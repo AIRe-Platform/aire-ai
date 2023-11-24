@@ -1,0 +1,4 @@
+{
+    "python.defaultInterpreterPath": "./.env/bin/python3",
+    "python.envFile": "${workspaceFolder}/development.env"
+}

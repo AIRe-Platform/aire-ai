@@ -1,0 +1,36 @@
+#!/bin/bash
+
+setup_venv()
+{
+    if [ ! -d ."env" ]
+    then
+        echo "Creating Python virtual environment..."
+        python3 -m venv ./.env || (echo "Failed to create venv" && exit 1)
+    fi
+    source .env/bin/activate
+}
+
+setup_requirements()
+{
+    echo "Installing requirements..."
+    pip3 install -r requirements.txt || (echo "Failed to install requirements" && exit 1)
+}
+
+setup_dev()
+{
+    echo "Installing development requirements..."
+    pip3 install -r requirements_dev.txt || (echo "Failed to install development requirements" && exit 1)
+}
+
+setup_venv && echo "Virtual environment is set up."
+setup_requirements && echo "Requirements installed."
+
+if [[ $* == *--dev* ]]
+then
+    setup_dev && echo "Development requirements installed."
+fi
+
+echo "Activate virtual environment by running:"
+echo " "
+echo "  source .env/bin/activate"
+echo " "
