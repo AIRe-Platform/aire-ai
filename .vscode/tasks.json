@@ -1,4 +1,21 @@
 {
     "version": "2.0.0",
-    "tasks": []
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "Build Docker image",
+            "command": "docker",
+            "args": [
+                "build",
+                "${workspaceFolder}",
+                "-t",
+                "aire-id"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
 }
