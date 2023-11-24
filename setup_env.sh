@@ -17,7 +17,10 @@ setup_requirements()
 }
 
 setup_dev()
-{
+{   
+    echo "Creating development.env..."
+    touch ./development.env
+
     echo "Installing development requirements..."
     pip3 install -r requirements_dev.txt || (echo "Failed to install development requirements" && exit 1)
 }
@@ -30,7 +33,10 @@ then
     setup_dev && echo "Development requirements installed."
 fi
 
+echo " "
 echo "Activate virtual environment by running:"
 echo " "
 echo "  source .env/bin/activate"
+echo " "
+echo "Note that if you are using VS Code, it should automatically activate the environment."
 echo " "
