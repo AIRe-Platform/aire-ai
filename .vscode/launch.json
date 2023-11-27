@@ -9,9 +9,9 @@
       "type": "python",
       "request": "launch",
       "module": "uvicorn",
-      "cwd": "${workspaceFolder}",
+      "cwd": "${workspaceFolder}/app",
       "args": [
-        "app.server:app",
+        "server:app",
         "--reload", 
         "--port", "7074"
       ],

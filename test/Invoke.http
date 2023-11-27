@@ -1,0 +1,11 @@
+@host=http://localhost:7074
+
+POST {{host}}/api/bot/default/invoke HTTP/1.1
+
+{
+    "input": {   
+         "chat": [
+            { "name": "user", "content": "Hei! Mikä on päivystysnumero?" }
+        ]  
+    }
+}
