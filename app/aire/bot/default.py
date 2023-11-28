@@ -2,7 +2,7 @@ import os
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema.runnable import RunnableLambda
 from langchain.chat_models import ChatOpenAI
-from models import AireChatInput
+from ..models.chat import AireChatInput
 
 model = ChatOpenAI(model="gpt-3.5-turbo", base_url=os.getenv("OPENAI_API_BASE"))
 system_prompt_text = """

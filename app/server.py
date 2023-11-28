@@ -2,8 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from langserve import add_routes
-from models import AireChatbot
-from default_bot import DefaultBot
+from aire.models.chat import AireChatbotInfo
+from aire.bot.default import DefaultBot
+from aire.services.platform import get_platform_config
 
 app = FastAPI(
     title="AIRe AI",
@@ -19,14 +20,16 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+platform = get_platform_config()
+
 @app.get("/")
 async def redirect_root_to_docs():
     return RedirectResponse("/docs")
 
 @app.get("/api/bot", description="List available bots")
-async def get_bots() -> list[AireChatbot]:
+async def get_bots() -> list[AireChatbotInfo]:
     return [
-        AireChatbot(name="default", description="Default chat bot")
+        AireChatbotInfo(name="default", description="Default chat bot")
     ]
 
 add_routes(

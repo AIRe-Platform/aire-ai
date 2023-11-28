@@ -8,6 +8,6 @@ class AireChatMessage(CustomUserType):
 class AireChatInput(CustomUserType):
     chat: list[AireChatMessage]
 
-class AireChatbot(BaseModel):
+class AireChatbotInfo(BaseModel):
     name: str
     description: str
