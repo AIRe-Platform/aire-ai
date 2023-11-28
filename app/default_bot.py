@@ -1,8 +1,6 @@
-from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from models import AireChatInput
 
-model = ChatOpenAI(model="gpt-3.5-turbo")
 
 system_prompt_text = """
 Act as a medical advisor.
@@ -27,4 +25,4 @@ def runnable(input: AireChatInput):
         ("system", system_prompt_text),
         *history
     ])
-    return prompt | model
+    return prompt
