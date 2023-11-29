@@ -2,7 +2,7 @@ import os
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema.runnable import RunnableLambda
 from langchain.chat_models import ChatOpenAI
-from ..models.chat import AireChatInput
+from ..models.chat import AireChatContext
 
 model = ChatOpenAI(model="gpt-3.5-turbo", base_url=os.getenv("OPENAI_API_BASE"))
 system_prompt_text = """
@@ -22,8 +22,8 @@ For emergencies, people should call 112 to get immediate help.
 It is important that you tell your patient that you are a bot.
 """
 
-def process(input: AireChatInput):
-    history = map(lambda msg: (msg.name, msg.content), input.chat)
+def process(ctx: AireChatContext):
+    history = map(lambda msg: (msg.name, msg.content), ctx.input.chat)
     prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt_text),
         *history

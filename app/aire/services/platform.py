@@ -9,9 +9,9 @@ def get_platform_config():
     if base == None or key == None:
         raise RuntimeError("Missing AIRe service configuration")
     
-    url = base + "/v1/config?service=true"
+    url = base + "/v1/config/internal"
     headers = {
-        "Authorization": "Bearer {key}",
+        "Aire-Service-Key": "{key}",
         "Accept": "application/json"
     }
 
@@ -21,3 +21,4 @@ def get_platform_config():
         return AirePlatformConfiguration.parse_obj(json)
     else:
         raise RuntimeError("Failed to request platform configuration")
+    

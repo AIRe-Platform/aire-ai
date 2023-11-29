@@ -1,10 +1,20 @@
-from fastapi import FastAPI
+import json;
+from typing import Annotated, AsyncIterator
+from fastapi import FastAPI, Header
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
-from langserve import add_routes
-from aire.models.chat import AireChatbotInfo
-from aire.bot.default import DefaultBot
+from fastapi.responses import (
+    RedirectResponse, 
+    Response
+)
+from sse_starlette import EventSourceResponse;
+from langserve.serialization import WellKnownLCSerializer
+from aire.models.chat import (
+    AireChatbotInfo, 
+    AireChatInput,
+    AireChatContext
+)
 from aire.services.platform import get_platform_config
+from aire.bot.default import DefaultBot
 
 app = FastAPI(
     title="AIRe AI",
@@ -20,6 +30,7 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+serializer = WellKnownLCSerializer()
 platform = get_platform_config()
 
 @app.get("/")
@@ -32,10 +43,39 @@ async def get_bots() -> list[AireChatbotInfo]:
         AireChatbotInfo(name="default", description="Default chat bot")
     ]
 
-add_routes(
-    app, 
-    DefaultBot, 
-    path="/api/bot/default")
+@app.post("/api/bot/{bot_name}/stream", description="Stream completion")
+async def stream_bot(bot_name: str, 
+                     input: AireChatInput,
+                     authorization: Annotated[str | None, Header()] = None):
+
+    match bot_name:
+        case "default":
+            bot = DefaultBot
+        case _:
+            return Response(status_code=404)
+        
+    context = AireChatContext(input=input)
+    print(f"Auth: {authorization}")
+    
+    async def stream() -> AsyncIterator[dict]:
+        try:
+            iter = bot.astream(context)
+            async for chunk in iter:
+                yield {
+                    "event": "data",
+                    "data": serializer.dumps(chunk).decode("utf-8")
+                }
+            yield { "event": "end" }
+        except BaseException:
+            yield {
+                "event": "error",
+                "data": json.dumps({ 
+                    "status_code": 500, 
+                    "message": "Internal Server Error"
+                })
+            }
+
+    return EventSourceResponse(stream())
 
 if __name__ == "__main__":
     import uvicorn
