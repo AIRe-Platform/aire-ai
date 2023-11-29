@@ -1,5 +1,6 @@
-import json;
+import json
 from typing import Annotated, AsyncIterator
+
 from fastapi import FastAPI, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import (
@@ -8,6 +9,7 @@ from fastapi.responses import (
 )
 from sse_starlette import EventSourceResponse;
 from langserve.serialization import WellKnownLCSerializer
+
 from aire.models.chat import (
     AireChatbotInfo, 
     AireChatInput,
@@ -57,7 +59,7 @@ async def stream_bot(bot_name: str,
         
     context = AireChatContext(input=input)
     print(f"Auth: {authorization}")
-
+    
     try:
         if authorization != None:
             context.user = get_user(platform, authorization)
@@ -74,7 +76,8 @@ async def stream_bot(bot_name: str,
                     "data": serializer.dumps(chunk).decode("utf-8")
                 }
             yield { "event": "end" }
-        except BaseException:
+        except BaseException as ex:
+            print(f"Error: {ex}")
             yield {
                 "event": "error",
                 "data": json.dumps({ 

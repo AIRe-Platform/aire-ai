@@ -1,8 +1,9 @@
 import os
 from langchain.prompts import ChatPromptTemplate
+from langchain.schema.messages import ChatMessage
 from langchain.schema.runnable import RunnableLambda
 from langchain.chat_models import ChatOpenAI
-from ..models.chat import AireChatContext
+from ..models.chat import AireChatContext, AireChatMessage
 
 model = ChatOpenAI(model="gpt-3.5-turbo", base_url=os.getenv("OPENAI_API_BASE"))
 system_prompt_text = """
@@ -23,7 +24,11 @@ It is important that you tell your patient that you are a bot.
 """
 
 def process(ctx: AireChatContext):
-    history = map(lambda msg: (msg.name, msg.content), ctx.input.chat)
+
+    def mapMessage(msg: AireChatMessage) -> ChatMessage:
+        return ChatMessage(role=msg.role, content=msg.content)
+
+    history = map(mapMessage, ctx.input.chat)
 
     # TODO: Summarize user data and use it as part of the prompt
     if ctx.user != None:

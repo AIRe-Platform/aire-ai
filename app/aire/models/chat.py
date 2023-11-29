@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from .user import AireUser
 
 class AireChatMessage(CustomUserType):
-    name: str
+    role: str
     content: str
 
 class AireChatInput(CustomUserType):
