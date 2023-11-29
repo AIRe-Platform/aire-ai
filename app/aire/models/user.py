@@ -19,4 +19,4 @@ class AireUser(BaseModel):
     age: int | None
     language: str | None
     country: str | None
-    connected_services: list[AireUserServiceCredentials]
+    connected_services: list[AireUserServiceCredentials] | None

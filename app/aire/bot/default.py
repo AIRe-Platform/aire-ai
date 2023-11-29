@@ -24,6 +24,11 @@ It is important that you tell your patient that you are a bot.
 
 def process(ctx: AireChatContext):
     history = map(lambda msg: (msg.name, msg.content), ctx.input.chat)
+
+    # TODO: Summarize user data and use it as part of the prompt
+    if ctx.user != None:
+        print("TODO: Summarize user info")
+
     prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt_text),
         *history

@@ -14,6 +14,7 @@ from aire.models.chat import (
     AireChatContext
 )
 from aire.services.platform import get_platform_config
+from aire.services.id import get_user
 from aire.bot.default import DefaultBot
 
 app = FastAPI(
@@ -56,7 +57,14 @@ async def stream_bot(bot_name: str,
         
     context = AireChatContext(input=input)
     print(f"Auth: {authorization}")
-    
+
+    try:
+        if authorization != None:
+            context.user = get_user(platform, authorization)
+    except BaseException as e:
+        print(f"Could not retrieve user data: {e}")
+        return Response(status_code=401)
+
     async def stream() -> AsyncIterator[dict]:
         try:
             iter = bot.astream(context)

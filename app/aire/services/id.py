@@ -6,22 +6,21 @@ from ..models.platform import (
 )
 from ..models.user import AireUser
 
-def get_user(conf: AirePlatformConfiguration, token: str):
-    base = os.getenv("AIRE_SERVICE_BASE")
+def get_user(conf: AirePlatformConfiguration, auth: str):
     key = os.getenv("AIRE_SERVICE_KEY")
 
-    if base == None or key == None:
+    if key == None:
         raise RuntimeError("Missing AIRe service configuration")
     
-    svc_url = conf.platform.modules.get(AireModuleType.ID)
-    if svc_url == None:
+    svc = conf.platform.modules.get(AireModuleType.ID)
+    if svc == None:
         raise RuntimeError("ID Module is not configured")
     
-    url = svc_url + "/v1/user"
+    url = svc.endpoint + "/v1/user"
     headers = {
-        "Aire-Service-Key": f"{key}",
+        "Aire-Service-Key": key,
         "Accept": "application/json",
-        "Authorization": f"Bearer {token}"
+        "Authorization": auth
     }
 
     response = requests.get(url=url, headers=headers)
