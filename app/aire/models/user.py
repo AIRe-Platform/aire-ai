@@ -5,7 +5,7 @@ class AireUserServiceCredentials(BaseModel):
     name: str
     token: str
 
-class AireUserGender(Enum):
+class AireUserGender(str, Enum):
     Male = "male"
     Female = "female"
     Other = "other"
@@ -19,4 +19,5 @@ class AireUser(BaseModel):
     age: int | None
     language: str | None
     country: str | None
+    bio: str | None
     connected_services: list[AireUserServiceCredentials] | None
