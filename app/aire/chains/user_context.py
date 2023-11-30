@@ -6,7 +6,6 @@ from ..models.user import AireUser
 template = HumanMessagePromptTemplate.from_template("Summarize user info from the following JSON: {json_str}")
 
 def summarize_user_context(user: AireUser, model: BaseChatModel):
-
     data = json.dumps(user.dict(include={
         "first_name",
         "last_name", 

@@ -25,7 +25,6 @@ def process(ctx: AireChatContext):
     history = map(mapMessage, ctx.input.chat)
 
     if ctx.user != None:
-        print("TODO: Summarize user info")
         user_summary = summarize_user_context(ctx.user, model)
     else:
         user_summary = "No user summary available, you may ask relevant information from the user."
