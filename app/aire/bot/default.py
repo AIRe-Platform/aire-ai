@@ -12,6 +12,8 @@ Act as a medical advisor.
 Your task is to find out what is bothering your patient and provide suggestions.
 Do not suggest anything that could worsen the condition of the patient.
 
+Act with empathy and in a friendly manner.
+
 Here's a summary of your patient:
 {user_summary}
 """
@@ -28,6 +30,8 @@ def process(ctx: AireChatContext):
         user_summary = summarize_user_context(ctx.user, model)
     else:
         user_summary = "No user summary available, you may ask relevant information from the user."
+        if ctx.input.ui_lang != None:
+            user_summary += f"\nUser language is set to {ctx.input.ui_lang}"
 
     prompt = ChatPromptTemplate.from_messages([
         system_prompt_template.format(user_summary=user_summary),

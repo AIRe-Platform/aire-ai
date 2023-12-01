@@ -8,6 +8,7 @@ class AireChatMessage(CustomUserType):
 
 class AireChatInput(CustomUserType):
     chat: list[AireChatMessage]
+    ui_lang: str | None
 
 class AireChatbotInfo(BaseModel):
     name: str
