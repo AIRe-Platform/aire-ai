@@ -1,12 +1,12 @@
 from pydantic import BaseModel
 from enum import Enum
 
-class AireModuleType(Enum):
+class AireModuleType(str, Enum):
     AI = "ai"
     ID = "id"
     Memory = "memory"
 
-class AireModuleAccess(Enum):
+class AireModuleAccess(str, Enum):
     Public = "public"
     Service = "service"
     Private = "private"
