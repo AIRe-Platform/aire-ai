@@ -18,6 +18,16 @@ Adjust development environment with `development.env` file as needed.
 
 There are launch/debug configurations for VSCode.
 
+Example `development.env`:
+
+```
+OPENAI_API_BASE=<Remove this line if you want to use OpenAI's API. If using local inference server, place its address here.>
+OPENAI_API_KEY=<Your API Key to OpenAI, or any string if using local API>
+AIRE_SERVICE_BASE=http://localhost:7071/api
+AIRE_SERVICE_KEY=<any string>
+PGVECTOR_CONNECTION_STRING=<connection string here>
+```
+
 ## LangChain
 
 Tips for using LangChain.
