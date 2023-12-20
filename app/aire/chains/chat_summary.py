@@ -1,28 +1,51 @@
 import os
 from langchain.llms.openai import OpenAI
-from langchain.prompts import PromptTemplate
+from langchain.prompts import PromptTemplate, ChatPromptTemplate
 from langchain.memory import ConversationSummaryBufferMemory, ChatMessageHistory
 from langchain.output_parsers import CommaSeparatedListOutputParser
+from langchain.schema.runnable import RunnableParallel, RunnableLambda
 from ..models.chat import AireChatSummary, AireChatInput
 
 llm = OpenAI(temperature=0, 
              base_url=os.getenv("OPENAI_API_BASE"))
 
-parser = CommaSeparatedListOutputParser()
-format_instructions = parser.get_format_instructions()
+list_parser = CommaSeparatedListOutputParser()
+format_instructions = list_parser.get_format_instructions()
 
-keyword_prompt = PromptTemplate(
-    template="Extract maximum of 5 keywords related to symptoms from the following text:\n<START>{summary}<END>\n{format_instructions}",
-    input_variables=["summary"],
-    partial_variables={"format_instructions": format_instructions})
-
-def summarize_chat(input: AireChatInput) -> AireChatSummary:
+def __chat_summarize(input: AireChatInput) -> str:
     history = ChatMessageHistory(messages=input.toChatMessages())
     memory = ConversationSummaryBufferMemory(chat_memory=history, llm=llm)
-    summary = memory.predict_new_summary(memory.chat_memory.messages, "")
+    return memory.predict_new_summary(memory.chat_memory.messages, "")
 
-    keywords_input = keyword_prompt.format(summary=summary)
-    keywords_output = llm(keywords_input)
-    keywords = parser.parse(keywords_output)
+def __chat_keyword_prompt(input: AireChatInput) -> list[str]:
+    prompt_template = """
+Extract keywords from the following conversation.
+{format_instructions} 
 
-    return AireChatSummary(summary=summary, keywords=keywords)
+Conversation:
+{messages}
+"""    
+    keyword_prompt = PromptTemplate(
+        template=prompt_template,
+        input_variables=["messages"],
+        partial_variables={"format_instructions": format_instructions})
+    
+    messages = ChatPromptTemplate.from_messages(input.toChatMessages())
+    prompt = keyword_prompt.format(messages=messages.format())
+
+    output = llm(prompt)
+    return list_parser.parse(output)[:6]
+
+
+def __summary(input: AireChatInput) -> AireChatSummary:
+    chat_summary_chain = RunnableLambda(__chat_summarize)
+    chat_keyword_chain = RunnableLambda(__chat_keyword_prompt)
+    
+    chains = RunnableParallel(
+        summary=chat_summary_chain, 
+        keywords=chat_keyword_chain)
+    result = chains.invoke(input)
+
+    return AireChatSummary(summary=result["summary"], keywords=result["keywords"])
+
+ChatSummaryChain = RunnableLambda(__summary)

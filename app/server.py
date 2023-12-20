@@ -16,7 +16,7 @@ from aire.models.chat import (
 from aire.services.platform import get_platform_config
 from aire.services.id import get_user
 from aire.bot.default import DefaultBot
-from aire.chains.chat_summary import summarize_chat
+from aire.chains.chat_summary import ChatSummaryChain
 
 app = FastAPI(
     docs_url="/api/swagger/ui",
@@ -101,7 +101,7 @@ async def stream_bot(bot_name: str,
 @app.post("/api/summarize", 
           description="Summarize given text and pick keywords")
 async def summarize(input: AireChatInput):
-    return summarize_chat(input)
+    return ChatSummaryChain.invoke(input)
 
 
 if __name__ == "__main__":
