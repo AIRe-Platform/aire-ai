@@ -1,0 +1,12 @@
+@host=http://localhost:7074
+
+POST {{host}}/api/bot/default/stream HTTP/1.1
+Accept: text/event-stream
+Content-Type: application/json
+
+{
+    "chat": [
+        { "role": "user", "content": "Hello!" }
+    ],
+    "ui_lang": "en"
+}

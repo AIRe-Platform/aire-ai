@@ -1,0 +1,61 @@
+@host=http://localhost:7074
+
+POST {{host}}/api/summarize HTTP/1.1
+Accept: application/json
+Content-Type: application/json
+
+{
+    "chat": [
+        {
+            "role": "user",
+            "content": "Hello!",
+            "timestamp": 1702555234123
+        },
+        {
+            "role": "assistant",
+            "content": "Hello Tero, how can I assist you today?",
+            "timestamp": 1702555239143
+        },
+        {
+            "role": "user",
+            "content": "My back is hurting",
+            "timestamp": 1702560946295
+        },
+        {
+            "role": "assistant",
+            "content": "I'm sorry to hear that. Can you tell me more about the pain in your back? When did it start and what does it feel like?",
+            "timestamp": 1702560956006
+        },
+        {
+            "role": "user",
+            "content": "It has persisted years. It annoys me.",
+            "timestamp": 1702560986711
+        },
+        {
+            "role": "assistant",
+            "content": "I understand that chronic pain can be frustrating to deal with. Have you tried any treatments or therapies for your back pain?",
+            "timestamp": 1702560992218
+        },
+        {
+            "role": "user",
+            "content": "I've seen a doctor who said it is caused by wear and tear over time. Is there something I could try to ease the pain?",
+            "timestamp": 1702561051697
+        },
+        {
+            "role": "assistant",
+            "content": "There are several things you can try to help manage your back pain. These include:\n\n1. Over-the-counter pain relievers such as ibuprofen or paracetamol.\n2. Applying heat or ice packs to the affected area.\n3. Gentle stretching and exercise to maintain flexibility and strength.\n4. Practicing good posture while sitting, standing, and sleeping.\n5. Avoiding activities that cause pain or discomfort.\n6. Seeking professional guidance from a physiotherapist or chiropractor for tailored treatment plans.\n\nIt's important to remember that everyone is different, so it may take some trial and error to find what works best for you. If your symptoms persist or worsen despite these measures, I would recommend consulting with your doctor again for further evaluation.",
+            "timestamp": 1702561056476
+        },
+        {
+            "role": "user",
+            "content": "Thanks!",
+            "timestamp": 1702561067506
+        },
+        {
+            "role": "assistant",
+            "content": "You're welcome. If you have any more questions or concerns, feel free to reach out anytime. Take care and stay well!",
+            "timestamp": 1702561073453
+        }
+    ],
+    "ui_lang": "en"
+}
