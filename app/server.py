@@ -3,10 +3,8 @@ from typing import Annotated, AsyncIterator
 
 from fastapi import FastAPI, Header
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import (
-    RedirectResponse, 
-    Response
-)
+from fastapi.openapi.utils import get_openapi
+from fastapi.responses import Response
 from sse_starlette import EventSourceResponse;
 from langserve.serialization import WellKnownLCSerializer
 
@@ -20,10 +18,24 @@ from aire.services.id import get_user
 from aire.bot.default import DefaultBot
 
 app = FastAPI(
-    title="AIRe AI",
-    version="0.1",
-    description="AIRe AI Service Module"
+    docs_url="/api/swagger/ui",
+    openapi_url="/api/swagger.json"
 )
+
+def openapi_docs():
+    if app.openapi_schema:
+        return app.openapi_schema
+    schema = get_openapi(
+        title="AIRe AI Module",
+        version="0.1.0",
+        description="This is the documentation of the AIRe AI API.",
+        openapi_version="3.0.0",
+        routes=app.routes,
+    )
+    app.openapi_schema = schema
+    return schema
+
+app.openapi = openapi_docs
 
 app.add_middleware(
     CORSMiddleware,
@@ -36,17 +48,14 @@ app.add_middleware(
 serializer = WellKnownLCSerializer()
 platform = get_platform_config()
 
-@app.get("/")
-async def redirect_root_to_docs():
-    return RedirectResponse("/docs")
-
 @app.get("/api/bot", description="List available bots")
 async def get_bots() -> list[AireChatbotInfo]:
     return [
         AireChatbotInfo(name="default", description="Default chat bot")
     ]
 
-@app.post("/api/bot/{bot_name}/stream", description="Stream completion")
+@app.post("/api/bot/{bot_name}/stream", 
+          description="Stream completion")
 async def stream_bot(bot_name: str, 
                      input: AireChatInput,
                      authorization: Annotated[str | None, Header()] = None):
