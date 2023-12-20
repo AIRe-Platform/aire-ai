@@ -21,7 +21,7 @@ There are launch/debug configurations for VSCode.
 Example of `development.env`:
 
 ```
-OPENAI_API_BASE=<Remove if using OpenAI's API or place URL of OpenAI compatible endoints here.>
+OPENAI_API_BASE=<Remove if using OpenAI's API or place URL of OpenAI compatible endpoints here.>
 OPENAI_API_KEY=<Your API Key to OpenAI, or any string if using local API>
 AIRE_SERVICE_BASE=http://localhost:7071/api
 AIRE_SERVICE_KEY=<any string>
