@@ -1,54 +1,16 @@
 import os
 from langchain.llms.openai import OpenAI
-from langchain.prompts import PromptTemplate, ChatPromptTemplate
 from langchain.memory import ConversationSummaryBufferMemory, ChatMessageHistory
-from langchain.output_parsers import CommaSeparatedListOutputParser
-from langchain.schema.runnable import RunnableParallel, RunnableLambda
-from ..models.chat import AireChatSummary, AireChatInput
+from langchain.schema.runnable import RunnableLambda
+from ..models.chat import AireChatInput
 
-llm = OpenAI(temperature=0, 
-             base_url=os.getenv("OPENAI_API_BASE"))
+llm_summary = OpenAI(
+    temperature=0, 
+    base_url=os.getenv("OPENAI_API_BASE"))
 
-list_parser = CommaSeparatedListOutputParser()
-format_instructions = list_parser.get_format_instructions()
-
-def __chat_summarize(input: AireChatInput) -> str:
+def __chat_summary(input: AireChatInput) -> str:
     history = ChatMessageHistory(messages=input.toChatMessages())
-    memory = ConversationSummaryBufferMemory(chat_memory=history, llm=llm)
-    return memory.predict_new_summary(memory.chat_memory.messages, "")
+    memory = ConversationSummaryBufferMemory(chat_memory=history, llm=llm_summary)
+    return memory.predict_new_summary(memory.chat_memory.messages, "").strip("\n ")
 
-def __chat_keyword_prompt(input: AireChatInput) -> list[str]:
-    prompt_template = """
-Extract keywords from the following conversation.
-
-Conversation:
-{messages}
-
-{format_instructions} Answer just with the list."
-"""    
-    keyword_prompt = PromptTemplate(
-        template=prompt_template,
-        input_variables=["messages"],
-        partial_variables={"format_instructions": format_instructions})
-    
-    messages = ChatPromptTemplate.from_messages(input.toChatMessages())
-    prompt = keyword_prompt.format(messages=messages.format())
-
-    output = llm(prompt)
-    words = list_parser.parse(output)[:6]
-    words = list(map(lambda x: x.strip("\" ,.;-/"), words))
-    return words
-
-
-def __summary(input: AireChatInput) -> AireChatSummary:
-    chat_summary_chain = RunnableLambda(__chat_summarize)
-    chat_keyword_chain = RunnableLambda(__chat_keyword_prompt)
-    
-    chains = RunnableParallel(
-        summary=chat_summary_chain, 
-        keywords=chat_keyword_chain)
-    result = chains.invoke(input)
-
-    return AireChatSummary(summary=result["summary"], keywords=result["keywords"])
-
-ChatSummaryChain = RunnableLambda(__summary)
+ChatSummaryChain = RunnableLambda(__chat_summary)

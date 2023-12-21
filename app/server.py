@@ -16,6 +16,8 @@ from aire.models.chat import (
 from aire.services.platform import get_platform_config
 from aire.services.id import get_user
 from aire.bot.default import DefaultBot
+from aire.chains.chat_abstract import ChatAbstractChain
+from aire.chains.chat_keywords import ChatKeywordChain
 from aire.chains.chat_summary import ChatSummaryChain
 
 app = FastAPI(
@@ -98,10 +100,20 @@ async def stream_bot(bot_name: str,
 
     return EventSourceResponse(stream())
 
-@app.post("/api/summarize", 
-          description="Summarize given text and pick keywords")
-async def summarize(input: AireChatInput):
+@app.post("/api/chat/abstract", 
+          description="Generate abstract from a chat")
+async def chat_abstract(input: AireChatInput):
+    return ChatAbstractChain.invoke(input)
+
+@app.post("/api/chat/summary", 
+          description="Summarize chat")
+async def chat_summary(input: AireChatInput):
     return ChatSummaryChain.invoke(input)
+
+@app.post("/api/chat/keywords", 
+          description="Pick keywords from a chat")
+async def chat_keywords(input: AireChatInput):
+    return ChatKeywordChain.invoke(input)
 
 
 if __name__ == "__main__":

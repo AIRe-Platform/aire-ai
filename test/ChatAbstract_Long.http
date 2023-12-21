@@ -1,0 +1,101 @@
+@host=http://localhost:7074
+
+POST {{host}}/api/chat/abstract HTTP/1.1
+Accept: application/json
+Content-Type: application/json
+
+{
+    "chat": [
+        {
+            "role": "user",
+            "content": "Hello!",
+            "timestamp": 1703163277452
+        },
+        {
+            "role": "assistant",
+            "content": "Hello Tero, I'm sorry to hear about your chronic back pain. How have you been feeling lately? Is there anything specific that has been bothering you or causing more discomfort than usual?",
+            "timestamp": 1703163280090
+        },
+        {
+            "role": "user",
+            "content": "Yeah, the back has been more irritating lately.",
+            "timestamp": 1703166493507
+        },
+        {
+            "role": "assistant",
+            "content": "I understand that living with chronic back pain can be quite challenging. Could you share more details about the discomfort you're experiencing? When did it start getting worse, and have you noticed any changes in your daily activities or routines?",
+            "timestamp": 1703166496514
+        },
+        {
+            "role": "user",
+            "content": "It's gotten worse little by little, so it's hard to point when it started.",
+            "timestamp": 1703166544643
+        },
+        {
+            "role": "assistant",
+            "content": "Even small changes over time can affect your back pain. It's important to identify any potential triggers or aggravating factors. Have you recently changed your workstation, started a new hobby, or experienced any stressful events? These factors may be connected to your increased discomfort.",
+            "timestamp": 1703166547396
+        },
+        {
+            "role": "user",
+            "content": "Now that you meantion, I've had more stress lately.",
+            "timestamp": 1703166587664
+        },
+        {
+            "role": "assistant",
+            "content": "Stress can indeed impact our physical well-being, including chronic conditions like back pain. It's essential to address both your physical and emotional health. I recommend trying relaxation techniques such as deep breathing exercises, meditation, or gentle yoga to help manage stress. If you're not already doing so, it's also vital to maintain a regular exercise routine that strengthens your core, as this can provide better support for your back. Remember to consult with your healthcare provider before starting any new exercise program.",
+            "timestamp": 1703166590408
+        },
+        {
+            "role": "user",
+            "content": "Meditation sounds interesting",
+            "timestamp": 1703166640954
+        },
+        {
+            "role": "assistant",
+            "content": "I'm glad you find meditation interesting! It can be a helpful tool for managing stress and promoting relaxation. To start, you might try finding a guided meditation video or app that suits your preferences. Begin with short sessions, even as little as 5-10 minutes, and gradually increase the duration as you become more comfortable. Remember, consistency is key when incorporating new habits into your daily routine. If you have any questions or need further guidance, please don't hesitate to ask.",
+            "timestamp": 1703166643552
+        },
+        {
+            "role": "user",
+            "content": "Can I do something for by back?",
+            "timestamp": 1703166679876
+        },
+        {
+            "role": "assistant",
+            "content": "Absolutely, there are several things you can do to support your back health. Firstly, maintaining good posture is essential. Whether you're sitting or standing, try to keep your back straight, shoulders relaxed, and your head aligned with your spine. Regular stretching exercises can also help alleviate back pain. Focus on stretches that target your hamstrings, hip flexors, and lower back muscles.\n\nIn addition, I mentioned earlier about maintaining a regular exercise routine to strengthen your core. Exercises like planks, bridges, and bird-dogs can be beneficial. It's always a good idea to consult with your healthcare provider or a physical therapist for personalized recommendations based on your specific needs and condition.\n\nLastly, remember to take breaks throughout the day, especially if you have a desk job. Stretch your legs, walk around, and give your back a rest from prolonged sitting or standing.",
+            "timestamp": 1703166682527
+        },
+        {
+            "role": "user",
+            "content": "Can you suggest a training program I could add to my day?",
+            "timestamp": 1703166738899
+        },
+        {
+            "role": "assistant",
+            "content": "Certainly! Here's a simple 15-minute core and back strengthening routine that you can consider incorporating into your day:\n\n1. Plank Hold (aim for 30 seconds)\n- Start on your hands and toes, keeping your body straight like a plank. Engage your core and hold this position.\n\n2. Side Plank (hold for 30 seconds on each side)\n- From a plank position, shift your weight onto one forearm and the edge of your feet. Your body should form a straight line from head to toes. Hold this side plank before switching to the other side.\n\n3. Bridge (15 reps)\n- Lie on your back with your knees bent and feet hip-width apart on the ground. Keeping your shoulders on the floor, engage your core and glutes to lift your hips towards the ceiling. Slowly lower your hips to the ground to complete one rep.\n\n4. Bird-Dog (15 reps, alternate between sides)\n- Start on all fours with your hands under your shoulders and knees under your hips. Extend your right arm forward and your left leg backward, keeping your core engaged and maintaining a flat back. Return to the starting position and repeat on the opposite side.\n\n5. Seated Russian Twists (15 reps)\n- Sit on the floor with your knees bent and lean your torso slightly backward. Lift your feet off the ground, balancing on your sit bones. Hold your hands in front of you with your elbout bent at 90 degrees. Slowly twist your torso to the left, then to the right, keeping your core engaged throughout the movement.\n\nRemember to consult with your healthcare provider or physical therapist before starting this routine, especially if you have any specific concerns related to your chronic back pain. They can provide personalized guidance and modifications if needed.",
+            "timestamp": 1703166741559
+        },
+        {
+            "role": "user",
+            "content": "Alright, thanks. If I wanted to ask an opinion from a medical professional, where I should contact?",
+            "timestamp": 1703166825444
+        },
+        {
+            "role": "assistant",
+            "content": "You're welcome! If you're seeking professional medical advice or want to consult with a healthcare provider about your back pain or any other health concerns, I recommend reaching out to your primary care physician or a specialist like a physical therapist. They can provide personalized recommendations and guidance based on your specific needs and medical history.\n\nYou can also consider contacting local healthcare facilities, clinics, or hospitals in Suomi, where you reside. Many of them may have online appointment booking systems or provide phone consultation services. Additionally, you can ask for recommendations from friends, family, or your local community for trusted medical professionals in your area.",
+            "timestamp": 1703166827989
+        },
+        {
+            "role": "user",
+            "content": "Great. Bye!",
+            "timestamp": 1703166879529
+        },
+        {
+            "role": "assistant",
+            "content": "Goodbye, Tero! I hope this information helps you in managing your chronic back pain and finding the appropriate medical advice. If you have any more questions or need further assistance, please don't hesitate to ask. Take care!",
+            "timestamp": 1703166882266
+        }
+    ],
+    "ui_lang": "en"
+}
