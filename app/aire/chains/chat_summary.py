@@ -20,10 +20,11 @@ def __chat_summarize(input: AireChatInput) -> str:
 def __chat_keyword_prompt(input: AireChatInput) -> list[str]:
     prompt_template = """
 Extract keywords from the following conversation.
-{format_instructions} 
 
 Conversation:
 {messages}
+
+{format_instructions} Answer just with the list."
 """    
     keyword_prompt = PromptTemplate(
         template=prompt_template,
@@ -34,7 +35,9 @@ Conversation:
     prompt = keyword_prompt.format(messages=messages.format())
 
     output = llm(prompt)
-    return list_parser.parse(output)[:6]
+    words = list_parser.parse(output)[:6]
+    words = list(map(lambda x: x.strip("\" ,.;-/"), words))
+    return words
 
 
 def __summary(input: AireChatInput) -> AireChatSummary:
