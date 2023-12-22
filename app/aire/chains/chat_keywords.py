@@ -30,12 +30,10 @@ Conversation:
     messages = ChatPromptTemplate.from_messages(input.toChatMessages())
     prompt = keyword_prompt.format(messages=messages.format())
 
-    output = llm(prompt)
+    output = llm(prompt).replace("\n", ", ").replace("Keywords", "")
     words = parser.parse(output)
-    return list(
-        map(lambda x: 
-            x.replace("Keywords", "").strip("\" ,.:;-/\n"), 
-            words)
-    )
+    stripped_words = map(lambda x: x.strip("\" ,.:;-/\n1234567890#"), words)
+
+    return list(filter(lambda x: len(x) > 0, stripped_words))
 
 ChatKeywordChain = RunnableLambda(__chat_keywords)
