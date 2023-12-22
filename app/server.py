@@ -1,7 +1,7 @@
 import json
 from typing import Annotated, AsyncIterator
 
-from fastapi import FastAPI, Header
+from fastapi import FastAPI, Header, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import Response
@@ -54,6 +54,7 @@ platform = get_platform_config()
 
 @app.get("/api/bot", 
          description="List available bots",
+         tags=["Chatbot"],
          response_description="List of bots")
 async def get_bots() -> list[AireChatbotInfo]:
     return [
@@ -62,6 +63,7 @@ async def get_bots() -> list[AireChatbotInfo]:
 
 @app.post("/api/bot/{bot_name}/stream", 
           description="Stream completion",
+          tags=["Chatbot"],
           response_description="Returns a stream of events",
           response_class=Response)
 async def stream_bot(bot_name: str, 
@@ -105,23 +107,34 @@ async def stream_bot(bot_name: str,
 
     return EventSourceResponse(stream())
 
-@app.post("/api/chat/abstract", 
+@app.post("/api/chat/abstract",
+          name="Chat abstract (summary and keywords)",
           description="Generate abstract from a chat",
+          tags=["Chat Processing"],
           response_description="Returns the generated abstract")
 async def chat_abstract(input: AireChatInput) -> AireChatAbstract:
-    return ChatAbstractChain.invoke(input)
+    context = AireChatContext(input=input)
+    return ChatAbstractChain.invoke(context)
 
 @app.post("/api/chat/summary", 
           description="Summarize chat",
+          tags=["Chat Processing"],
           response_description="Returns the summary as a string")
 async def chat_summary(input: AireChatInput) -> str:
-    return ChatSummaryChain.invoke(input)
+    context = AireChatContext(input=input)
+    return ChatSummaryChain.invoke(context)
 
 @app.post("/api/chat/keywords", 
           description="Pick keywords from a chat",
+          tags=["Chat Processing"],
           response_description="Returns a list of keywords")
-async def chat_keywords(input: AireChatInput) -> list[str]:
-    return ChatKeywordChain.invoke(input)
+async def chat_keywords(input: AireChatInput, 
+                        regen: Annotated[bool, Query(
+                            description="Set to true if you wish to add randomness to the response"
+                            )] = False
+                        ) -> list[str]:
+    context = AireChatContext(input=input, regen=regen)
+    return ChatKeywordChain.invoke(context)
 
 
 if __name__ == "__main__":

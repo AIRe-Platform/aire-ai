@@ -28,11 +28,12 @@ class AireChatContext(CustomUserType):
     """The context for the chat"""
 
     input: AireChatInput
-    user: AireUser | None
+    user: AireUser | None = None
+    regen: bool = False
 
 class AireChatAbstract(BaseModel):
     """Contains the abstract generated from chat messages."""
-    
+
     summary: str
     keywords: list[str]
     

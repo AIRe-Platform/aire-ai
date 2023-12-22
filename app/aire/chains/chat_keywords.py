@@ -3,17 +3,20 @@ from langchain.llms.openai import OpenAI
 from langchain.prompts import PromptTemplate, ChatPromptTemplate
 from langchain.output_parsers import CommaSeparatedListOutputParser
 from langchain.schema.runnable import  RunnableLambda
-from ..models.chat import AireChatInput
-
-llm = OpenAI(
-    temperature=0.5, 
-    base_url=os.getenv("OPENAI_API_BASE"),
-    max_tokens=24)
+from ..models.chat import AireChatContext
 
 parser = CommaSeparatedListOutputParser()
 format_instructions = parser.get_format_instructions()
 
-def __chat_keywords(input: AireChatInput) -> list[str]:
+def __chat_keywords(ctx: AireChatContext) -> list[str]:
+    temperature = 0.0
+    if ctx.regen: temperature = 0.2
+
+    llm = OpenAI(
+        temperature=temperature, 
+        base_url=os.getenv("OPENAI_API_BASE"),
+        max_tokens=24)
+
     prompt_template = """
 Extract keywords from the following conversation.
 
@@ -27,13 +30,19 @@ Conversation:
         input_variables=["messages"],
         partial_variables={"format_instructions": format_instructions})
     
-    messages = ChatPromptTemplate.from_messages(input.toChatMessages())
+    messages = ChatPromptTemplate.from_messages(ctx.input.toChatMessages())
     prompt = keyword_prompt.format(messages=messages.format())
 
-    output = llm(prompt).replace("\n", ", ").replace("Keywords", "")
-    words = parser.parse(output)
-    stripped_words = map(lambda x: x.strip("\" ,.:;-/\n1234567890#"), words)
+    output = llm(prompt)
+    print(f"Raw keyword response:\n'{output}'")
 
-    return list(filter(lambda x: len(x) > 0, stripped_words))
+    output = output.replace("\n", ", ").replace("Keywords", "")
+    output = parser.parse(output)
+    output = map(lambda x: x.strip("\" ,.:;-/\n1234567890#"), output)
+    output = list(filter(lambda x: len(x) > 0, output))
+
+    print(f"Processed keywords: {output}")
+
+    return output
 
 ChatKeywordChain = RunnableLambda(__chat_keywords)
