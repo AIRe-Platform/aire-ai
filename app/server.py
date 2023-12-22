@@ -11,7 +11,8 @@ from langserve.serialization import WellKnownLCSerializer
 from aire.models.chat import (
     AireChatbotInfo, 
     AireChatInput,
-    AireChatContext
+    AireChatContext,
+    AireChatAbstract
 )
 from aire.services.platform import get_platform_config
 from aire.services.id import get_user
@@ -51,14 +52,18 @@ app.add_middleware(
 serializer = WellKnownLCSerializer()
 platform = get_platform_config()
 
-@app.get("/api/bot", description="List available bots")
+@app.get("/api/bot", 
+         description="List available bots",
+         response_description="List of bots")
 async def get_bots() -> list[AireChatbotInfo]:
     return [
         AireChatbotInfo(name="default", description="Default chat bot")
     ]
 
 @app.post("/api/bot/{bot_name}/stream", 
-          description="Stream completion")
+          description="Stream completion",
+          response_description="Returns a stream of events",
+          response_class=Response)
 async def stream_bot(bot_name: str, 
                      input: AireChatInput,
                      authorization: Annotated[str | None, Header()] = None):
@@ -101,18 +106,21 @@ async def stream_bot(bot_name: str,
     return EventSourceResponse(stream())
 
 @app.post("/api/chat/abstract", 
-          description="Generate abstract from a chat")
-async def chat_abstract(input: AireChatInput):
+          description="Generate abstract from a chat",
+          response_description="Returns the generated abstract")
+async def chat_abstract(input: AireChatInput) -> AireChatAbstract:
     return ChatAbstractChain.invoke(input)
 
 @app.post("/api/chat/summary", 
-          description="Summarize chat")
-async def chat_summary(input: AireChatInput):
+          description="Summarize chat",
+          response_description="Returns the summary as a string")
+async def chat_summary(input: AireChatInput) -> str:
     return ChatSummaryChain.invoke(input)
 
 @app.post("/api/chat/keywords", 
-          description="Pick keywords from a chat")
-async def chat_keywords(input: AireChatInput):
+          description="Pick keywords from a chat",
+          response_description="Returns a list of keywords")
+async def chat_keywords(input: AireChatInput) -> list[str]:
     return ChatKeywordChain.invoke(input)
 
 
