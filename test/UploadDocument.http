@@ -1,0 +1,11 @@
+@host=http://localhost:7074
+
+POST {{host}}/api/document HTTP/1.1
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="document"; filename="my_test_document.md"
+Content-Type: text/markdown
+
+< ./my_test_document.md
+------WebKitFormBoundary7MA4YWxkTrZu0gW--

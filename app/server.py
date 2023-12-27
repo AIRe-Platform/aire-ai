@@ -1,7 +1,7 @@
 import json
 from typing import Annotated, AsyncIterator
 
-from fastapi import FastAPI, Header, Query
+from fastapi import FastAPI, Header, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import Response
@@ -16,10 +16,12 @@ from aire.models.chat import (
 )
 from aire.services.platform import get_platform_config
 from aire.services.id import get_user
+from aire.services.memory import store_pdf, store_markdown
 from aire.bot.default import DefaultBot
 from aire.chains.chat_abstract import ChatAbstractChain
 from aire.chains.chat_keywords import ChatKeywordChain
 from aire.chains.chat_summary import ChatSummaryChain
+from helpers.temp_files import create_temporary_file
 
 app = FastAPI(
     docs_url="/api/swagger/ui",
@@ -135,6 +137,36 @@ async def chat_keywords(input: AireChatInput,
                         ) -> list[str]:
     context = AireChatContext(input=input, regen=regen)
     return ChatKeywordChain.invoke(context)
+
+@app.post("/api/document",
+          description="Create embeddings and store a PDF or Markdown document",
+          tags=["Documents"])
+async def embed_document(document: UploadFile) -> Response:
+    if document.size > 1024 * 16:
+        return Response(status_code=400, 
+                        content="The file is too large. The file must be 16 MB max.")
+    
+    if document.content_type == "application/pdf":
+        handler = store_pdf
+    elif document.content_type == "text/markdown":
+        handler = store_markdown
+    else:
+       return Response(status_code=415, content="Unsupported file type")
+    
+    path = None
+    try:
+        path = await create_temporary_file(document)
+        if path == None:
+            raise Exception("Failed to store uploaded file")
+        handler(path)
+        status = 204
+    except BaseException as ex:
+        print(f"Failed to process document: {ex}")
+        status = 422
+    finally:
+        if path != None: path.unlink()
+
+    return Response(status_code=status)
 
 
 if __name__ == "__main__":

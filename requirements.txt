@@ -4,3 +4,8 @@ langserve[server]
 openai
 pgvector
 psycopg2-binary
+pypdf
+python-multipart
+unstructured
+markdown
+tiktoken
