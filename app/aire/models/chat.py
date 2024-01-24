@@ -4,10 +4,11 @@ from pydantic import BaseModel
 from .user import AireUser
 
 class AireChatMessage(CustomUserType):
-    """A chat meesage"""
+    """A chat message"""
 
     role: str
     content: str
+    timestamp: int | None
 
 class AireChatInput(CustomUserType):
     """This class containst the information about a chat"""

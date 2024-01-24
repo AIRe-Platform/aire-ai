@@ -27,3 +27,10 @@ class AireUser(BaseModel):
     country: str | None
     bio: str | None
     connected_services: list[AireUserServiceCredentials] | None
+
+class AireRole(str, Enum):
+    """User roles"""
+
+    User = "user"
+    Admin = "admin"
+

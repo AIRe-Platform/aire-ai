@@ -26,7 +26,19 @@ OPENAI_API_KEY=<Your API Key to OpenAI, or any string if using local API>
 AIRE_SERVICE_BASE=http://localhost:7071/api
 AIRE_SERVICE_KEY=<any string>
 PGVECTOR_CONNECTION_STRING=<connection string here>
+ALLOW_ANONYMOUS_USERS=1
 ```
+
+`ALLOW_ANONYMOUS_USERS=1` is required for testing without signing in. Otherwise, you have to register and log in to your account.
+
+## Local Inference
+
+You can test the features with a local language model. Options for running local "OpenAI-compatible" servers:
+
+- [LM Studio](https://lmstudio.ai/) is a fast and easy way to get up and running. Although, some features may not work correctly as the OpenAI-compatibility is not perfect.
+- [text-generation-webui](https://github.com/oobabooga/text-generation-webui) is another option with more complete OpenAI-compatibility. The setup may be more involved.
+
+Recent Mistral-based models have relatively low hardware requirements and perform well for their size.
 
 ## LangChain
 
