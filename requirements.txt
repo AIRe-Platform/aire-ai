@@ -1,5 +1,6 @@
 pydantic==1.10.13
-langchain
+langchain-community
+langchain-openai
 langserve[server]
 openai
 pgvector

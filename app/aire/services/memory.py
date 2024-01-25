@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from langchain.vectorstores.pgvector import PGVector
-from langchain.document_loaders import PyPDFLoader, UnstructuredMarkdownLoader
+from langchain_community.document_loaders import PyPDFLoader, UnstructuredMarkdownLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from ..llm import EmbeddingsModel
 
