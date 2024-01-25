@@ -1,15 +1,13 @@
 import os
 from pathlib import Path
 from langchain.vectorstores.pgvector import PGVector
-from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.document_loaders import PyPDFLoader, UnstructuredMarkdownLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from ..llm import EmbeddingsModel
 
-connection_string = os.getenv("PGVECTOR_CONNECTION_STRING")
-embeddings = OpenAIEmbeddings(base_url=os.getenv("OPENAI_API_BASE"))
-
-DOCUMENTS_COLLECTION = "documents"
-store = PGVector.from_existing_index(embeddings, collection_name=DOCUMENTS_COLLECTION)
+store = PGVector.from_existing_index(EmbeddingsModel(), 
+                                     collection_name="documents",
+                                     connection_string=os.getenv("PGVECTOR_CONNECTION_STRING"))
 
 splitter = RecursiveCharacterTextSplitter(
     chunk_size=1000, chunk_overlap=200, add_start_index=True)

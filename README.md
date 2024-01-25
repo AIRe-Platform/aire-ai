@@ -21,11 +21,18 @@ There are launch/debug configurations for VSCode.
 Example of `development.env`:
 
 ```
-OPENAI_API_BASE=<Remove if using OpenAI's API or place URL of OpenAI compatible endpoints here.>
-OPENAI_API_KEY=<Your API Key to OpenAI, or any string if using local API>
+OPENAI_API_TYPE=<Set to 'azure' if using Azure OpenAI. Otherwise, do not set.>
+OPENAI_API_VERSION=<Set if you want specific API version. Otherwise, do not set.>
+OPENAI_API_BASE=<Set if using local inference server. Otherwise, do not set.>
+OPENAI_API_KEY=<Your API Key to (Azure) OpenAI, or any string if using local API.>
+AZURE_OPENAI_ENDPOINT=<Set if using Azure OpenAI. Otherwise, do not set.>
+
 AIRE_SERVICE_BASE=http://localhost:7071/api
-AIRE_SERVICE_KEY=<any string>
-PGVECTOR_CONNECTION_STRING=<connection string here>
+AIRE_SERVICE_KEY=<Any string>
+TOKEN_SIGNING_KEY=<Use the same keys as other platform modules>
+TOKEN_ENCRYPTION_KEY=<Use the same keys as other platform modules>
+
+PGVECTOR_CONNECTION_STRING=<Connection string here>
 ALLOW_ANONYMOUS_USERS=1
 ```
 

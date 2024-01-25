@@ -1,4 +1,3 @@
-import os
 import json
 
 from langchain.schema.messages import (
@@ -6,15 +5,11 @@ from langchain.schema.messages import (
     SystemMessage
 )
 from langchain.schema import StrOutputParser
-from langchain.chat_models import ChatOpenAI
 from langchain.schema.runnable import RunnableLambda
 from langchain.prompts import ChatPromptTemplate
 
 from ..models.chat import AireChatContext
-
-model = ChatOpenAI(temperature=0, 
-                   model="gpt-3.5-turbo", 
-                   base_url=os.getenv("OPENAI_API_BASE"))
+from ..llm import ChatModel
 
 def __user_summary_prompt(ctx: AireChatContext):
     if ctx.user == None:
@@ -38,7 +33,7 @@ def __user_summary_prompt(ctx: AireChatContext):
             HumanMessage(content=data)
         ])
 
-        summary = prompt | model | StrOutputParser()
+        summary = prompt | ChatModel(temperature=0) | StrOutputParser()
 
     return summary
 

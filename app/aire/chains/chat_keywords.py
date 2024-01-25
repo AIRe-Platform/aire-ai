@@ -1,9 +1,8 @@
-import os
-from langchain.llms.openai import OpenAI
 from langchain.prompts import PromptTemplate, ChatPromptTemplate
 from langchain.output_parsers import CommaSeparatedListOutputParser
 from langchain.schema.runnable import  RunnableLambda
 from ..models.chat import AireChatContext
+from ..llm import LLM
 
 parser = CommaSeparatedListOutputParser()
 format_instructions = parser.get_format_instructions()
@@ -12,9 +11,8 @@ def __chat_keywords(ctx: AireChatContext) -> list[str]:
     temperature = 0.0
     if ctx.regen: temperature = 0.2
 
-    llm = OpenAI(
-        temperature=temperature, 
-        base_url=os.getenv("OPENAI_API_BASE"),
+    llm = LLM(
+        temperature=temperature,
         max_tokens=24)
 
     prompt_template = """

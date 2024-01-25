@@ -1,13 +1,9 @@
 import os
 from langchain.prompts import SystemMessagePromptTemplate, ChatPromptTemplate
 from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
-from langchain.chat_models import ChatOpenAI
+from ..llm import ChatModel
 from ..models.chat import AireChatContext
 from ..chains.user_summary import UserSummaryChain
-
-model = ChatOpenAI(
-    model="gpt-3.5-turbo", 
-    base_url=os.getenv("OPENAI_API_BASE"))
 
 system_prompt_text = """
 Act as a medical advisor.
@@ -35,5 +31,5 @@ def __messages(input: dict):
 DefaultBot = (
     { "user_summary": UserSummaryChain, "ctx": RunnablePassthrough() }
     | RunnableLambda(__messages)
-    | model
+    | ChatModel()
 )

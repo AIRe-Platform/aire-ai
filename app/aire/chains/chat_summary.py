@@ -1,12 +1,10 @@
-import os
 from langchain.llms.openai import OpenAI
 from langchain.memory import ConversationSummaryBufferMemory, ChatMessageHistory
 from langchain.schema.runnable import RunnableLambda
 from ..models.chat import AireChatContext
+from ..llm import LLM
 
-llm_summary = OpenAI(
-    temperature=0, 
-    base_url=os.getenv("OPENAI_API_BASE"))
+llm_summary = LLM(temperature=0)
 
 def __chat_summary(ctx: AireChatContext) -> str:
     history = ChatMessageHistory(messages=ctx.input.toChatMessages())
