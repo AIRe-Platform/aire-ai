@@ -11,7 +11,7 @@ def get_platform_config():
     
     url = base + "/v1/config/internal"
     headers = {
-        "Aire-Service-Key": "{key}",
+        "Aire-Service-Key": key,
         "Accept": "application/json"
     }
 
