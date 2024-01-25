@@ -1,6 +1,6 @@
-@host=http://localhost:7074
+@host=http://localhost:7074/api
 
-POST {{host}}/api/bot/default/stream HTTP/1.1
+POST {{host}}/bot/default/stream HTTP/1.1
 Accept: text/event-stream
 Content-Type: application/json
 

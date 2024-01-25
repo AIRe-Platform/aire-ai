@@ -35,8 +35,9 @@ from aire.chains.chat_summary import ChatSummaryChain
 from helpers.temp_files import create_temporary_file
 
 app = FastAPI(
-    docs_url="/api/swagger/ui",
-    openapi_url="/api/swagger.json"
+    root_path="/api",
+    docs_url="/swagger/ui",
+    openapi_url="/swagger.json"
 )
 
 def openapi_docs():
@@ -80,7 +81,7 @@ async def get_current_user(authorization: Annotated[str | None, Header()] = None
     return
 
 
-@app.get("/api/bot", 
+@app.get("/bot", 
          description="List available bots",
          tags=["Chatbot"],
          response_description="List of bots")
@@ -94,7 +95,7 @@ async def get_bots(token: Annotated[AireToken, Depends(verify_token)]) -> list[A
     ]
 
 
-@app.post("/api/bot/{bot_name}/stream", 
+@app.post("/bot/{bot_name}/stream", 
           description="Stream completion",
           tags=["Chatbot"],
           response_description="Returns a stream of events",
@@ -137,7 +138,7 @@ async def stream_bot(bot_name: str,
     return EventSourceResponse(stream())
 
 
-@app.post("/api/chat/abstract",
+@app.post("/chat/abstract",
           name="Chat abstract (summary and keywords)",
           description="Generate abstract from a chat",
           tags=["Chat Processing"],
@@ -154,7 +155,7 @@ async def chat_abstract(
     return ChatAbstractChain.invoke(context)
 
 
-@app.post("/api/chat/summary", 
+@app.post("/chat/summary", 
           description="Summarize chat",
           tags=["Chat Processing"],
           response_description="Returns the summary as a string")
@@ -170,7 +171,7 @@ async def chat_summary(
     return ChatSummaryChain.invoke(context)
 
 
-@app.post("/api/chat/keywords", 
+@app.post("/chat/keywords", 
           description="Pick keywords from a chat",
           tags=["Chat Processing"],
           response_description="Returns a list of keywords")
@@ -188,7 +189,7 @@ async def chat_keywords(
     return ChatKeywordChain.invoke(context)
 
 
-@app.post("/api/document",
+@app.post("/document",
           description="Create embeddings and store a PDF or Markdown document",
           tags=["Documents"])
 async def embed_document(
