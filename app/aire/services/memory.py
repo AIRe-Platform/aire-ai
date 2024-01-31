@@ -1,33 +1,48 @@
-import os
 from pathlib import Path
 from langchain.vectorstores.pgvector import PGVector
+from langchain_core.documents import Document
 from langchain_community.document_loaders import PyPDFLoader, UnstructuredMarkdownLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from ..llm import EmbeddingsModel
+from ..models.survey import AireSurvey
 
-store = PGVector.from_existing_index(EmbeddingsModel(), 
-                                     collection_name="documents",
-                                     connection_string=os.getenv("PGVECTOR_CONNECTION_STRING"))
+class BaseVectorStore:
+    store: PGVector
 
-splitter = RecursiveCharacterTextSplitter(
-    chunk_size=1000, chunk_overlap=200, add_start_index=True)
+    def __init__(self, store: PGVector):
+        self.store = store
 
-def store_pdf(filePath: Path):
-    loader = PyPDFLoader(file_path=filePath.as_posix())
-    docs = loader.load_and_split()
-    splits = splitter.split_documents(docs)
-    ids = store.add_documents(splits)
-    print(f"Added documents: {ids}")
+    def retriever(self):
+        return self.store.as_retriever()
+    
+    def similarity_search(self, query: str):
+        return self.store.similarity_search(query)
 
-def store_markdown(filepath: Path):
-    loader = UnstructuredMarkdownLoader(file_path=filepath.as_posix())
-    docs = loader.load()
-    splits = splitter.split_documents(docs)
-    ids = store.add_documents(splits)
-    print(f"Added documents: {ids}")
+class DocumentVectorStore(BaseVectorStore):
+    def __init__(self):
+        super().__init__(
+            PGVector.from_existing_index(EmbeddingsModel(), collection_name="documents")
+        )
+        
+        self.splitter = RecursiveCharacterTextSplitter(
+            chunk_size=1000, chunk_overlap=200, add_start_index=True)
 
-def query_documents(question: str):
-    return store.similarity_search(question)
+    def add_documents(self, docs: list[Document], source: str | None):
+        if source != None:
+            for d in docs: 
+                d.metadata["source"] = source
 
-def get_retriever():
-    return store.as_retriever()
+        splits = self.splitter.split_documents(docs)
+        ids = self.store.add_documents(splits)
+        print(f"Added documents: {ids}")
+
+    def add_pdf(self, filepath: Path, source: str | None):
+        loader = PyPDFLoader(file_path=filepath.as_posix())
+        docs = loader.load_and_split()
+        self.add_documents(docs, source)
+
+    def add_markdown(self, filepath: Path, source: str | None):
+        loader = UnstructuredMarkdownLoader(file_path=filepath.as_posix())
+        docs = loader.load()
+        self.add_documents(docs, source)
+

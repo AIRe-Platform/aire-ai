@@ -7,17 +7,17 @@ class AireScope(str, Enum):
 
     ChatCompletion = "chat-completion"
     ChatSummary = "chat-summary"
-    ChatEmbeddings = "chat-embeddings"
     ChatTokenCount = "chat-token-count"
+    DocumentEmbedding = "document-embedding"
+    SurveyEmbedding = "survey-embedding"
+    SurveyQuery = "survey-query"
 
-AnonymousScopes = [AireScope.ChatCompletion, AireScope.ChatSummary]
-
-class AireToken(BaseModel):
+class AireAuth(BaseModel):
     """User token payload"""
 
     subject: str | None
     role: AireRole = AireRole.User
-    scopes: list[str] = AnonymousScopes
+    scopes: list[str]
     user_key: str | None
     connected_services: list[AireUserServiceCredentials] | None
 
