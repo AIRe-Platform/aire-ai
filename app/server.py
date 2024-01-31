@@ -24,6 +24,7 @@ from aire.models.chat import (
 from aire.auth.jwt import verify_token
 from aire.models.auth import AireAuth, AireScope
 from aire.models.user import AireUser
+from aire.models.survey import AireSurvey
 from aire.services.platform import get_platform_config
 from aire.services.id import get_user
 from aire.services.memory import DocumentVectorStore, SurveyVectorStore
@@ -261,6 +262,51 @@ async def embed_document(
         if path != None: path.unlink()
 
     return Response(status_code=code)
+
+
+@app.post("/embeddings/survey",
+          description="Create embeddings and store vectors in vector store",
+          tags=["Surveys"])
+async def embed_survey(
+    survey: Annotated[AireSurvey, Body()],
+    is_service: Annotated[bool, Depends(check_service_key)],
+    auth: Annotated[AireAuth | None, Depends(verify_token)]):
+
+    if not is_service:
+        if auth == None:
+            raise UNAUTH_EXCEPTION
+        if not AireScope.SurveyEmbedding in auth.scopes:
+            raise FORBIDDEN_EXCEPTION
+        
+    store = SurveyVectorStore()
+    store.add_survey(survey)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@app.get("/embeddings/survey",
+         description="Query surveys",
+         tags=["Embeddings"],
+         response_description="Returns matching survey IDs in the order of relevance")
+async def query_survey(
+    is_service: Annotated[bool, Depends(check_service_key)],
+    auth: Annotated[AireAuth | None, Depends(verify_token)],
+    query: Annotated[str | None, Query()] = None):
+
+    if not is_service:
+        if auth == None:
+            raise UNAUTH_EXCEPTION
+        if not AireScope.SurveyQuery in auth.scopes:
+            raise FORBIDDEN_EXCEPTION
+        
+    if query == None or len(query) == 0:
+        raise BAD_REQUEST_EXCEPTION
+    
+    store = SurveyVectorStore()
+    store.query_keywords(query.split(","))
+
+    # TODO: Return survey ID
+
+    return Response(status_code=status.HTTP_501_NOT_IMPLEMENTED)
 
 
 if __name__ == "__main__":

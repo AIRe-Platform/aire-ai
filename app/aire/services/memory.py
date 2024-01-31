@@ -46,3 +46,22 @@ class DocumentVectorStore(BaseVectorStore):
         docs = loader.load()
         self.add_documents(docs, source)
 
+
+class SurveyVectorStore(BaseVectorStore):
+    def __init__(self):
+        super().__init__(
+            PGVector.from_existing_index(EmbeddingsModel(), collection_name="surveys")
+        )
+
+    def add_survey(self, survey: AireSurvey):
+        # TODO: Crawl through the survey, pick keywords, and contruct document from those
+        # TODO: Mark the survey id as source of the documents
+        # TODO: Store vectors
+        pass
+
+    def query_keywords(self, keywords: list[str]) -> list[str]:
+        # TODO: Perform similarity search with the keywords
+        # TODO: Retrieve the keyword document
+        # TODO: Read survey id from the document metadata
+        # TODO: Return survey ID or retrieve it from the DB?
+        return []

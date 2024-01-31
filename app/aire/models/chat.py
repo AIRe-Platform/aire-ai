@@ -2,6 +2,7 @@ from langserve.schema import CustomUserType
 from langchain.schema.messages import ChatMessage
 from pydantic import BaseModel
 from .user import AireUser
+from .survey import AireSurveyAnswer
 
 class AireChatMessage(CustomUserType):
     """A chat message"""
@@ -9,6 +10,8 @@ class AireChatMessage(CustomUserType):
     role: str
     content: str
     timestamp: int | None
+    survey_answer: AireSurveyAnswer | None
+
 
 class AireChatInput(CustomUserType):
     """This class containst the information about a chat"""
