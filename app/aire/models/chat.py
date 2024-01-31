@@ -16,8 +16,9 @@ class AireChatInput(CustomUserType):
     chat: list[AireChatMessage]
     ui_lang: str | None
 
-    def toChatMessages(cls) -> list[ChatMessage]:
-        return list(map(lambda msg: ChatMessage(role=msg.role, content=msg.content), cls.chat))
+    def to_chat_messages(self) -> list[ChatMessage]:
+        return list(map(lambda msg: ChatMessage(role=msg.role, content=msg.content), self.chat))
+
 
 class AireChatbotInfo(BaseModel):
     """Details a chatbot"""
@@ -25,12 +26,14 @@ class AireChatbotInfo(BaseModel):
     name: str
     description: str
 
+
 class AireChatContext(CustomUserType):
     """The context for the chat"""
 
     input: AireChatInput
     user: AireUser | None = None
     regen: bool = False
+
 
 class AireChatAbstract(BaseModel):
     """Contains the abstract generated from chat messages."""

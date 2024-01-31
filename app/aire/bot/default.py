@@ -23,7 +23,7 @@ def __messages(ctx: AireChatContext):
 
     prompt = [
         system_prompt.format(user_summary=user_summary),
-        *ctx.input.toChatMessages()
+        *ctx.input.to_chat_messages()
     ]
 
     return prompt
