@@ -8,5 +8,7 @@ Content-Type: application/json
     "chat": [
         { "role": "user", "content": "Hello!" }
     ],
-    "ui_lang": "en"
+    "context": {
+        "language": "en"
+    }
 }

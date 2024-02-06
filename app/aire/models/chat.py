@@ -13,11 +13,20 @@ class AireChatMessage(CustomUserType):
     survey_answer: AireSurveyAnswer | None
 
 
+class AireChatInputContext(CustomUserType):
+    """Additional chat context"""
+
+    age: int | None
+    occupation: str | None
+    topic: str | None
+    language: str | None
+
+
 class AireChatInput(CustomUserType):
     """This class containst the information about a chat"""
 
     chat: list[AireChatMessage]
-    ui_lang: str | None
+    context: AireChatInputContext | None
 
     def to_chat_messages(self) -> list[ChatMessage]:
         return list(map(lambda msg: ChatMessage(role=msg.role, content=msg.content), self.chat))
