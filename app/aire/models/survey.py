@@ -13,9 +13,7 @@ class AireSurveyOptionType(str, Enum):
 
 class AireSurveyOption(BaseModel):
     """Survey option base class"""
-
-    type: AireSurveyOptionType
-    required: bool = False
+    pass
 
 
 class AireSurveyOptionRange(AireSurveyOption):
@@ -55,6 +53,7 @@ class AireSurveyQuestion(BaseModel):
     question: str
     keywords: list[str] | None
     prompt: str | None
+    type: AireSurveyOptionType
     options: AireSurveyOption
     required: bool = False
 
@@ -81,9 +80,9 @@ class AireSurvey(BaseModel):
     id: str
     name: str
     lang: str
-    modified: datetime
+    modified: datetime | None
     keywords: list[str]
-    preliminary: AireSurveyPreliminary
+    preliminary: AireSurveyPreliminary | None
     content: list[AireSurveySection]
 
 
