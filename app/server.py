@@ -1,19 +1,15 @@
 import json, os
+from pydantic import BaseModel
 from typing import Annotated, AsyncIterator
 from fastapi import (
-    FastAPI, 
-    Depends, 
-    Header, 
-    Query, 
-    Body,
-    UploadFile, 
-    HTTPException, 
-    status
+    FastAPI, Depends, Header, Query, Body,
+    UploadFile, HTTPException, status
 )
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import Response
 from sse_starlette import EventSourceResponse;
+from langchain.schema.document import Document
 from langserve.serialization import WellKnownLCSerializer
 from aire.models.chat import (
     AireChatbotInfo, 
@@ -21,13 +17,15 @@ from aire.models.chat import (
     AireChatContext,
     AireChatAbstract
 )
-from aire.auth.jwt import verify_token
-from aire.models.auth import AireAuth, AireScope
+from aire.auth import (
+    AireAuth, AireScope,
+    verify_token, check_service_key
+)
 from aire.models.user import AireUser
-from aire.models.survey import AireSurvey
+from aire.models.questionnaire import AireQuestionnaire
 from aire.services.platform import get_platform_config
 from aire.services.id import get_user
-from aire.services.memory import DocumentVectorStore, SurveyVectorStore
+from aire.services.memory import DocumentVectorStore, QuestionnaireVectorStore
 from aire.bot.default import DefaultBot
 from aire.chains.chat_abstract import ChatAbstractChain
 from aire.chains.chat_keywords import ChatKeywordChain
@@ -83,12 +81,18 @@ UNSUPPORTED_MEDIA_EXCEPTION = HTTPException(
     status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
     detail="Unsupported media type"
 )
-SERVICE_KEY = os.getenv("AIRE_SERVICE_KEY")
 
-def check_service_key(aire_service_key: Annotated[str | None, Header()] = None):
-    if SERVICE_KEY == None:
-        raise RuntimeError("AIRE_SERVICE_KEY environment value is missing")
-    return aire_service_key == SERVICE_KEY
+class DocumentQueryResponse(BaseModel):
+    documents: list[Document]
+
+class QuestionnaireQueryResponse(BaseModel):
+    results: list[str]
+
+class EmbedResponse(BaseModel):
+    ids: list[str]
+
+# Utilities
+# ---------
 
 def get_current_user(authorization: Annotated[str | None, Header()] = None):
     try:
@@ -102,6 +106,9 @@ def get_current_user(authorization: Annotated[str | None, Header()] = None):
         raise FORBIDDEN_EXCEPTION
     return
 
+
+# Chat bot
+# --------
 
 @app.get("/bot", 
          description="List available bots",
@@ -164,6 +171,9 @@ async def stream_bot(bot_name: str,
     return EventSourceResponse(stream())
 
 
+# Chat processing
+# ---------------
+
 @app.post("/chat/abstract",
           name="Chat abstract (summary and keywords)",
           description="Generate abstract from a chat",
@@ -221,9 +231,33 @@ async def chat_keywords(
     return ChatKeywordChain.invoke(context)
 
 
+# Document embeddings
+# -------------------
+
+@app.get("/embeddings/document",
+         description="Find documents using similarity search",
+         tags=["Documents"],
+         response_model=DocumentQueryResponse)
+async def query_document(
+    is_service: Annotated[bool, Depends(check_service_key)],
+    auth: Annotated[AireAuth | None, Depends(verify_token)],
+    query: Annotated[str | None, Query(description="Query")] = None):
+
+    if not is_service:
+        if auth == None:
+            raise UNAUTH_EXCEPTION
+        if not AireScope.DocumentQuery in auth.scopes:
+            raise FORBIDDEN_EXCEPTION
+        
+    store = DocumentVectorStore()
+    docs = store.similarity_search(query)
+    return DocumentQueryResponse(documents=docs)
+
+
 @app.post("/embeddings/document",
           description="Create embeddings and store a PDF or Markdown document",
-          tags=["Documents"])
+          tags=["Documents"],
+          response_model=EmbedResponse)
 async def embed_document(
     document: UploadFile,
     is_service: Annotated[bool, Depends(check_service_key)],
@@ -249,45 +283,73 @@ async def embed_document(
         raise UNSUPPORTED_MEDIA_EXCEPTION
     
     path = None
+    ids: list[str] | None = None
+
     try:
         path = await create_temporary_file(document)
         if path == None:
             raise Exception("Failed to store uploaded file")
-        handler(path)
-        code = status.HTTP_204_NO_CONTENT
+        ids = handler(path)
     except BaseException as ex:
         print(f"Failed to process document: {ex}")
-        code = status.HTTP_422_UNPROCESSABLE_ENTITY
     finally:
         if path != None: path.unlink()
 
-    return Response(status_code=code)
+    if ids != None:
+        return EmbedResponse(ids=ids)
+    else:
+        return Response(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
 
-@app.post("/embeddings/survey",
-          description="Create embeddings and store vectors in vector store",
-          tags=["Surveys"])
+@app.delete("/embeddings/document/{id}",
+            description="Delete a document",
+            tags=["Documents"])
+async def delete_document(
+    is_service: Annotated[bool, Depends(check_service_key)],
+    auth: Annotated[AireAuth | None, Depends(verify_token)],
+    id: str):
+
+    if not is_service:
+        if auth == None:
+            raise UNAUTH_EXCEPTION
+        if not AireScope.DocumentDelete in auth.scopes:
+            raise FORBIDDEN_EXCEPTION
+        
+    store = DocumentVectorStore()
+    store.remove_document(id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+# Questionnaire embeddings
+# -----------------
+
+@app.post("/embeddings/questionnaire",
+          description="Create a document of the questionnaire for keyword searches",
+          tags=["Questionnaires"],
+          response_description="Returns a document ID for the created embedding",
+          response_model=EmbedResponse)
 async def embed_survey(
-    survey: Annotated[AireSurvey, Body()],
+    questionnaire: Annotated[AireQuestionnaire, Body()],
     is_service: Annotated[bool, Depends(check_service_key)],
     auth: Annotated[AireAuth | None, Depends(verify_token)]):
 
     if not is_service:
         if auth == None:
             raise UNAUTH_EXCEPTION
-        if not AireScope.SurveyEmbedding in auth.scopes:
+        if not AireScope.QuestionnaireWrite in auth.scopes:
             raise FORBIDDEN_EXCEPTION
         
-    store = SurveyVectorStore()
-    store.add_survey(survey)
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    store = QuestionnaireVectorStore()
+    id = store.add_survey(questionnaire)
+    return EmbedResponse(ids=[id])
 
 
-@app.get("/embeddings/survey",
-         description="Query surveys",
-         tags=["Embeddings"],
-         response_description="Returns matching survey IDs in the order of relevance")
-async def query_survey(
+@app.get("/embeddings/questionnaire",
+         description="Perform similarity search using keywords to find questionnaires",
+         tags=["Questionnaires"],
+         response_description="Returns matching questionnaire IDs in the order of relevance",
+         response_model=QuestionnaireQueryResponse)
+async def query_questionnaire(
     is_service: Annotated[bool, Depends(check_service_key)],
     auth: Annotated[AireAuth | None, Depends(verify_token)],
     query: Annotated[str | None, Query()] = None):
@@ -295,20 +357,36 @@ async def query_survey(
     if not is_service:
         if auth == None:
             raise UNAUTH_EXCEPTION
-        if not AireScope.SurveyQuery in auth.scopes:
+        if not AireScope.QuestionnaireRead in auth.scopes:
             raise FORBIDDEN_EXCEPTION
         
     if query == None or len(query) == 0:
         raise BAD_REQUEST_EXCEPTION
     
-    store = SurveyVectorStore()
-    store.query_keywords(query.split(","))
-
-    # TODO: Return survey ID
-
-    return Response(status_code=status.HTTP_501_NOT_IMPLEMENTED)
+    store = QuestionnaireVectorStore()
+    results = store.query_keywords(query.split(","))
+    return QuestionnaireQueryResponse(results=results)
 
 
+@app.delete("/embeddings/survey/{id}",
+            description="Delete a questionnaire",
+            tags=["Questionnaires"])
+async def delete_survey(
+    is_service: Annotated[bool, Depends(check_service_key)],
+    auth: Annotated[AireAuth | None, Depends(verify_token)],
+    id: str):
+    
+    if not is_service:
+        if auth == None:
+            raise UNAUTH_EXCEPTION
+        if not AireScope.QuestionnaireDelete in auth.scopes:
+            raise FORBIDDEN_EXCEPTION
+
+    store = QuestionnaireQueryResponse()
+    store.remove_document(id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+# --------------------------------------------
 if __name__ == "__main__":
     import uvicorn
 

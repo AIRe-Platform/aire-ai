@@ -3,13 +3,46 @@ from jose import jwt, jwe, JWTError
 from jose.exceptions import JWEError
 from typing import Annotated
 from fastapi import Header
-from ..models.auth import AireAuth, AireScope
+from enum import Enum
+from pydantic import BaseModel
+from .models.user import AireRole, AireUserServiceCredentials
+
 
 TOKEN_SIGNING_KEY = os.getenv("TOKEN_SIGNING_KEY")
 TOKEN_ENCRYPTION_KEY = os.getenv("TOKEN_ENCRYPTION_KEY")
+SERVICE_KEY = os.getenv("AIRE_SERVICE_KEY")
+
+
+class AireScope(str, Enum):
+    """Access scopes"""
+
+    ChatCompletion = "chat-completion"
+    ChatSummary = "chat-summary"
+    ChatTokenCount = "chat-token-count"
+
+    DocumentRead = "document-read"
+    DocumentWrite = "document-write"
+    DocumentDelete = "document-delete"
+
+    QuestionnaireRead = "questionnaire-read"
+    QuestionnaireWrite = "questionnaire-write"
+    QuestionnaireDelete = "questionnaire-delete"
+
+
+class AireAuth(BaseModel):
+    """User token payload"""
+
+    subject: str | None
+    role: AireRole = AireRole.User
+    scopes: list[str]
+    user_key: str | None
+    connected_services: list[AireUserServiceCredentials] | None
+
 
 allow_anonymous_users = os.getenv("ALLOW_ANONYMOUS_USERS") == "1"
-AnonymousScopes = [AireScope.ChatCompletion, AireScope.ChatSummary]
+AnonymousScopes = [AireScope.ChatCompletion, AireScope.ChatSummary, 
+                   AireScope.QuestionnaireRead, AireScope.QuestionnaireWrite, AireScope.QuestionnaireDelete] # FIXME: Remove this before commit!
+
 
 def verify_token(authorization: Annotated[str | None, Header()] = None):
     if TOKEN_SIGNING_KEY == None or TOKEN_ENCRYPTION_KEY == None:
@@ -62,3 +95,7 @@ def verify_token(authorization: Annotated[str | None, Header()] = None):
         print(f"Token verification exception: {e}")
         raise e
     
+def check_service_key(aire_service_key: Annotated[str | None, Header()] = None):
+    if SERVICE_KEY == None:
+        raise RuntimeError("AIRE_SERVICE_KEY environment value is missing")
+    return aire_service_key == SERVICE_KEY
