@@ -26,11 +26,12 @@ setup_dev()
 }
 
 setup_venv && echo "Virtual environment is set up."
-setup_requirements && echo "Requirements installed."
 
 if [[ $* == *--dev* ]]
 then
     setup_dev && echo "Development requirements installed."
+else
+    setup_requirements && echo "Requirements installed."
 fi
 
 echo " "

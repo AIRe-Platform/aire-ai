@@ -1,33 +1,89 @@
-import os
 from pathlib import Path
 from langchain.vectorstores.pgvector import PGVector
+from langchain_core.documents import Document
 from langchain_community.document_loaders import PyPDFLoader, UnstructuredMarkdownLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from ..llm import EmbeddingsModel
+from ..models.questionnaire import AireQuestionnaire
 
-store = PGVector.from_existing_index(EmbeddingsModel(), 
-                                     collection_name="documents",
-                                     connection_string=os.getenv("PGVECTOR_CONNECTION_STRING"))
+class BaseVectorStore:
+    store: PGVector
 
-splitter = RecursiveCharacterTextSplitter(
-    chunk_size=1000, chunk_overlap=200, add_start_index=True)
+    def __init__(self, store: PGVector):
+        self.store = store
 
-def store_pdf(filePath: Path):
-    loader = PyPDFLoader(file_path=filePath.as_posix())
-    docs = loader.load_and_split()
-    splits = splitter.split_documents(docs)
-    ids = store.add_documents(splits)
-    print(f"Added documents: {ids}")
+    def retriever(self):
+        return self.store.as_retriever()
+    
+    def similarity_search(self, query: str):
+        return self.store.similarity_search(query)
+    
+    def add_documents(self, docs: list[Document], source: str | None) -> list[str]:
+        if source != None:
+            for d in docs: 
+                d.metadata["source"] = source
 
-def store_markdown(filepath: Path):
-    loader = UnstructuredMarkdownLoader(file_path=filepath.as_posix())
-    docs = loader.load()
-    splits = splitter.split_documents(docs)
-    ids = store.add_documents(splits)
-    print(f"Added documents: {ids}")
+        ids = self.store.add_documents(docs)
+        return ids
+    
+    def remove_document(self, id: str):
+        self.store.delete([id])
 
-def query_documents(question: str):
-    return store.similarity_search(question)
+class DocumentVectorStore(BaseVectorStore):
+    def __init__(self):
+        super().__init__(
+            PGVector.from_existing_index(EmbeddingsModel(), collection_name="documents")
+        )
+        
+        self.splitter = RecursiveCharacterTextSplitter(
+            chunk_size=1000, chunk_overlap=200, add_start_index=True)
 
-def get_retriever():
-    return store.as_retriever()
+    def add_pdf(self, filepath: Path, source: str | None) -> list[str]:
+        loader = PyPDFLoader(file_path=filepath.as_posix())
+        docs = loader.load_and_split(self.splitter)
+        return self.add_documents(docs, source)
+
+    def add_markdown(self, filepath: Path, source: str | None) -> list[str]:
+        loader = UnstructuredMarkdownLoader(file_path=filepath.as_posix())
+        docs = loader.load_and_split(self.splitter)
+        return self.add_documents(docs, source)
+
+
+class QuestionnaireVectorStore(BaseVectorStore):
+    def __init__(self):
+        super().__init__(
+            PGVector.from_existing_index(EmbeddingsModel(), collection_name="questionnaires")
+        )
+
+    def add_questionnaire(self, questionnaire: AireQuestionnaire) -> str:
+
+        # Crawl through the survey, pick keywords and other queryable properties
+        keywords = questionnaire.keywords
+        for section in questionnaire.content:
+            if section.keywords != None:
+                keywords.extend(section.keywords)
+            for question in section.questions:
+                if question.keywords != None:
+                    keywords.extend(question.keywords)
+
+        keywords.append(questionnaire.name)
+        keywords = list(set(keywords))
+        content = " ".join(keywords)
+
+        # Create a document of the keywords and mark the questionnaire id as source of the documents
+        # Store it in the vector store
+        doc = Document(page_content=content, metadata={ "source": questionnaire.id })
+        ids = self.add_documents([doc])
+        if len(ids) != 1:
+            raise RuntimeError("Unexpected count of IDs")
+        return ids[0]
+
+    def query_keywords(self, keywords: list[str]) -> list[str]:
+        # Perform similarity search with the keywords and retrieve document
+        query = " ".join(list(set(keywords)))
+        results = self.store.similarity_search_with_relevance_scores(query, 4, score_threshold=0.5)
+        results.sort(key=lambda x: x[1], reverse=True)
+        
+        # Read questionnaire id from the document metadata
+        questionnaires = list(map(lambda x: x[0].metadata["source"], results))
+        return questionnaires

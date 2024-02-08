@@ -2,6 +2,7 @@ from langserve.schema import CustomUserType
 from langchain.schema.messages import ChatMessage
 from pydantic import BaseModel
 from .user import AireUser
+from .questionnaire import AireQuestionnaireAnswer
 
 class AireChatMessage(CustomUserType):
     """A chat message"""
@@ -9,15 +10,27 @@ class AireChatMessage(CustomUserType):
     role: str
     content: str
     timestamp: int | None
+    questionnaire_answer: AireQuestionnaireAnswer | None
+
+
+class AireChatInputContext(CustomUserType):
+    """Additional chat context"""
+
+    age: int | None
+    occupation: str | None
+    topic: str | None
+    language: str | None
+
 
 class AireChatInput(CustomUserType):
     """This class containst the information about a chat"""
 
     chat: list[AireChatMessage]
-    ui_lang: str | None
+    context: AireChatInputContext | None
 
-    def toChatMessages(cls) -> list[ChatMessage]:
-        return list(map(lambda msg: ChatMessage(role=msg.role, content=msg.content), cls.chat))
+    def to_chat_messages(self) -> list[ChatMessage]:
+        return list(map(lambda msg: ChatMessage(role=msg.role, content=msg.content), self.chat))
+
 
 class AireChatbotInfo(BaseModel):
     """Details a chatbot"""
@@ -25,12 +38,14 @@ class AireChatbotInfo(BaseModel):
     name: str
     description: str
 
+
 class AireChatContext(CustomUserType):
     """The context for the chat"""
 
     input: AireChatInput
     user: AireUser | None = None
     regen: bool = False
+
 
 class AireChatAbstract(BaseModel):
     """Contains the abstract generated from chat messages."""

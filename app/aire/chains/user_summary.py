@@ -7,15 +7,35 @@ from langchain.schema.messages import (
 from langchain.schema import StrOutputParser
 from langchain.schema.runnable import RunnableLambda
 
-from ..models.chat import AireChatContext
+from ..models.chat import AireChatContext, AireChatInputContext
 from ..llm import ChatModel
 
 def __user_summary_prompt(ctx: AireChatContext) -> str:
+    summary = ""
+    info: AireChatInputContext | None = ctx.input.context
     
     if ctx.user == None:
-        summary = "No details available. You may ask relevant information from the user."
-        if ctx.input.ui_lang != None:
-            summary += f" The locale is '{ctx.input.ui_lang}'"
+        user_info = ""
+        
+        if info != None:
+            if info.language != None:
+                summary += f"The user speaks {info.language}."
+
+            if info.age != None:
+                user_info += f" The user is {info.age} years old."
+            if info.occupation != None:
+                user_info += f" The user's occupation is {info.occupation}."
+        
+        if len(user_info) > 0:
+            summary += user_info
+        else:
+            summary += """
+            The user has not provided any information about themselves.
+            You may ask them about their age and occupation.
+            """
+
+        summary += "\nYou may ask the user for any relevant background information"
+
         return summary
     else:
         data = json.dumps(ctx.user.dict(include={
@@ -27,7 +47,6 @@ def __user_summary_prompt(ctx: AireChatContext) -> str:
             "country", 
             "bio"
         }))
-        print(f"User data: {data}")
 
         prompt = [
             SystemMessage(content="Summarize the user information from the following object"),
@@ -35,6 +54,11 @@ def __user_summary_prompt(ctx: AireChatContext) -> str:
         ]
 
         model_parser = ChatModel(temperature=0) | StrOutputParser()
-        return model_parser.invoke(prompt)
+        summary = model_parser.invoke(prompt)
+
+    if info != None and info.topic != None:
+        summary += f"\nThe user wants to speak about {info.topic}."
+
+    return summary
 
 UserSummaryChain = RunnableLambda(__user_summary_prompt)
