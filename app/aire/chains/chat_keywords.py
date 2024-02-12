@@ -28,7 +28,7 @@ Conversation:
         input_variables=["messages"],
         partial_variables={"format_instructions": format_instructions})
     
-    messages = ChatPromptTemplate.from_messages(ctx.input.toChatMessages())
+    messages = ChatPromptTemplate.from_messages(ctx.input.to_chat_messages())
     prompt = keyword_prompt.format(messages=messages.format())
 
     output = llm(prompt)
