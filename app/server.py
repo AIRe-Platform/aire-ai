@@ -28,8 +28,8 @@ from aire.services.id import get_user
 from aire.services.memory import DocumentVectorStore, QuestionnaireVectorStore
 from aire.bot.default import DefaultBot
 from aire.chains.chat_abstract import ChatAbstractChain
-from aire.chains.chat_keywords import ChatKeywordChain
 from aire.chains.chat_summary import ChatSummaryChain
+from aire.chains.cbr_tagging import CbrTaggingChain
 from helpers.temp_files import create_temporary_file
 
 app = FastAPI(
@@ -228,7 +228,7 @@ async def chat_keywords(
         raise FORBIDDEN_EXCEPTION
     
     context = AireChatContext(input=input, regen=regen)
-    return ChatKeywordChain.invoke(context)
+    return CbrTaggingChain.invoke(context)
 
 
 # Document embeddings
