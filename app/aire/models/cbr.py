@@ -33,104 +33,104 @@ CBR_HEALTH = CbrCategory(
 CBR_EDUCATION = CbrCategory(
     name="Education",
     keywords=[
-        "Literacy",
-        "Numeracy",
-        "Early childhood education",
-        "Primary education",
-        "Secondary education",
-        "Tertiary education",
-        "Vocational training",
-        "Special education",
-        "Inclusive education",
-        "Learning materials",
-        "Teacher training",
-        "Educational policy",
-        "Scholarships",
-        "Distance learning",
-        "Educational technology",
-        "Library access",
-        "Curriculum adaptation",
-        "Peer tutoring",
-        "Life skills",
-        "Educational assessment"
+        "literacy",
+        "numeracy",
+        "early childhood education",
+        "primary education",
+        "secondary education",
+        "tertiary education",
+        "vocational training",
+        "special education",
+        "inclusive education",
+        "learning materials",
+        "teacher training",
+        "educational policy",
+        "scholarships",
+        "distance learning",
+        "educational technology",
+        "library access",
+        "curriculum adaptation",
+        "peer tutoring",
+        "life skills",
+        "educational assessment"
     ]
 )
 
 CBR_LIVELIHOOD = CbrCategory(
     name="Livelihood",
     keywords=[
-        "Employment",
-        "Income generation",
-        "Financial literacy",
-        "Entrepreneurship",
-        "Vocational skills",
-        "Microfinance",
-        "Job placement",
-        "Work accommodations",
-        "Agricultural development",
-        "Market access",
-        "Productivity tools",
-        "Business training",
-        "Savings groups",
-        "Economic policy",
-        "Cooperatives",
-        "Trade skills",
-        "Resource management",
-        "Networking",
-        "Social enterprise",
-        "Labor rights"
+        "employment",
+        "income generation",
+        "financial literacy",
+        "entrepreneurship",
+        "vocational skills",
+        "microfinance",
+        "job placement",
+        "work accommodations",
+        "agricultural development",
+        "market access",
+        "productivity tools",
+        "business training",
+        "savings groups",
+        "economic policy",
+        "cooperatives",
+        "trade skills",
+        "resource management",
+        "networking",
+        "social enterprise",
+        "labor rights"
     ]
 )
 
 CBR_SOCIAL = CbrCategory(
     name="Social",
     keywords=[
-        "Family support",
-        "Peer support",
-        "Community inclusion",
-        "Social networks",
-        "Cultural activities",
-        "Sports and recreation",
-        "Accessible transportation",
-        "Social services",
-        "Housing",
-        "Legal rights",
-        "Advocacy",
-        "Stigma reduction",
-        "Networking events",
-        "Leisure activities",
-        "Friendship development",
-        "Conflict resolution",
-        "Civic participation",
-        "Community leadership",
-        "Social policy",
-        "Emergency response"
+        "family support",
+        "peer support",
+        "community inclusion",
+        "social networks",
+        "cultural activities",
+        "sports and recreation",
+        "accessible transportation",
+        "social services",
+        "housing",
+        "legal rights",
+        "advocacy",
+        "stigma reduction",
+        "networking events",
+        "leisure activities",
+        "friendship development",
+        "conflict resolution",
+        "civic participation",
+        "community leadership",
+        "social policy",
+        "emergency response"
     ]
 )
 
 CBR_EMPOWERMENT = CbrCategory(
     name="Empowerment",
     keywords=[
-        "Self-advocacy",
-        "Decision-making",
-        "Rights awareness",
-        "Leadership training",
-        "Political participation",
-        "Legal aid",
-        "Representation",
-        "Accessibility standards",
-        "Gender equality",
-        "Youth empowerment",
-        "Disability awareness",
-        "Community organizing",
-        "Information access",
-        "Technology use",
-        "Financial independence",
-        "Mentorship",
-        "Networking",
-        "Skill development",
-        "Capacity building",
-        "Policy development"
+        "self-advocacy",
+        "decision-making",
+        "rights awareness",
+        "leadership training",
+        "political participation",
+        "legal aid",
+        "representation",
+        "accessibility standards",
+        "gender equality",
+        "youth empowerment",
+        "disability awareness",
+        "community organizing",
+        "information access",
+        "technology use",
+        "financial independence",
+        "mentorship",
+        "networking",
+        "skill development",
+        "capacity building",
+        "policy development"
     ]
 )
 
@@ -141,3 +141,11 @@ CBR_KEYWORDS = (
     CBR_SOCIAL.keywords + 
     CBR_EMPOWERMENT.keywords
 )
+
+CBR_CATEGORIES = [
+    CBR_HEALTH.name + 
+    CBR_EDUCATION.name +
+    CBR_LIVELIHOOD.name + 
+    CBR_SOCIAL.name + 
+    CBR_EMPOWERMENT.name
+]
