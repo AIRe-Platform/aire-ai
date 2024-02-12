@@ -321,7 +321,7 @@ async def delete_document(
 
 
 # Questionnaire embeddings
-# -----------------
+# ------------------------
 
 @app.post("/embeddings/questionnaire",
           description="Create a document of the questionnaire for keyword searches",
@@ -340,7 +340,7 @@ async def embed_survey(
             raise FORBIDDEN_EXCEPTION
         
     store = QuestionnaireVectorStore()
-    id = store.add_survey(questionnaire)
+    id = store.add_questionnaire(questionnaire)
     return EmbedResponse(ids=[id])
 
 
@@ -368,7 +368,7 @@ async def query_questionnaire(
     return QuestionnaireQueryResponse(results=results)
 
 
-@app.delete("/embeddings/survey/{id}",
+@app.delete("/embeddings/questionnaire/{id}",
             description="Delete a questionnaire",
             tags=["Questionnaires"])
 async def delete_survey(
@@ -382,7 +382,7 @@ async def delete_survey(
         if not AireScope.QuestionnaireDelete in auth.scopes:
             raise FORBIDDEN_EXCEPTION
 
-    store = QuestionnaireQueryResponse()
+    store = QuestionnaireVectorStore()
     store.remove_document(id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 

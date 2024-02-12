@@ -1,86 +1,21 @@
 @base = http://localhost:7074/api
+@token = eyJhbGciOiJBMjU2S1ciLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIiwidHlwIjoiSldUIiwiY3R5IjoiSldUIn0.Cmu2q8CafLqxYTCGqUN_PW_m3o2seU-2M6k2Z1ElMlc0daqs5LCF4smLf2RRTnNab4irZc53mqH30IeQgz5q7mG_T4eiG4El.7qkoghB3jfa5MaoQzOF1Xg.Oohd-uxah0hur5W8K0u0MqnnWNovNyHL6jx3awmzqtogQYYlckAnUrLtD_a8sgU0ohQILJCt7Cq8qnQHQ28eyYIn62mQ__-kC6hRYR4DIlVyLw3Lziein6LQMxHfu4oTe09PpXRswUmWspELfACzMAxUl0WZGm_MQL_j83a_1_Ul5HzJX9CvAwXKHgFt6xwwFams-kbBXXxFvJX92-maNnVhNwUesAqbl04amtfLnE5u93HtwSwg4pPhxmsePkjuyirIJVB7YFOnjwGcHcuHV6x23abqQUPbIVti92wE0kzTpgjBoSnTdi6MUDpeAgC59cOAWKfdShYe5ZI7yp41xe0aOO6gR2JR2EscSYxbMHZ3w-vK0TyawsmgFl_e1Q2nH_LQ1l1TGsh7oy_37MYW_EIxFtX8DgVbWNfGlaXru4U5bIJnW2_Uk5f7q_sQ2fauTxDYQtG_OmMeTCIl-M7QDUTXa7VLanDJbBhkcMgTVclq1YORRD_we0x3MqjQeALnwcwiAVYvrLNvPPO97NaOqVtTz9agHkmmCBpMbucFEcOwe0wvn43LP1buzneyN92vg7AnpWAX3DhMJqfCUMjWSOPy_2QP1vTDVZg9GANlsEyPV_IKtUAuzIKCFrIObc9YoS_HpXNCNTSmz-08x_rfxyyaZAEBJ6G9aVy_NQUn1MaCEDyz2NB0X8WPmPltgDO4nUSBlUjv9qyzf5_fSE_6Q2Mlswbn7Vl9fMouucEJFObVERtnJ_jl_anndoS1-FTmkZMY21rFon1xtzB9a6ItuWoH9rpCsInFi40gFfYm-GexkoNJnD9-OTs8ScTf8Ncw0roOXJ9oTkcH5nrp3Y9w4eDMgkpKjzyDWKgkvloUzW6C3LYJ3-fj6z-FQ9OcENUyZaZzn-IiyK0f6topME1VIIfLl9mI7CR2TGWYDBImAVx4CRk8MKpT1450v2lU6T9h_Dmm821HABO7pcvC178RDZG3-zsYh9g8P_Fz2w_JKhqWr_x5vedLVMAkHNgJyFKEEbBh4TIb68QCBMVKTRo-CmGO_kKFbyHIZq47hnq3QGg.Vf1EY_N-flmYGdzk2j4WiUWE9UZhN9ALPZ0AXz1UcTo
 
 ### Add a questionnaire
 POST {{base}}/embeddings/questionnaire HTTP/1.1
 Accept: application/json
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
-{
-    "id": "d65b8044-3679-4cdf-8422-0f472aec6edb",
-    "name": "My Survey",
-    "lang": "en",
-    "modified": "2020-01-01T00:00:00.000Z",
-    "keywords": ["quality of life", "mental health"],
-    "preliminary": {
-        "properties": {
-            "age": { "type": "integer" },
-            "gender": { "type": "string" }
-        },
-        "required": [ "age" ]
-    },
-    "content": [
-        { 
-            "id": "1", 
-            "name": "Mental Health", 
-            "keywords": [ "mental health" ],
-            "questions": [
-                {
-                    "id": "1.1",
-                    "question": "How happy are you?",
-                    "keywords": ["happiness"],
-                    "prompt": "The user ranks his/her happiness as {answer} on a scale from {min} to {max}.",
-                    "type": "range",
-                    "options": {
-                        "min": 0,
-                        "max": 5 
-                    }
-                },
-                {
-                    "id": "1.2",
-                    "question": "I am worried about...",
-                    "keywords": ["stress", "worry"],
-                    "type": "checkbox",
-                    "prompt": "The user is worried about {answer}.",
-                    "options": {
-                        "values": [ "Work", "Family", "Money" ],
-                        "multiselect": true
-                    }
-                },
-                {
-                    "id": "1.3",
-                    "question": "Please enter the country you live in",
-                    "keywords": ["location"],
-                    "prompt": "The user's residence is in {location}.",
-                    "type": "open",
-                    "options": {
-                        "max_len": 120,
-                        "match": "/.+/g",
-                        "multiline": true,
-                    },
-                    "required": true
-                },
-                {
-                    "id": "1.4",
-                    "question": "Enter a number",
-                    "keywords": ["useless"],
-                    "type": "number",
-                    "prompt": "Here's a useless random number: {answer}. It's not actually random if it's {default}. Keep it safe!",
-                    "options": {
-                        "min": 0,
-                        "max": 666,
-                        "default": 42
-                    }
-                }
-            ]
-        }
-    ]
-}
+< ./sample_questionnaire.json
 
 ### Query a questionnaire
-@query = "back pain"
+@query = "back pain sample questionnaire"
 GET {{base}}/embeddings/questionnaire?query={{query}} HTTP/1.1
 Accept: application/json
+Authorization: Bearer {{token}}
 
 ### Delete a questionnaire
-@survey_id = asd
+@survey_id = 4634fd7c-c988-11ee-b165-8616e5ba1b04
 DELETE {{base}}/embeddings/questionnaire/{{survey_id}} HTTP/1.1
+Authorization: Bearer {{token}}
