@@ -72,8 +72,8 @@ class QuestionnaireVectorStore(BaseVectorStore):
 
         # Create a document of the keywords and mark the questionnaire id as source of the documents
         # Store it in the vector store
-        doc = Document(page_content=content, metadata={ "source": questionnaire.id })
-        ids = self.add_documents([doc])
+        doc = Document(page_content=content)
+        ids = self.add_documents([doc], questionnaire.id)
         if len(ids) != 1:
             raise RuntimeError("Unexpected count of IDs")
         return ids[0]
@@ -81,7 +81,7 @@ class QuestionnaireVectorStore(BaseVectorStore):
     def query_keywords(self, keywords: list[str]) -> list[str]:
         # Perform similarity search with the keywords and retrieve document
         query = " ".join(list(set(keywords)))
-        results = self.store.similarity_search_with_relevance_scores(query, 4, score_threshold=0.5)
+        results = self.store.similarity_search_with_relevance_scores(query, 4, score_threshold=0.8)
         results.sort(key=lambda x: x[1], reverse=True)
         
         # Read questionnaire id from the document metadata
