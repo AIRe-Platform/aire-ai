@@ -9,7 +9,7 @@ from ..llm import ChatModel
 class CbrTags(BaseModel):
     keywords: str = Field(..., 
                           enum=CBR_KEYWORDS,
-                          description="Describes what CBR topics could relate to the discussion")
+                          description="Describes what CBR topics could relate to the discussion, separated by commas and spaces")
 
 def __cbr_tagging_chain(ctx: AireChatContext):
     llm = ChatModel(temperature=0.0)

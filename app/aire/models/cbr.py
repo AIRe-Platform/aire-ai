@@ -143,9 +143,9 @@ CBR_KEYWORDS = (
 )
 
 CBR_CATEGORIES = [
-    CBR_HEALTH.name + 
-    CBR_EDUCATION.name +
-    CBR_LIVELIHOOD.name + 
-    CBR_SOCIAL.name + 
+    CBR_HEALTH.name,
+    CBR_EDUCATION.name,
+    CBR_LIVELIHOOD.name,
+    CBR_SOCIAL.name,
     CBR_EMPOWERMENT.name
 ]
