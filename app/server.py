@@ -62,7 +62,6 @@ app.add_middleware(
 )
 
 serializer = WellKnownLCSerializer()
-platform = get_platform_config()
 
 UNAUTH_EXCEPTION = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -95,6 +94,8 @@ class EmbedResponse(BaseModel):
 # ---------
 
 def get_current_user(authorization: Annotated[str | None, Header()] = None):
+    platform = get_platform_config()
+    
     try:
         if authorization != None:
             return get_user(platform, authorization)
@@ -158,6 +159,7 @@ async def stream_bot(bot_name: str,
                     "data": serializer.dumps(chunk).decode("utf-8")
                 }
             yield { "event": "end" }
+            # TODO: Return custom events after finished streaming response
         except BaseException as ex:
             print(f"Error: {ex}")
             yield {

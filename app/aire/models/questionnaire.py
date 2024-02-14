@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Extra
+from pydantic import BaseModel
 from enum import Enum
 from datetime import datetime
 
@@ -94,17 +94,16 @@ class AireQuestionnaireAnswer(BaseModel):
     question: str
     prompt: str | None
     answer: int | str | None
-
-    model_config = ConfigDict(extra=Extra.allow)
+    options: dict | None
 
 
 class AireQuestionnaireResult(BaseModel):
     """Processed Questionnaire results"""
 
     id: str | None
-    survey_id: str
+    questionnaire_id: str
     timestamp: datetime
     preliminary: dict | None
     answers: list[AireQuestionnaireAnswer]
     summary: str
-    prompts: list[str]
+    prompts: list[str] | None
