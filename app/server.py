@@ -248,7 +248,7 @@ async def query_document(
     if not is_service:
         if auth == None:
             raise UNAUTH_EXCEPTION
-        if not AireScope.DocumentQuery in auth.scopes:
+        if not AireScope.DocumentRead in auth.scopes:
             raise FORBIDDEN_EXCEPTION
         
     store = DocumentVectorStore()
@@ -268,7 +268,7 @@ async def embed_document(
     if not is_service:
         if auth == None:
             raise UNAUTH_EXCEPTION
-        if not AireScope.DocumentEmbedding in auth.scopes:
+        if not AireScope.DocumentWrite in auth.scopes:
             raise FORBIDDEN_EXCEPTION
 
     if document.size > 1024 * 16:
