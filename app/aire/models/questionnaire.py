@@ -93,7 +93,7 @@ class AireQuestionnaireAnswer(BaseModel):
     type: AireQuestionnaireOptionType
     question: str
     prompt: str | None
-    answer: int | str | None
+    answer: int | str | list[str] | dict | None
     options: dict | None
 
 
@@ -107,3 +107,9 @@ class AireQuestionnaireResult(BaseModel):
     answers: list[AireQuestionnaireAnswer]
     summary: str
     prompts: list[str] | None
+
+class AireQuestionnaireProcessingRequest(BaseModel):
+    """Request to process questionnaire results"""
+
+    questionnaire_id: str
+    answers: list[AireQuestionnaireAnswer]
