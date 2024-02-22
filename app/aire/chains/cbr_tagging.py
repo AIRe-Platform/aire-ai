@@ -16,7 +16,7 @@ def __cbr_tagging_chain(ctx: AireChatContext):
     messages = ctx.input.to_chat_messages()
     output = chain.invoke(messages)
     model: CbrTags = output['text']
-    keywords = map(lambda x: x.strip() ,model.keywords.split(","))
+    keywords = map(lambda x: x.strip(), model.keywords.split(","))
     return list(keywords)
 
 CbrTaggingChain = RunnableLambda(__cbr_tagging_chain)
