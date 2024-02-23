@@ -89,6 +89,7 @@ class AireQuestionnaire(BaseModel):
 class AireQuestionnaireAnswer(BaseModel):
     """Questionnaire answer object"""
 
+    questionnaire_id: str
     question_id: str
     type: AireQuestionnaireOptionType
     question: str
