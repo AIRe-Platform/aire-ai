@@ -28,16 +28,21 @@ def __process_questionnaire(input: AireQuestionnaireProcessingRequest) -> AireQu
     prompts_to_process = filter(lambda x: x.prompt != None and x.answer != None, input.answers)
     prompts = list(map(__build_prompt, prompts_to_process))
 
-    summary_prompt = PromptTemplate.from_template(summarizy_prompt_template)
-    summary_chain = LLMChain(llm=ChatModel(temperature=0.0), prompt=summary_prompt)
-    summary = summary_chain.invoke({ "text": "\n".join(prompts) })
+    if len(prompts) > 0:
+        summary_prompt = PromptTemplate.from_template(summarizy_prompt_template)
+        summary_chain = LLMChain(llm=ChatModel(temperature=0.0), prompt=summary_prompt)
+        summary_result = summary_chain.invoke({ "text": "\n".join(prompts) })
+        summary = summary_result['text']
+    else:
+        summary = "No summary available."
+
 
     return AireQuestionnaireResult(
         id=str(uuid.uuid4()),
         questionnaire_id=input.questionnaire_id, 
         timestamp=datetime.datetime.utcnow(),
         answers=input.answers,
-        summary=summary['text'],
+        summary=summary,
         prompts=prompts)
 
 
