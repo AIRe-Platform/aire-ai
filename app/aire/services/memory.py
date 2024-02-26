@@ -5,6 +5,7 @@ from langchain_community.document_loaders import PyPDFLoader, UnstructuredMarkdo
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from ..llm import EmbeddingsModel
 from ..models.questionnaire import AireQuestionnaire
+from ..models.document import AireDocumentMetadata
 
 class BaseVectorStore:
     store: PGVector
@@ -18,11 +19,7 @@ class BaseVectorStore:
     def similarity_search(self, query: str):
         return self.store.similarity_search(query)
     
-    def add_documents(self, docs: list[Document], source: str | None) -> list[str]:
-        if source != None:
-            for d in docs: 
-                d.metadata["source"] = source
-
+    def add_documents(self, docs: list[Document]) -> list[str]:
         ids = self.store.add_documents(docs)
         return ids
     
@@ -41,12 +38,18 @@ class DocumentVectorStore(BaseVectorStore):
     def add_pdf(self, filepath: Path, source: str | None) -> list[str]:
         loader = PyPDFLoader(file_path=filepath.as_posix())
         docs = loader.load_and_split(self.splitter)
-        return self.add_documents(docs, source)
+        if source != None:
+            for d in docs:
+                d.metadata["source"] = source
+        return self.add_documents(docs)
 
     def add_markdown(self, filepath: Path, source: str | None) -> list[str]:
         loader = UnstructuredMarkdownLoader(file_path=filepath.as_posix())
         docs = loader.load_and_split(self.splitter)
-        return self.add_documents(docs, source)
+        if source != None:
+            for d in docs:
+                d.metadata["source"] = source
+        return self.add_documents(docs)
 
 
 class QuestionnaireVectorStore(BaseVectorStore):
@@ -73,17 +76,26 @@ class QuestionnaireVectorStore(BaseVectorStore):
         # Create a document of the keywords and mark the questionnaire id as source of the documents
         # Store it in the vector store
         doc = Document(page_content=content)
-        ids = self.add_documents([doc], questionnaire.id)
+        doc.metadata = {
+            "source": questionnaire.id,
+            "language": questionnaire.lang
+        }
+
+        ids = self.add_documents([doc])
         if len(ids) != 1:
             raise RuntimeError("Unexpected count of IDs")
         return ids[0]
 
-    def query_keywords(self, keywords: list[str]) -> list[str]:
+    def query_keywords(self, keywords: list[str]) -> list[AireDocumentMetadata]:
         # Perform similarity search with the keywords and retrieve document
         query = " ".join(list(set(keywords)))
-        results = self.store.similarity_search_with_relevance_scores(query, 4, score_threshold=0.8)
+        results = self.store.similarity_search_with_relevance_scores(query, 8)
         results.sort(key=lambda x: x[1], reverse=True)
         
         # Read questionnaire id from the document metadata
-        questionnaires = list(map(lambda x: x[0].metadata["source"], results))
+        questionnaires = list(map(lambda x: AireDocumentMetadata(
+            source=x[0].metadata["source"], 
+            language=x[0].metadata["language"],
+            relevance=x[1])
+        , results))
         return questionnaires

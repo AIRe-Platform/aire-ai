@@ -27,6 +27,7 @@ from aire.models.questionnaire import (
     AireQuestionnaireProcessingRequest,
     AireQuestionnaireResult
 )
+from aire.models.document import AireDocumentMetadata
 from aire.services.platform import get_platform_config
 from aire.services.id import get_user
 from aire.services.memory import DocumentVectorStore, QuestionnaireVectorStore
@@ -90,7 +91,7 @@ class DocumentQueryResponse(BaseModel):
     documents: list[Document]
 
 class QuestionnaireQueryResponse(BaseModel):
-    results: list[str]
+    results: list[AireDocumentMetadata]
 
 class EmbedResponse(BaseModel):
     ids: list[str]
