@@ -155,16 +155,24 @@ async def stream_bot(bot_name: str,
         
     context = AireChatContext(input=input, user=user)
 
+    # Generate keywords list every 5 messages
+    gen_keywords = (len(input.to_chat_messages()) % 5 == 0)
+
     async def stream() -> AsyncIterator[dict]:
         try:
             iter = bot.astream(context)
             async for chunk in iter:
                 yield {
-                    "event": "data",
+                    "event": "message",
                     "data": serializer.dumps(chunk).decode("utf-8")
                 }
+            if gen_keywords:
+                keywords = await CbrTaggingChain.ainvoke(context)
+                yield { 
+                    "event": "keywords",
+                    "data": serializer.dumps(keywords).decode("utf-8")
+                }
             yield { "event": "end" }
-            # TODO: Return custom events after finished streaming response
         except BaseException as ex:
             print(f"Error: {ex}")
             yield {
