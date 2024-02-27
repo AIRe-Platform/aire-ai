@@ -67,13 +67,6 @@ class AireQuestionnaireSection(BaseModel):
     questions: list[AireQuestionnaireQuestion]
 
 
-class AireQuestionnairePreliminary(BaseModel):
-    """Preliminary data extraction schema"""
-
-    properties: dict
-    required: list[str] | None
-
-
 class AireQuestionnaire(BaseModel):
     """Questionnaire model"""
 
@@ -82,7 +75,6 @@ class AireQuestionnaire(BaseModel):
     lang: str
     modified: datetime | None
     keywords: list[str]
-    preliminary: AireQuestionnairePreliminary | None
     content: list[AireQuestionnaireSection]
 
 
@@ -104,10 +96,10 @@ class AireQuestionnaireResult(BaseModel):
     id: str | None
     questionnaire_id: str
     timestamp: datetime
-    preliminary: dict | None
     answers: list[AireQuestionnaireAnswer]
     summary: str
     prompts: list[str] | None
+
 
 class AireQuestionnaireProcessingRequest(BaseModel):
     """Request to process questionnaire results"""

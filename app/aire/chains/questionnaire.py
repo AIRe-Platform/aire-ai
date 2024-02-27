@@ -36,7 +36,6 @@ def __process_questionnaire(input: AireQuestionnaireProcessingRequest) -> AireQu
     else:
         summary = "No summary available."
 
-
     return AireQuestionnaireResult(
         id=str(uuid.uuid4()),
         questionnaire_id=input.questionnaire_id, 
