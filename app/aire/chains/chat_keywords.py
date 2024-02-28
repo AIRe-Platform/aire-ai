@@ -28,18 +28,17 @@ Conversation:
         input_variables=["messages"],
         partial_variables={"format_instructions": format_instructions})
     
-    messages = ChatPromptTemplate.from_messages(ctx.input.to_chat_messages())
-    prompt = keyword_prompt.format(messages=messages.format())
-
+    messages = ctx.input.to_chat_messages()
+    if len(messages) < 1:
+        return []
+    
+    prompt = keyword_prompt.format(messages=messages)
     output = llm(prompt)
-    print(f"Raw keyword response:\n'{output}'")
 
     output = output.replace("\n", ", ").replace("Keywords", "")
     output = parser.parse(output)
     output = map(lambda x: x.strip("\" ,.:;-/\n1234567890#"), output)
     output = list(filter(lambda x: len(x) > 0, output))
-
-    print(f"Processed keywords: {output}")
 
     return output
 

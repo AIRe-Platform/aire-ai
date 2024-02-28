@@ -11,10 +11,14 @@ class CbrTags(BaseModel):
                           description="Describes what CBR topics could relate to the discussion, separated by commas.")
 
 def __cbr_tagging_chain(ctx: AireChatContext):
+    messages = ctx.input.to_chat_messages()
+    if len(messages) < 1:
+        return list[str]()
+
     llm = ChatModel(temperature=0.0)
     chain = create_tagging_chain_pydantic(CbrTags, llm)
-    messages = ctx.input.to_chat_messages()
     output = chain.invoke(messages)
+    
     model: CbrTags = output['text']
     keywords = map(lambda x: x.strip(), model.keywords.split(","))
     return list(keywords)

@@ -7,7 +7,10 @@ from ..llm import LLM
 llm_summary = LLM(temperature=0)
 
 def __chat_summary(ctx: AireChatContext) -> str:
-    history = ChatMessageHistory(messages=ctx.input.to_chat_messages())
+    messages = ctx.input.to_chat_messages()
+    if len(messages) < 1:
+        return ""
+    history = ChatMessageHistory(messages=messages)
     memory = ConversationSummaryBufferMemory(chat_memory=history, llm=llm_summary)
     return memory.predict_new_summary(memory.chat_memory.messages, "").strip("\n ")
 
