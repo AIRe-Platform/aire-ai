@@ -8,7 +8,7 @@ from ..llm import ChatModel
 class CbrTags(BaseModel):
     keywords: str = Field(..., 
                           enum=CBR_KEYWORDS,
-                          description="Describes what CBR topics could relate to the discussion, separated by commas.")
+                          description="Describes what CBR topics could relate to the discussion, separated by commas. If no topics apply, this is empty.")
 
 def __cbr_tagging_chain(ctx: AireChatContext):
     messages = ctx.input.to_chat_messages()
@@ -21,6 +21,6 @@ def __cbr_tagging_chain(ctx: AireChatContext):
     
     model: CbrTags = output['text']
     keywords = map(lambda x: x.strip(), model.keywords.split(","))
-    return list(keywords)
+    return list(filter(lambda x: len(x) > 0, keywords))
 
 CbrTaggingChain = RunnableLambda(__cbr_tagging_chain)
