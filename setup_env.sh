@@ -2,18 +2,25 @@
 
 setup_venv()
 {
-    if [ ! -d ."env" ]
+    if [ ! -d ".env" ]
     then
         echo "Creating Python virtual environment..."
-        python3 -m venv ./.env || (echo "Failed to create venv" && exit 1)
+        python3 -m venv ./.env
     fi
-    source .env/bin/activate
+ 
+    source .env/bin/activate || (
+        echo "Failed to activate the virtual environment. Make sure you have 'python3-venv' installed." 
+        exit 1
+    )
 }
 
 setup_requirements()
 {
     echo "Installing requirements..."
-    pip3 install -r requirements.txt || (echo "Failed to install requirements" && exit 1)
+    pip3 install -r requirements.txt || (
+        echo "Failed to install requirements"
+        exit 1
+    )
 }
 
 setup_dev()
@@ -22,7 +29,10 @@ setup_dev()
     touch ./development.env
 
     echo "Installing development requirements..."
-    pip3 install -r requirements_dev.txt || (echo "Failed to install development requirements" && exit 1)
+    pip3 install -r requirements_dev.txt || (
+        echo "Failed to install development requirements"
+        exit 1
+    )
 }
 
 setup_venv && echo "Virtual environment is set up."

@@ -65,7 +65,7 @@
                     "keywords": [
                         "location"
                     ],
-                    "prompt": "The user's residence is in {location}.",
+                    "prompt": "The user's residence is in {answer}.",
                     "type": "open",
                     "options": {
                         "max_len": 120,

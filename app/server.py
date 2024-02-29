@@ -22,14 +22,20 @@ from aire.auth import (
     verify_token, check_service_key
 )
 from aire.models.user import AireUser
-from aire.models.questionnaire import AireQuestionnaire
+from aire.models.questionnaire import (
+    AireQuestionnaire, 
+    AireQuestionnaireProcessingRequest,
+    AireQuestionnaireResult
+)
+from aire.models.document import AireDocumentMetadata
 from aire.services.platform import get_platform_config
 from aire.services.id import get_user
 from aire.services.memory import DocumentVectorStore, QuestionnaireVectorStore
 from aire.bot.default import DefaultBot
 from aire.chains.chat_abstract import ChatAbstractChain
-from aire.chains.chat_keywords import ChatKeywordChain
 from aire.chains.chat_summary import ChatSummaryChain
+from aire.chains.cbr_tagging import CbrTaggingChain
+from aire.chains.questionnaire import ProcessQuestionnaireChain
 from helpers.temp_files import create_temporary_file
 
 app = FastAPI(
@@ -62,7 +68,6 @@ app.add_middleware(
 )
 
 serializer = WellKnownLCSerializer()
-platform = get_platform_config()
 
 UNAUTH_EXCEPTION = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -86,7 +91,7 @@ class DocumentQueryResponse(BaseModel):
     documents: list[Document]
 
 class QuestionnaireQueryResponse(BaseModel):
-    results: list[str]
+    results: list[AireDocumentMetadata]
 
 class EmbedResponse(BaseModel):
     ids: list[str]
@@ -95,6 +100,8 @@ class EmbedResponse(BaseModel):
 # ---------
 
 def get_current_user(authorization: Annotated[str | None, Header()] = None):
+    platform = get_platform_config()
+    
     try:
         if authorization != None:
             return get_user(platform, authorization)
@@ -149,13 +156,22 @@ async def stream_bot(bot_name: str,
         
     context = AireChatContext(input=input, user=user)
 
+    # Generate keywords list every 5 messages
+    gen_keywords = (len(input.to_chat_messages()) % 5 == 0)
+
     async def stream() -> AsyncIterator[dict]:
         try:
             iter = bot.astream(context)
             async for chunk in iter:
                 yield {
-                    "event": "data",
+                    "event": "message",
                     "data": serializer.dumps(chunk).decode("utf-8")
+                }
+            if gen_keywords:
+                keywords = await CbrTaggingChain.ainvoke(context)
+                yield { 
+                    "event": "keywords",
+                    "data": serializer.dumps(keywords).decode("utf-8")
                 }
             yield { "event": "end" }
         except BaseException as ex:
@@ -228,7 +244,7 @@ async def chat_keywords(
         raise FORBIDDEN_EXCEPTION
     
     context = AireChatContext(input=input, regen=regen)
-    return ChatKeywordChain.invoke(context)
+    return CbrTaggingChain.invoke(context)
 
 
 # Document embeddings
@@ -246,7 +262,7 @@ async def query_document(
     if not is_service:
         if auth == None:
             raise UNAUTH_EXCEPTION
-        if not AireScope.DocumentQuery in auth.scopes:
+        if not AireScope.DocumentRead in auth.scopes:
             raise FORBIDDEN_EXCEPTION
         
     store = DocumentVectorStore()
@@ -266,7 +282,7 @@ async def embed_document(
     if not is_service:
         if auth == None:
             raise UNAUTH_EXCEPTION
-        if not AireScope.DocumentEmbedding in auth.scopes:
+        if not AireScope.DocumentWrite in auth.scopes:
             raise FORBIDDEN_EXCEPTION
 
     if document.size > 1024 * 16:
@@ -386,7 +402,29 @@ async def delete_survey(
     store.remove_document(id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-# --------------------------------------------
+
+# Questionnaire processing
+# ------------------------
+
+@app.post("/questionnaire-results",
+          description="Process questionnaire results",
+          tags=["Questionnaires"])
+async def process_questionnaire(
+    is_service: Annotated[bool, Depends(check_service_key)],
+    auth: Annotated[AireAuth | None, Depends(verify_token)],
+    results: Annotated[AireQuestionnaireProcessingRequest, Body()]
+) -> AireQuestionnaireResult:
+    
+    if not is_service:
+        if auth == None:
+            raise UNAUTH_EXCEPTION
+        if not AireScope.QuestionnaireRead in auth.scopes:
+            raise FORBIDDEN_EXCEPTION
+        
+    return ProcessQuestionnaireChain.invoke(results)
+
+
+# ---------------------------------------------
 if __name__ == "__main__":
     import uvicorn
 

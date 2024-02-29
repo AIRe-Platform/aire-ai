@@ -22,7 +22,7 @@ Example of `development.env`:
 
 ```
 OPENAI_API_TYPE=<Set to 'azure' if using Azure OpenAI. Otherwise, do not set.>
-OPENAI_API_VERSION=<Set if you want specific API version. Otherwise, do not set.>
+OPENAI_API_VERSION=2023-12-01-preview
 OPENAI_API_BASE=<Set if using local inference server. Otherwise, do not set.>
 OPENAI_API_KEY=<Your API Key to (Azure) OpenAI, or any string if using local API.>
 AZURE_OPENAI_ENDPOINT=<Set if using Azure OpenAI. Otherwise, do not set.>

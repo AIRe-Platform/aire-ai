@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Extra
+from pydantic import BaseModel
 from enum import Enum
 from datetime import datetime
 
@@ -67,13 +67,6 @@ class AireQuestionnaireSection(BaseModel):
     questions: list[AireQuestionnaireQuestion]
 
 
-class AireQuestionnairePreliminary(BaseModel):
-    """Preliminary data extraction schema"""
-
-    properties: dict
-    required: list[str] | None
-
-
 class AireQuestionnaire(BaseModel):
     """Questionnaire model"""
 
@@ -82,29 +75,34 @@ class AireQuestionnaire(BaseModel):
     lang: str
     modified: datetime | None
     keywords: list[str]
-    preliminary: AireQuestionnairePreliminary | None
     content: list[AireQuestionnaireSection]
 
 
 class AireQuestionnaireAnswer(BaseModel):
     """Questionnaire answer object"""
 
+    questionnaire_id: str
     question_id: str
     type: AireQuestionnaireOptionType
     question: str
     prompt: str | None
-    answer: int | str | None
-
-    model_config = ConfigDict(extra=Extra.allow)
+    answer: int | str | list[str] | dict | None
+    options: dict | None
 
 
 class AireQuestionnaireResult(BaseModel):
     """Processed Questionnaire results"""
 
     id: str | None
-    survey_id: str
+    questionnaire_id: str
     timestamp: datetime
-    preliminary: dict | None
     answers: list[AireQuestionnaireAnswer]
     summary: str
-    prompts: list[str]
+    prompts: list[str] | None
+
+
+class AireQuestionnaireProcessingRequest(BaseModel):
+    """Request to process questionnaire results"""
+
+    questionnaire_id: str
+    answers: list[AireQuestionnaireAnswer]

@@ -8,9 +8,10 @@ class AireChatMessage(CustomUserType):
     """A chat message"""
 
     role: str
-    content: str
+    content: str | None
     timestamp: int | None
-    questionnaire_answer: AireQuestionnaireAnswer | None
+    rating: int | None
+    question: AireQuestionnaireAnswer | None
 
 
 class AireChatInputContext(CustomUserType):
@@ -29,7 +30,8 @@ class AireChatInput(CustomUserType):
     context: AireChatInputContext | None
 
     def to_chat_messages(self) -> list[ChatMessage]:
-        return list(map(lambda msg: ChatMessage(role=msg.role, content=msg.content), self.chat))
+        messages = filter(lambda msg: msg.content != None, self.chat)
+        return list(map(lambda msg: ChatMessage(role=msg.role, content=msg.content), messages))
 
 
 class AireChatbotInfo(BaseModel):
