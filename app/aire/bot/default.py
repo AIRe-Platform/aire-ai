@@ -34,17 +34,16 @@ def token_count(chat_input: AireChatInput):
 
     model = "gpt-3.5-turbo-1106"
     encoding = tiktoken.encoding_for_model(model)
+    tokens_per_message = 4
 
-    chat_template = ChatPromptTemplate.from_messages(chat_input.to_chat_messages())
-    messages_list = list(map(lambda msg: msg.content, chat_template.messages))
-    list_token_values = encoding.encode_batch(messages_list)
-    
-    num_total_tokens = 0
-    for list_item in list_token_values:
-        num_tokens = len(list_item)
-        num_total_tokens += num_tokens
+    chat_messages = chat_input.to_chat_messages()
 
-    return num_total_tokens
+    num_tokens = 0
+    for message in chat_messages:
+        num_tokens += len(encoding.encode(message.content))
+        num_tokens += len(encoding.encode(message.role))
+        num_tokens += tokens_per_message
+    return num_tokens
 
 
 DefaultBot = RunnableLambda(__messages) | ChatModel()
