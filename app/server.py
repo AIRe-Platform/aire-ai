@@ -10,6 +10,7 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.responses import Response
 from sse_starlette import EventSourceResponse;
 from langchain.schema.document import Document
+from langchain.schema.messages import ChatMessage
 from langserve.serialization import WellKnownLCSerializer
 from aire.models.chat import (
     AireChatbotInfo, 
@@ -159,22 +160,36 @@ async def stream_bot(bot_name: str,
         
     context = AireChatContext(input=input, user=user)
 
+    user_input_token_count = token_count(input)
+
     # Generate keywords list every 5 messages
     gen_keywords = (len(input.to_chat_messages()) % 5 == 0)
 
     async def stream() -> AsyncIterator[dict]:
+        bot_output_token_count = 0
         try:
+            bot_output = ""
             iter = bot.astream(context)
             async for chunk in iter:
+                buffer = serializer.dumpd(chunk)
                 yield {
                     "event": "message",
                     "data": serializer.dumps(chunk).decode("utf-8")
                 }
+                if(buffer["content"]):
+                    bot_output += buffer["content"]
+            bot_message = ChatMessage(role="assistant", content=bot_output)
+            bot_input = AireChatInput(chat=[bot_message])
+            bot_output_token_count = token_count(bot_input)
             if gen_keywords:
                 keywords = await CbrTaggingChain.ainvoke(context)
                 yield { 
                     "event": "keywords",
                     "data": serializer.dumps(keywords).decode("utf-8")
+                }
+            yield { 
+                "event": "token-count",
+                "data": bot_output_token_count + user_input_token_count
                 }
             yield { "event": "end" }
         except BaseException as ex:
