@@ -37,7 +37,7 @@ def __messages(ctx: AireChatContext):
     return prompt
 
 
-def token_count(chat_input: AireChatInput):
+def count_tokens(chat_input: AireChatInput):
     llm = ChatBotModel()
     model = llm.model_name
     encoding = tiktoken.encoding_for_model(model)

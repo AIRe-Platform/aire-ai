@@ -16,7 +16,8 @@ from aire.models.chat import (
     AireChatbotInfo, 
     AireChatInput,
     AireChatContext,
-    AireChatAbstract
+    AireChatAbstract,
+    AireChatStats
 )
 from aire.auth import (
     AireAuth, AireScope,
@@ -32,7 +33,7 @@ from aire.models.document import AireDocumentMetadata
 from aire.services.platform import get_platform_config
 from aire.services.id import get_user
 from aire.services.memory import DocumentVectorStore, QuestionnaireVectorStore
-from aire.bot.default import (DefaultBot, token_count)
+from aire.bot.default import DefaultBot, count_tokens
 from aire.chains.chat_abstract import ChatAbstractChain
 from aire.chains.chat_summary import ChatSummaryChain
 from aire.chains.cbr_tagging import CbrTaggingChain
@@ -97,9 +98,6 @@ class QuestionnaireQueryResponse(BaseModel):
 class EmbedResponse(BaseModel):
     ids: list[str]
 
-class CountResponse(BaseModel):
-    count: int
-
 # Utilities
 # ---------
 
@@ -159,7 +157,7 @@ async def stream_bot(bot_name: str,
             return Response(status_code=status.HTTP_404_NOT_FOUND)
         
     context = AireChatContext(input=input, user=user)
-    input_token_count = token_count(input)
+    input_token_count = count_tokens(input)
 
     # Generate keywords list every 5 messages
     gen_keywords = (len(input.to_chat_messages()) % 5 == 0)
@@ -180,7 +178,7 @@ async def stream_bot(bot_name: str,
 
             bot_message = ChatMessage(role="assistant", content=output)
             bot_input = AireChatInput(chat=[bot_message])
-            output_token_count = token_count(bot_input)
+            output_token_count = count_tokens(bot_input)
             yield { 
                 "event": "token-count",
                 "data": output_token_count + input_token_count
@@ -267,14 +265,14 @@ async def chat_keywords(
     return CbrTaggingChain.invoke(context)
 
 
-@app.post("/chat/{bot_name}/tokens", 
-         description="Get token count for chat",
+@app.post("/chat/{bot_name}/stats", 
+         description="Get statistics for a chat",
          tags=["Chat Processing"],
          response_description="Returns token count")
 async def chat_tokens(
     bot_name: str, 
     input: AireChatInput,
-    auth: Annotated[AireAuth | None, Depends(verify_token)]) -> CountResponse:
+    auth: Annotated[AireAuth | None, Depends(verify_token)]) -> AireChatStats:
 
     if auth == None:
         raise UNAUTH_EXCEPTION
@@ -283,7 +281,7 @@ async def chat_tokens(
     
     match bot_name:
         case "default":
-            return CountResponse(count=token_count(input))
+            return AireChatStats(token_count=count_tokens(input))
         case _:
             return Response(status_code=status.HTTP_404_NOT_FOUND)
 
