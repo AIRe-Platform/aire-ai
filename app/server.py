@@ -159,16 +159,14 @@ async def stream_bot(bot_name: str,
             return Response(status_code=status.HTTP_404_NOT_FOUND)
         
     context = AireChatContext(input=input, user=user)
-
-    user_input_token_count = token_count(input)
+    input_token_count = token_count(input)
 
     # Generate keywords list every 5 messages
     gen_keywords = (len(input.to_chat_messages()) % 5 == 0)
 
     async def stream() -> AsyncIterator[dict]:
-        bot_output_token_count = 0
         try:
-            bot_output = ""
+            output = ""
             iter = bot.astream(context)
             async for chunk in iter:
                 buffer = serializer.dumpd(chunk)
@@ -176,21 +174,25 @@ async def stream_bot(bot_name: str,
                     "event": "message",
                     "data": serializer.dumps(chunk).decode("utf-8")
                 }
+
                 if(buffer["content"]):
-                    bot_output += buffer["content"]
-            bot_message = ChatMessage(role="assistant", content=bot_output)
+                    output += buffer["content"]
+
+            bot_message = ChatMessage(role="assistant", content=output)
             bot_input = AireChatInput(chat=[bot_message])
-            bot_output_token_count = token_count(bot_input)
+            output_token_count = token_count(bot_input)
+            yield { 
+                "event": "token-count",
+                "data": output_token_count + input_token_count
+            }
+
             if gen_keywords:
                 keywords = await CbrTaggingChain.ainvoke(context)
                 yield { 
                     "event": "keywords",
                     "data": serializer.dumps(keywords).decode("utf-8")
                 }
-            yield { 
-                "event": "token-count",
-                "data": bot_output_token_count + user_input_token_count
-                }
+            
             yield { "event": "end" }
         except BaseException as ex:
             print(f"Error: {ex}")
@@ -267,7 +269,7 @@ async def chat_keywords(
 
 @app.post("/chat/{bot_name}/tokens", 
          description="Get token count for chat",
-         tags=["Chat tokens"],
+         tags=["Chat Processing"],
          response_description="Returns token count")
 async def chat_tokens(
     bot_name: str, 

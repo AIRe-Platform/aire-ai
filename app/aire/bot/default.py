@@ -1,11 +1,10 @@
+import tiktoken
 from langchain_core.prompts import SystemMessagePromptTemplate
 from langchain.schema.runnable import RunnableLambda
 from ..llm import ChatBotModel
 from ..models.chat import AireChatContext
-import tiktoken
 from ..models.chat import AireChatContext, AireChatInput
 from ..chains.user_summary import UserSummaryChain
-from langchain_core.prompts import ChatPromptTemplate
 
 system_prompt_text = """
 Act as a medical advisor. 
@@ -39,8 +38,8 @@ def __messages(ctx: AireChatContext):
 
 
 def token_count(chat_input: AireChatInput):
-
-    model = "gpt-3.5-turbo-1106"
+    llm = ChatBotModel()
+    model = llm.model_name
     encoding = tiktoken.encoding_for_model(model)
     tokens_per_message = 4
 
