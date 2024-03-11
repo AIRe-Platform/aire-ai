@@ -55,3 +55,9 @@ class AireChatAbstract(BaseModel):
     summary: str
     keywords: list[str]
     
+
+class AireChatStats(BaseModel):
+    """Contains statistics for a chat log"""
+
+    token_count: int
+    

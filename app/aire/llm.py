@@ -18,12 +18,25 @@ def LLM(temperature: float = 0.7, max_tokens: int = 256):
             temperature=temperature,
             max_tokens=max_tokens
         )
-
-def ChatModel(temperature: float = 0.7):
+    
+def ChatModel(temperature: float = 0.0):
     if azure:
         return AzureChatOpenAI(
             azure_deployment="chat",
             model="gpt-3.5-turbo-1106",
+            temperature=temperature
+        )
+    else:
+        return ChatOpenAI(
+            model="gpt-3.5-turbo-1106",
+            temperature=temperature
+        )
+
+def ChatBotModel(temperature: float = 0.7):
+    if azure:
+        return AzureChatOpenAI(
+            azure_deployment="gpt4-chat",
+            model="gpt-4-1106-preview",
             temperature=temperature
         )
     else:
