@@ -1,4 +1,4 @@
-from langchain.prompts import PromptTemplate, ChatPromptTemplate
+from langchain.prompts import PromptTemplate
 from langchain.output_parsers import CommaSeparatedListOutputParser
 from langchain.schema.runnable import  RunnableLambda
 from ..models.chat import AireChatContext
