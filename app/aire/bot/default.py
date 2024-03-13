@@ -17,7 +17,7 @@ Consider possible causes.
 
 Do not jump into conclusions too early.
 
-Do not ask too many questions at once.
+Ask only a single question at once.
 
 Here's a summary of your patient:
 {user_summary}
