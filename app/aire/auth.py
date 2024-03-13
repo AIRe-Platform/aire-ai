@@ -33,7 +33,7 @@ class AireAuth(BaseModel):
     """User token payload"""
 
     subject: str | None
-    role: AireRole = AireRole.User
+    role: AireRole | str = AireRole.User
     scopes: list[str]
     user_key: str | None
     connected_services: list[AireUserServiceCredentials] | None
