@@ -18,7 +18,7 @@ class AireUser(BaseModel):
     """User account details"""
     
     uuid: str
-    email: str
+    email: str | None
     first_name: str | None
     last_name: str | None
     gender: AireUserGender | None
