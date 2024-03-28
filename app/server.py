@@ -50,9 +50,9 @@ def openapi_docs():
     if app.openapi_schema:
         return app.openapi_schema
     schema = get_openapi(
-        title="AIRe AI Module",
         version="0.1.0",
-        description="This is the documentation of the AIRe AI API.",
+        title="AIRe AI Module",
+        description="This is the reference implementation of the AIRe AI module.",
         openapi_version="3.0.0",
         routes=app.routes,
     )
