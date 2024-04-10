@@ -72,7 +72,6 @@ def verify_token(authorization: Annotated[str | None, Header()] = None):
             "require_exp": True
         })
 
-        print(f"Payload: {payload}")
         payload_scopes = payload.get("scope")
 
         if isinstance(payload_scopes, str):
