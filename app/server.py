@@ -156,7 +156,8 @@ async def stream_bot(bot_name: str,
         case _:
             return Response(status_code=status.HTTP_404_NOT_FOUND)
         
-    context = AireChatContext(input=input, user=user)
+    allow_prompt_override = AireScope.ExperimentalCustomPrompt in auth.scopes
+    context = AireChatContext(input=input, user=user, allow_custom_prompt=allow_prompt_override)
     input_token_count = count_tokens(input)
 
     # Generate keywords list every 5 messages

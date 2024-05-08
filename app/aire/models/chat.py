@@ -47,6 +47,7 @@ class AireChatContext(CustomUserType):
     input: AireChatInput
     user: AireUser | None = None
     regen: bool = False
+    allow_custom_prompt: bool = False
 
 
 class AireChatAbstract(BaseModel):
