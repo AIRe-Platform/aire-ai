@@ -29,6 +29,8 @@ def __messages(ctx: AireChatContext):
 
     user_summary = UserSummaryChain.invoke(ctx)
 
+    prompt = None
+
     if ctx.allow_custom_prompt:
         try:
             prompt = ctx.user.preferences.experimental_custom_prompt
