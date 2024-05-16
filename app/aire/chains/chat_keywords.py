@@ -1,45 +1,35 @@
-from langchain.prompts import PromptTemplate
-from langchain.output_parsers import CommaSeparatedListOutputParser
-from langchain.schema.runnable import  RunnableLambda
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.pydantic_v1 import BaseModel, Field
+from langchain_core.runnables import RunnableLambda
 from ..models.chat import AireChatContext
-from ..llm import LLM
+from ..llm import ChatModel
+from ..services.memory import get_keywords
 
-parser = CommaSeparatedListOutputParser()
-format_instructions = parser.get_format_instructions()
+prompt = ChatPromptTemplate.from_template(
+    """
+Extract the keywords describing the topic of the following conversation.
 
-def __chat_keywords(ctx: AireChatContext) -> list[str]:
-    temperature = 0.0
-    if ctx.regen: temperature = 0.2
-
-    llm = LLM(
-        temperature=temperature,
-        max_tokens=24)
-
-    prompt_template = """
-Extract keywords from the following conversation.
-
-{format_instructions}
+Only extract the keywords in the 'Keywords' function. Separate the keywords with commas.
 
 Conversation:
-{messages}
-"""    
-    keyword_prompt = PromptTemplate(
-        template=prompt_template,
-        input_variables=["messages"],
-        partial_variables={"format_instructions": format_instructions})
-    
+{input}
+"""
+)
+
+def __keyword_tagging_chain(ctx: AireChatContext):
     messages = ctx.input.to_chat_messages()
     if len(messages) < 1:
-        return []
+        return list[str]()
     
-    prompt = keyword_prompt.format(messages=messages)
-    output = llm(prompt)
+    class Keywords(BaseModel):
+        keywords: str = Field(..., 
+            enum=get_keywords(ctx.platform),
+            description="Keywords describing the topic of the conversation. Empty if no suitable keywords are found.")
 
-    output = output.replace("\n", ", ").replace("Keywords", "")
-    output = parser.parse(output)
-    output = map(lambda x: x.strip("\" ,.:;-/\n1234567890#"), output)
-    output = list(filter(lambda x: len(x) > 0, output))
+    llm = ChatModel(temperature=0.0).with_structured_output(Keywords)
+    chain = prompt | llm
+    output = chain.invoke({"input": messages})
+    keywords = map(lambda x: x.strip(), output.keywords.split(","))
+    return list(filter(lambda x: len(x) > 0, keywords))
 
-    return output
-
-ChatKeywordChain = RunnableLambda(__chat_keywords)
+ChatKeywordChain = RunnableLambda(__keyword_tagging_chain)

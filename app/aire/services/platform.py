@@ -1,7 +1,9 @@
 import requests
 import os
+from cachetools import cached, TTLCache
 from ..models.platform import AirePlatformConfiguration
 
+@cached(cache=TTLCache(maxsize=1, ttl=1800))
 def get_platform_config():
     base = os.getenv("AIRE_SERVICE_BASE")
     key = os.getenv("AIRE_SERVICE_KEY")

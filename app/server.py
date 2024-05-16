@@ -9,8 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import Response
 from sse_starlette import EventSourceResponse;
-from langchain.schema.document import Document
-from langchain.schema.messages import ChatMessage
+from langchain_core.documents import Document
+from langchain_core.messages import ChatMessage
 from langserve.serialization import WellKnownLCSerializer
 from aire.models.chat import (
     AireChatbotInfo, 
@@ -36,7 +36,7 @@ from aire.services.memory import DocumentVectorStore, QuestionnaireVectorStore
 from aire.bot.default import DefaultBot, count_tokens
 from aire.chains.chat_abstract import ChatAbstractChain
 from aire.chains.chat_summary import ChatSummaryChain
-from aire.chains.cbr_tagging import CbrTaggingChain
+from aire.chains.chat_keywords import ChatKeywordChain
 from aire.chains.questionnaire import ProcessQuestionnaireChain
 from helpers.temp_files import create_temporary_file
 
@@ -156,7 +156,12 @@ async def stream_bot(bot_name: str,
         case _:
             return Response(status_code=status.HTTP_404_NOT_FOUND)
         
-    context = AireChatContext(input=input, user=user)
+    allow_prompt_override = AireScope.ExperimentalCustomPrompt in auth.scopes
+    context = AireChatContext(
+        input=input, 
+        user=user, 
+        allow_custom_prompt=allow_prompt_override,
+        platform=get_platform_config())
     input_token_count = count_tokens(input)
 
     # Generate keywords list every 5 messages
@@ -185,7 +190,7 @@ async def stream_bot(bot_name: str,
             }
 
             if gen_keywords:
-                keywords = await CbrTaggingChain.ainvoke(context)
+                keywords = await ChatKeywordChain.ainvoke(context)
                 yield { 
                     "event": "keywords",
                     "data": serializer.dumps(keywords).decode("utf-8")
@@ -223,7 +228,7 @@ async def chat_abstract(
     if not AireScope.ChatSummary in auth.scopes:
         raise FORBIDDEN_EXCEPTION
     
-    context = AireChatContext(input=input)
+    context = AireChatContext(input=input, platform=get_platform_config())
     return ChatAbstractChain.invoke(context)
 
 
@@ -241,7 +246,7 @@ async def chat_summary(
     if not AireScope.ChatSummary in auth.scopes:
         raise FORBIDDEN_EXCEPTION
     
-    context = AireChatContext(input=input)
+    context = AireChatContext(input=input, platform=get_platform_config())
     return ChatSummaryChain.invoke(context)
 
 
@@ -261,8 +266,8 @@ async def chat_keywords(
     if not AireScope.ChatSummary in auth.scopes:
         raise FORBIDDEN_EXCEPTION
     
-    context = AireChatContext(input=input, regen=regen)
-    return CbrTaggingChain.invoke(context)
+    context = AireChatContext(input=input, regen=regen, platform=get_platform_config())
+    return ChatKeywordChain.invoke(context)
 
 
 @app.post("/chat/{bot_name}/stats", 

@@ -28,6 +28,8 @@ class AireScope(str, Enum):
     QuestionnaireWrite = "questionnaire-write"
     QuestionnaireDelete = "questionnaire-delete"
 
+    ExperimentalCustomPrompt = "experimental-custom-prompt"
+
 
 class AireAuth(BaseModel):
     """User token payload"""

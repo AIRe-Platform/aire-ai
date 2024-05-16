@@ -29,8 +29,20 @@ def __messages(ctx: AireChatContext):
 
     user_summary = UserSummaryChain.invoke(ctx)
 
+    prompt = None
+
+    if ctx.allow_custom_prompt:
+        try:
+            prompt = ctx.user.preferences.experimental_custom_prompt
+        except AttributeError:
+            pass
+
+    if prompt == None:
+        prompt = system_prompt
+
+
     prompt = [
-        system_prompt.format(user_summary=user_summary),
+        prompt.format(user_summary=user_summary),
         *ctx.input.to_chat_messages()
     ]
 

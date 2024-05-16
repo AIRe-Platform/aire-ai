@@ -1,8 +1,9 @@
 from langserve.schema import CustomUserType
-from langchain.schema.messages import ChatMessage
+from langchain_core.messages import ChatMessage
 from pydantic import BaseModel
 from .user import AireUser
 from .questionnaire import AireQuestionnaireAnswer
+from .platform import AirePlatformConfiguration
 
 class AireChatMessage(CustomUserType):
     """A chat message"""
@@ -47,6 +48,8 @@ class AireChatContext(CustomUserType):
     input: AireChatInput
     user: AireUser | None = None
     regen: bool = False
+    allow_custom_prompt: bool = False
+    platform: AirePlatformConfiguration
 
 
 class AireChatAbstract(BaseModel):
