@@ -1,8 +1,9 @@
 from pathlib import Path
-from langchain.vectorstores.pgvector import PGVector
 from langchain_core.documents import Document
-from langchain_community.document_loaders import PyPDFLoader, UnstructuredMarkdownLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.vectorstores.pgvector import PGVector
+from langchain_community.document_loaders.pdf import PyPDFLoader
+from langchain_community.document_loaders.markdown  import UnstructuredMarkdownLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from ..llm import EmbeddingsModel
 from ..models.questionnaire import AireQuestionnaire
 from ..models.document import AireDocumentMetadata

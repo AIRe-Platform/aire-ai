@@ -1,11 +1,11 @@
 import json
 
-from langchain.schema.messages import (
+from langchain_core.messages import (
     HumanMessage, 
     SystemMessage
 )
-from langchain.schema import StrOutputParser
-from langchain.schema.runnable import RunnableLambda
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnableLambda
 
 from ..models.chat import AireChatContext, AireChatInputContext
 from ..llm import ChatModel

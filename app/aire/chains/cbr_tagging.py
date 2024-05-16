@@ -1,4 +1,4 @@
-from langchain.chains import create_tagging_chain_pydantic
+from langchain.chains.openai_functions.tagging import create_tagging_chain_pydantic
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain.schema.runnable import RunnableLambda
 from ..models.chat import AireChatContext

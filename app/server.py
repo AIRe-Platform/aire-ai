@@ -9,8 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import Response
 from sse_starlette import EventSourceResponse;
-from langchain.schema.document import Document
-from langchain.schema.messages import ChatMessage
+from langchain_core.documents import Document
+from langchain_core.messages import ChatMessage
 from langserve.serialization import WellKnownLCSerializer
 from aire.models.chat import (
     AireChatbotInfo, 

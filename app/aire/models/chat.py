@@ -1,5 +1,5 @@
 from langserve.schema import CustomUserType
-from langchain.schema.messages import ChatMessage
+from langchain_core.messages import ChatMessage
 from pydantic import BaseModel
 from .user import AireUser
 from .questionnaire import AireQuestionnaireAnswer

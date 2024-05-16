@@ -1,7 +1,6 @@
 import datetime, uuid
-from langchain.schema.runnable import RunnableLambda
-from langchain.chains.llm import LLMChain
-from langchain.prompts import PromptTemplate
+from langchain_core.runnables import RunnableLambda
+from langchain_core.prompts import PromptTemplate
 from ..models.questionnaire import (
     AireQuestionnaireProcessingRequest, 
     AireQuestionnaireResult, 
@@ -27,10 +26,11 @@ def __build_prompt(item: AireQuestionnaireAnswer):
 def __process_questionnaire(input: AireQuestionnaireProcessingRequest) -> AireQuestionnaireResult:
     prompts_to_process = filter(lambda x: x.prompt != None and x.answer != None, input.answers)
     prompts = list(map(__build_prompt, prompts_to_process))
+    llm = ChatModel(temperature=0.0)
 
     if len(prompts) > 0:
         summary_prompt = PromptTemplate.from_template(summarizy_prompt_template)
-        summary_chain = LLMChain(llm=ChatModel(temperature=0.0), prompt=summary_prompt)
+        summary_chain = summary_prompt | llm
         summary_result = summary_chain.invoke({ "text": "\n".join(prompts) })
         summary = summary_result['text']
     else:
