@@ -32,14 +32,14 @@ def __process_questionnaire(input: AireQuestionnaireProcessingRequest) -> AireQu
         summary_prompt = PromptTemplate.from_template(summarizy_prompt_template)
         summary_chain = summary_prompt | llm
         summary_result = summary_chain.invoke({ "text": "\n".join(prompts) })
-        summary = summary_result['text']
+        summary = summary_result.content
     else:
         summary = "No summary available."
 
     return AireQuestionnaireResult(
         id=str(uuid.uuid4()),
         questionnaire_id=input.questionnaire_id, 
-        timestamp=datetime.datetime.utcnow(),
+        timestamp=datetime.datetime.now(datetime.UTC),
         answers=input.answers,
         summary=summary,
         prompts=prompts)
