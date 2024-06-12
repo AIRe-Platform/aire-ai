@@ -4,7 +4,7 @@ from enum import Enum
 class AireUserServiceCredentials(BaseModel):
     """Service credentials"""
 
-    name: str
+    service_name: str
     token: str
 
 
