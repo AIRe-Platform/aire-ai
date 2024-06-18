@@ -2,7 +2,6 @@ import tiktoken
 from langchain_core.prompts import SystemMessagePromptTemplate
 from langchain.schema.runnable import RunnableLambda
 from ..llm import ChatBotModel
-from ..models.chat import AireChatContext
 from ..models.chat import AireChatContext, AireChatInput
 from ..chains.user_summary import UserSummaryChain
 
@@ -55,7 +54,6 @@ def __messages(ctx: AireChatContext):
 
     if prompt == None:
         prompt = system_prompt
-
 
     prompt = [
         prompt.format(

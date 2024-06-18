@@ -5,7 +5,7 @@ from .user import AireUser
 from .questionnaire import AireQuestionnaireAnswer
 from .platform import AirePlatformConfiguration
 
-class AireChatMessage(CustomUserType):
+class AireChatMessage(BaseModel):
     """A chat message"""
 
     role: str
@@ -15,7 +15,7 @@ class AireChatMessage(CustomUserType):
     question: AireQuestionnaireAnswer | None
 
 
-class AireChatInputContext(CustomUserType):
+class AireChatInputContext(BaseModel):
     """Additional chat context"""
 
     age: int | None
@@ -24,7 +24,7 @@ class AireChatInputContext(CustomUserType):
     language: str | None
 
 
-class AireChatInput(CustomUserType):
+class AireChatInput(BaseModel):
     """This class containst the information about a chat"""
 
     chat: list[AireChatMessage]
