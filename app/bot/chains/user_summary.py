@@ -1,14 +1,9 @@
 import json
-
-from langchain_core.messages import (
-    HumanMessage, 
-    SystemMessage
-)
+from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableLambda
-
-from ..models.chat import AireChatContext, AireChatInputContext
-from ..llm import ChatModel
+from aire.models.chat import AireChatContext, AireChatInputContext
+from llm import ChatModel
 
 def __user_summary_prompt(ctx: AireChatContext) -> str:
     summary = ""

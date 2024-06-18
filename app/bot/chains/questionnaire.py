@@ -1,12 +1,8 @@
 import datetime, uuid
 from langchain_core.runnables import RunnableLambda
 from langchain_core.prompts import PromptTemplate
-from ..models.questionnaire import (
-    AireQuestionnaireProcessingRequest, 
-    AireQuestionnaireResult, 
-    AireQuestionnaireAnswer
-)
-from ..llm import ChatModel
+from aire.models.questionnaire import *
+from llm import ChatModel
 
 summarizy_prompt_template = """
 Please summarize the following facts:

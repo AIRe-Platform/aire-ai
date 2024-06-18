@@ -1,9 +1,9 @@
 import tiktoken
 from langchain_core.prompts import SystemMessagePromptTemplate
 from langchain.schema.runnable import RunnableLambda
-from ..llm import ChatBotModel
-from ..models.chat import AireChatContext, AireChatInput
-from ..chains.user_summary import UserSummaryChain
+from llm import ChatBotModel
+from aire.models.chat import AireChatContext, AireChatInput
+from .chains.user_summary import UserSummaryChain
 
 system_prompt_text = """
 Act as a medical advisor. 
@@ -31,10 +31,25 @@ You should answer only in this language: {language}
 system_prompt = SystemMessagePromptTemplate.from_template(system_prompt_text)
 
 def __messages(ctx: AireChatContext):
+    user_summary = None
+    language = None
+    prompt = None
 
-    user_summary = UserSummaryChain.invoke(ctx)
-    language = ctx.user.language
-    
+
+    try:
+        user_summary = ctx.user.summary
+    except AttributeError:
+        pass
+
+    if user_summary == None:
+        user_summary = UserSummaryChain.invoke(ctx)
+
+
+    try:
+        language = ctx.user.language
+    except AttributeError:
+        pass
+
     if language == None:
         try:
             language = ctx.input.context.language
@@ -44,7 +59,6 @@ def __messages(ctx: AireChatContext):
     if language == None:
         language = "English"
 
-    prompt = None
 
     if ctx.allow_custom_prompt:
         try:
@@ -54,6 +68,7 @@ def __messages(ctx: AireChatContext):
 
     if prompt == None:
         prompt = system_prompt
+
 
     prompt = [
         prompt.format(

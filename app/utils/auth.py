@@ -3,48 +3,18 @@ from jose import jwt, jwe, JWTError
 from jose.exceptions import JWEError
 from typing import Annotated
 from fastapi import Header
-from enum import Enum
-from pydantic import BaseModel
-from .models.user import AireRole, AireUserServiceCredentials
-
+from aire.models.auth import *
 
 TOKEN_SIGNING_KEY = os.getenv("TOKEN_SIGNING_KEY")
 TOKEN_ENCRYPTION_KEY = os.getenv("TOKEN_ENCRYPTION_KEY")
 SERVICE_KEY = os.getenv("AIRE_SERVICE_KEY")
 
-
-class AireScope(str, Enum):
-    """Access scopes"""
-
-    ChatCompletion = "chat-completion"
-    ChatSummary = "chat-summary"
-    ChatTokenCount = "chat-token-count"
-
-    DocumentRead = "document-read"
-    DocumentWrite = "document-write"
-    DocumentDelete = "document-delete"
-
-    QuestionnaireRead = "questionnaire-read"
-    QuestionnaireWrite = "questionnaire-write"
-    QuestionnaireDelete = "questionnaire-delete"
-
-    ExperimentalCustomPrompt = "experimental-custom-prompt"
-
-
-class AireAuth(BaseModel):
-    """User token payload"""
-
-    subject: str | None
-    role: AireRole | str = AireRole.User
-    scopes: list[str]
-    user_key: str | None
-    connected_services: list[AireUserServiceCredentials] | None
-
-
 allow_anonymous_users = os.getenv("ALLOW_ANONYMOUS_USERS") == "1"
-AnonymousScopes = [AireScope.ChatCompletion, AireScope.ChatSummary, 
-                   AireScope.QuestionnaireRead, AireScope.QuestionnaireWrite, AireScope.QuestionnaireDelete] # FIXME: Remove this before commit!
-
+AnonymousScopes = [
+    AireScope.ChatCompletion, 
+    AireScope.ChatSummary,
+    AireScope.QuestionnaireRead,
+]
 
 def verify_token(authorization: Annotated[str | None, Header()] = None):
     if TOKEN_SIGNING_KEY == None or TOKEN_ENCRYPTION_KEY == None:
