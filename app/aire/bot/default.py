@@ -2,17 +2,20 @@ import tiktoken
 from langchain_core.prompts import SystemMessagePromptTemplate
 from langchain.schema.runnable import RunnableLambda
 from ..llm import ChatBotModel
-from ..models.chat import AireChatContext
 from ..models.chat import AireChatContext, AireChatInput
 from ..chains.user_summary import UserSummaryChain
 
 system_prompt_text = """
 Act as a medical advisor. 
+
 Act with empathy and in a friendly manner.
 
 Your task is to find out what is bothering your patient and provide suggestions.
+
 Do not suggest anything that could worsen the condition of the patient.
+
 Ask short and simple questions to get information about the nature of the condition.
+
 Consider possible causes.
 
 Do not jump into conclusions too early.
@@ -21,6 +24,8 @@ Ask only a single question at once.
 
 Here's a summary of your patient:
 {user_summary}
+
+You should answer only in this language: {language}
 """
 
 system_prompt = SystemMessagePromptTemplate.from_template(system_prompt_text)
@@ -28,6 +33,16 @@ system_prompt = SystemMessagePromptTemplate.from_template(system_prompt_text)
 def __messages(ctx: AireChatContext):
 
     user_summary = UserSummaryChain.invoke(ctx)
+    language = ctx.user.language
+    
+    if language == None:
+        try:
+            language = ctx.input.context.language
+        except AttributeError:
+            pass
+    
+    if language == None:
+        language = "English"
 
     prompt = None
 
@@ -40,9 +55,10 @@ def __messages(ctx: AireChatContext):
     if prompt == None:
         prompt = system_prompt
 
-
     prompt = [
-        prompt.format(user_summary=user_summary),
+        prompt.format(
+            user_summary=user_summary,
+            language=language),
         *ctx.input.to_chat_messages()
     ]
 
