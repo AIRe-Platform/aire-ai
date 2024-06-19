@@ -16,5 +16,5 @@ def get_current_user(authorization: Annotated[str | None, Header()] = None):
         raise FORBIDDEN_EXCEPTION
     
     if os.getenv("ALLOW_ANONYMOUS_USERS") != "1":
-        raise FORBIDDEN_EXCEPTION
+        raise UNAUTH_EXCEPTION
     return
