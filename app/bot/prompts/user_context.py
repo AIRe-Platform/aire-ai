@@ -6,13 +6,13 @@ def summary_from_chat_context(context: AireChatInputContext | None) -> str:
 
     if context != None:
         if context.language != None:
-            summary += f"The user speaks {context.language}."
+            summary += f"\nThe user speaks {context.language}."
 
         if context.age != None:
-            summary += f" The user is {context.age} years old."
+            summary += f"\nThe user is {context.age} years old."
             
         if context.occupation != None:
-            summary += f" The user's occupation is {context.occupation}."
+            summary += f"\nThe user's occupation is {context.occupation}."
 
     return summary
 
@@ -21,25 +21,25 @@ def summary_from_profile(user: AireUser) -> str:
     summary = ""
 
     if user.first_name != None:
-        summary += f"First name: {user.first_name}"
+        summary += f"\nFirst name: {user.first_name}"
 
     if user.last_name != None:
-        summary += f"Last name: {user.last_name}"
+        summary += f"\nLast name: {user.last_name}"
 
     if user.age != None:
-        summary += f"Age: {user.age}"
+        summary += f"\nAge: {user.age}"
 
     if user.gender != None:
-        summary += f"Gender: {user.gender}"
+        summary += f"\nGender: {user.gender.value}"
 
     if user.language != None:
-        summary += f"Language: {user.language}"
+        summary += f"\nLanguage: {user.language}"
 
     if user.country != None:
-        summary += f"Country: {user.country}"
+        summary += f"\nCountry: {user.country}"
 
     if user.bio != None:
-        summary += f"Biography: {user.bio}"
+        summary += f"\nBiography: {user.bio}"
 
     return summary
 
