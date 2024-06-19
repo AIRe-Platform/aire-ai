@@ -30,7 +30,7 @@ def summary_from_profile(user: AireUser) -> str:
         summary += f"Age: {user.age}"
 
     if user.gender != None:
-        summary += f"Last name: {user.gender}"
+        summary += f"Gender: {user.gender}"
 
     if user.language != None:
         summary += f"Language: {user.language}"
