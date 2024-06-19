@@ -5,8 +5,6 @@ from .user import AireRole, AireUserServiceCredentials
 class AireScope(str, Enum):
     """Access scopes"""
 
-    ProfileSummary = "profile-summary"
-
     ChatCompletion = "chat-completion"
     ChatSummary = "chat-summary"
     ChatTokenCount = "chat-token-count"

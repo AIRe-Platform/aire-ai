@@ -3,7 +3,7 @@ from langchain_core.prompts import SystemMessagePromptTemplate
 from langchain.schema.runnable import RunnableLambda
 from llm import ChatBotModel
 from aire.models.chat import AireChatContext, AireChatInput
-from .chains.user_summary import UserSummaryChain
+from .prompts.user_context import generate_user_context
 
 system_prompt_text = """
 Act as a medical advisor. 
@@ -31,19 +31,9 @@ You should answer only in this language: {language}
 system_prompt = SystemMessagePromptTemplate.from_template(system_prompt_text)
 
 def __messages(ctx: AireChatContext):
-    user_summary = None
     language = None
+    topic = None
     prompt = None
-
-
-    try:
-        user_summary = ctx.user.summary
-    except AttributeError:
-        pass
-
-    if user_summary == None:
-        user_summary = UserSummaryChain.invoke(ctx)
-
 
     try:
         language = ctx.user.language
@@ -60,6 +50,12 @@ def __messages(ctx: AireChatContext):
         language = "English"
 
 
+    try:
+        topic = ctx.input.context.topic
+    except AttributeError:
+        pass
+    
+
     if ctx.allow_custom_prompt:
         try:
             prompt = ctx.user.preferences.experimental_custom_prompt
@@ -69,10 +65,12 @@ def __messages(ctx: AireChatContext):
     if prompt == None:
         prompt = system_prompt
 
+    if topic != None:
+        prompt += f"\nThe user wants to speak about: {topic}."
 
     prompt = [
         prompt.format(
-            user_summary=user_summary,
+            user_summary=generate_user_context(ctx),
             language=language),
         *ctx.input.to_chat_messages()
     ]
