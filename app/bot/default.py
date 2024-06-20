@@ -36,15 +36,9 @@ def __messages(ctx: AireChatContext):
     prompt = None
 
     try:
-        language = ctx.user.language
+        language = ctx.input.context.language
     except AttributeError:
         pass
-
-    if language == None:
-        try:
-            language = ctx.input.context.language
-        except AttributeError:
-            pass
     
     if language == None:
         language = "English"

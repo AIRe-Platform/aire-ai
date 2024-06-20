@@ -5,9 +5,6 @@ def summary_from_chat_context(context: AireChatInputContext | None) -> str:
     summary = ""
 
     if context != None:
-        if context.language != None:
-            summary += f"\nThe user speaks {context.language}."
-
         if context.age != None:
             summary += f"\nThe user is {context.age} years old."
             
@@ -31,9 +28,6 @@ def summary_from_profile(user: AireUser) -> str:
 
     if user.gender != None:
         summary += f"\nGender: {user.gender.value}"
-
-    if user.language != None:
-        summary += f"\nLanguage: {user.language}"
 
     if user.country != None:
         summary += f"\nCountry: {user.country}"
