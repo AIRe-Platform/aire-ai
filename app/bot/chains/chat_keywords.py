@@ -1,9 +1,9 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_core.runnables import RunnableLambda
-from ..models.chat import AireChatContext
-from ..llm import ChatModel
-from ..services.memory import get_keywords
+from aire.models.chat import AireChatContext
+from aire.services.memory import get_keywords
+from llm import ChatModel
 
 prompt = ChatPromptTemplate.from_template(
     """

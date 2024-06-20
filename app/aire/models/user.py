@@ -37,6 +37,7 @@ class AireUser(BaseModel):
     bio: str | None
     connected_services: list[AireUserServiceCredentials] | None
     preferences: AireUserPreferences | None
+    summary: str | None
 
 
 class AireRole(str, Enum):
