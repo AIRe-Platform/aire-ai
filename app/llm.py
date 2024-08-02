@@ -1,5 +1,5 @@
 import os
-from langchain_openai import AzureOpenAI, OpenAI, AzureOpenAIEmbeddings, OpenAIEmbeddings
+from langchain_openai import AzureOpenAIEmbeddings, OpenAIEmbeddings
 from langchain_openai.chat_models import AzureChatOpenAI, ChatOpenAI
 
 AZURE_OPENAI = os.getenv("OPENAI_API_TYPE") == "azure"

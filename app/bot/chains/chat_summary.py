@@ -1,4 +1,5 @@
-from langchain.memory import ConversationSummaryBufferMemory, ChatMessageHistory
+from langchain.memory import ConversationSummaryBufferMemory
+from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain.memory.prompt import SUMMARY_PROMPT
 from langchain.schema.runnable import RunnableLambda
 from aire.models.chat import AireChatContext
