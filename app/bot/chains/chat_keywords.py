@@ -3,7 +3,7 @@ from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_core.runnables import RunnableLambda
 from aire.models.chat import AireChatContext
 from aire.services.memory import get_keywords
-from llm import ChatModel
+from llm import DefaultModel
 
 prompt = ChatPromptTemplate.from_template(
     """
@@ -26,7 +26,7 @@ def __keyword_tagging_chain(ctx: AireChatContext):
             enum=get_keywords(ctx.platform),
             description="Keywords describing the topic of the conversation. Empty if no suitable keywords are found.")
 
-    llm = ChatModel(temperature=0.0).with_structured_output(Keywords)
+    llm = DefaultModel(temperature=0.0).with_structured_output(Keywords)
     chain = prompt | llm
     output = chain.invoke({"input": messages})
     keywords = map(lambda x: x.strip(), output.keywords.split(","))
