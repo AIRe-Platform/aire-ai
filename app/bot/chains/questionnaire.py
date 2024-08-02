@@ -1,4 +1,5 @@
-import datetime, uuid
+import uuid
+from datetime import datetime, timezone
 from langchain_core.runnables import RunnableLambda
 from langchain_core.prompts import PromptTemplate
 from aire.models.questionnaire import *
@@ -35,7 +36,7 @@ def __process_questionnaire(input: AireQuestionnaireProcessingRequest) -> AireQu
     return AireQuestionnaireResult(
         id=str(uuid.uuid4()),
         questionnaire_id=input.questionnaire_id, 
-        timestamp=datetime.datetime.now(datetime.UTC),
+        timestamp=datetime.now(timezone.utc),
         answers=input.answers,
         summary=summary,
         prompts=prompts)
