@@ -1,8 +1,9 @@
-import datetime, uuid
+import uuid
+from datetime import datetime, timezone
 from langchain_core.runnables import RunnableLambda
 from langchain_core.prompts import PromptTemplate
 from aire.models.questionnaire import *
-from llm import ChatModel
+from llm import DefaultModel
 
 summarizy_prompt_template = """
 Please summarize the following facts:
@@ -22,7 +23,7 @@ def __build_prompt(item: AireQuestionnaireAnswer):
 def __process_questionnaire(input: AireQuestionnaireProcessingRequest) -> AireQuestionnaireResult:
     prompts_to_process = filter(lambda x: x.prompt != None and x.answer != None, input.answers)
     prompts = list(map(__build_prompt, prompts_to_process))
-    llm = ChatModel(temperature=0.0)
+    llm = DefaultModel(temperature=0.0)
 
     if len(prompts) > 0:
         summary_prompt = PromptTemplate.from_template(summarizy_prompt_template)
@@ -35,7 +36,7 @@ def __process_questionnaire(input: AireQuestionnaireProcessingRequest) -> AireQu
     return AireQuestionnaireResult(
         id=str(uuid.uuid4()),
         questionnaire_id=input.questionnaire_id, 
-        timestamp=datetime.datetime.now(datetime.UTC),
+        timestamp=datetime.now(timezone.utc),
         answers=input.answers,
         summary=summary,
         prompts=prompts)

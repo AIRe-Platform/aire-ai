@@ -31,10 +31,10 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-import api.bot;
-import api.chat;
-import api.embeddings;
-import api.questionnaires;
+from api.bot import *
+from api.chat import *
+from api.embeddings import *
+from api.questionnaires import *
 
 if __name__ == "__main__":
     import uvicorn

@@ -1,10 +1,11 @@
-from langchain.memory import ConversationSummaryBufferMemory, ChatMessageHistory
+from langchain.memory import ConversationSummaryBufferMemory
+from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain.memory.prompt import SUMMARY_PROMPT
 from langchain.schema.runnable import RunnableLambda
 from aire.models.chat import AireChatContext
-from llm import LLM
+from llm import DefaultModel
 
-llm_summary = LLM(temperature=0)
+llm_summary = DefaultModel(temperature=0, max_tokens=256)
 summary_prompt = """Progressively summarize the lines of conversation provided, adding onto the previous summary returning a new summary.
 
 Current summary:
