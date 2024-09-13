@@ -1,4 +1,10 @@
-from langchain.memory import ConversationSummaryBufferMemory, ChatMessageHistory
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+
+from langchain.memory import ConversationSummaryBufferMemory
+from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain.memory.prompt import SUMMARY_PROMPT
 from langchain.schema.runnable import RunnableLambda
 from aire.models.chat import AireChatContext
