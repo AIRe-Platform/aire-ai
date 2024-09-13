@@ -5,6 +5,8 @@
 
 import requests
 import os
+import json
+import ast
 from cachetools import cached, TTLCache
 from cachetools.keys import hashkey
 from pydantic import parse_obj_as
@@ -41,3 +43,30 @@ def get_keywords(conf: AirePlatformConfiguration):
         return list(map(lambda x: x.value, keywords))
     else:
         raise RuntimeError("Failed to get keywords")
+
+def post_event(event_data):
+    key = os.getenv("AIRE_SERVICE_KEY")
+
+    if key == None:
+        raise RuntimeError("Missing AIRe service configuration")
+    
+    url = "http://172.22.176.1:7073/api" + "/v1/events"
+    # url = svc.endpoint + "/v1/keywords"
+    token = "Bearer " + "TODO: get token from ID service here." # TODO: get token from ID service
+    headers = {
+        "Authorization": token,
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+    }
+
+    # json_data = json.dumps(event_data)
+    # print(json_data)
+
+    # response = requests.post(url=url, headers=headers, data=json_data)
+    response = requests.post(url=url, headers=headers, data="{ 'trigger_timestamp': 123456789, 'content': {'message': 'test'} }") # TODO: send real json
+
+    if response.status_code == 200:
+        json = response.json()
+        return json
+    else:
+        raise RuntimeError("Failed to add event")

@@ -5,6 +5,7 @@ langchain-community
 langchain-openai
 langchain-postgres
 langchain-text-splitters
+langgraph
 langserve[server]
 openai
 pgvector

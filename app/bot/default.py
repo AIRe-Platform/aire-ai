@@ -9,6 +9,7 @@ from langchain.schema.runnable import RunnableLambda
 from llm import ChatModel
 from aire.models.chat import AireChatContext, AireChatInput
 from .prompts.user_context import generate_user_context
+from .tools import Tools
 
 system_prompt_text = """
 Act as a medical advisor. 
@@ -34,7 +35,7 @@ You should answer only in this language: {language}
 """
 
 system_prompt = SystemMessagePromptTemplate.from_template(system_prompt_text)
-llm = ChatModel(temperature=0.7)
+llm = ChatModel(temperature=0.7).bind_tools(Tools)
 
 def __messages(ctx: AireChatContext):
     language = None

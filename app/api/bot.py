@@ -18,8 +18,10 @@ from fastapi import Depends, HTTPException, status
 from fastapi.responses import Response
 from langserve.serialization import WellKnownLCSerializer
 from sse_starlette import EventSourceResponse;
+from bot.agents.event import EventAgent
 
 serializer = WellKnownLCSerializer()
+
 
 @app.get("/bot", 
          description="List available bots",
@@ -82,6 +84,12 @@ async def stream_bot(bot_name: str,
 
                 if(buffer["content"]):
                     output += buffer["content"]
+                if(buffer["tool_calls"]):
+                    agent_result = EventAgent.invoke(
+                        {"messages": input.to_chat_messages()},
+                        config={"configurable": {"thread_id": 42}}
+                    )
+                    # print(agent_result) # TODO: when agent is done, handle response from it if it has any AIMessages
 
             bot_message = ChatMessage(role="assistant", content=output)
             bot_input = AireChatInput(chat=[bot_message])
