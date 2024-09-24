@@ -23,11 +23,26 @@ It uses LangChain framework to implement the AIRe platform's AI features.
 
 ## Getting Started
 
+Recommended Python version: 3.12.x
+
 Run the following command to setup the development environment:
+
+### Linux & macOS
 
 ```bash
 ./setup_env.sh --dev
 ```
+
+### Windows
+
+```cmd
+pip install virtualenv
+python -m venv .env
+.env\Scripts\activate.bat
+pip install -r requirements_dev.txt
+```
+
+_TODO: Test the above script on Windows_
 
 This will create a Python virtual environment and install necessary packages.
 
@@ -69,17 +84,17 @@ If you are using OpenAI's service, or if you have an inference server that has O
 OPENAI_API_BASE=http://<link-to-openai-compatible-api-endpoints>/v1
 ```
 
+Note that there may be compatibility issues, and that you might need to specify which models to use.
+
+You can override default models with environment values:
+
+```env
+LLM_DEFAULT_MODEL_NAME=my-model-name-for-general-tasks
+LLM_CHAT_MODEL_NAME=my-model-for-chatbot
+LLM_EMBEDDINGS_MODEL_NAME=my-model-for-embeddings
+```
+
 ## Anonymous Usage
 
 You may use `ALLOW_ANONYMOUS_USERS=1` to skip authentication for testing purposes.
 
-## Local Inference
-
-You can test the features with a local language model. Although, some features may not work correctly as the OpenAI-compatibility is not always perfect. 
-
-Here are various options for running local "OpenAI-compatible" inference servers:
-
-- [LM Studio](https://lmstudio.ai/) is an application with a GUI for running models locally.
-- [Ollama](https://ollama.ai) is a commandline application for running models locally. In addition to its own API, it also has OpenAI-compatible endpoints.
-- [KoboldCpp](https://github.com/LostRuins/koboldcpp) is another option for running local models.
-- [text-generation-webui](https://github.com/oobabooga/text-generation-webui) is another option and has a web interface for a GUI.
