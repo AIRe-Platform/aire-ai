@@ -30,12 +30,19 @@ Run the following command to setup the development environment:
 ### Linux & macOS
 
 ```bash
+# Optional: You might have to set execute permission for the script
+chmod +x ./setup_env.sh
+
+# Creates a virtual environment and install latest versions of the dependencies
 ./setup_env.sh --dev
+
+# To install 'frozen' versions of the dependencies that are verified to work, call:
+./setup_env.sh
 ```
 
 ### Windows
 
-```cmd
+```bat
 pip install virtualenv
 python -m venv .env
 .env\Scripts\activate.bat
@@ -78,13 +85,15 @@ AZURE_OPENAI_ENDPOINT=https://<my-openai-resource>.openai.azure.com
 
 ### Using OpenAI-compatible API 
 
-If you are using OpenAI's service, or if you have an inference server that has OpenAI-compatible endpoints, set the base address:
+If you are using the official OpenAI endpoints, or if you have an inference server that has OpenAI-compatible endpoints, set the base address:
 
 ```env
 OPENAI_API_BASE=http://<link-to-openai-compatible-api-endpoints>/v1
 ```
 
-Note that there may be compatibility issues, and that you might need to specify which models to use.
+### Third-party APIs or local inference
+
+Note that there may be compatibility issues when using other than OpenAI models, and that you might need to specify which models to use.
 
 You can override default models with environment values:
 
