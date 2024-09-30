@@ -58,7 +58,6 @@ def EmbeddingsModel():
         )
     else:
         return OpenAIEmbeddings(
-            model=LLM_EMBEDDINGS_MODEL_NAME,
-            check_embedding_ctx_length=False # Add for local inference compatibility
+            model=LLM_EMBEDDINGS_MODEL_NAME
         )
     
