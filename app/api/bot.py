@@ -66,9 +66,6 @@ async def stream_bot(bot_name: str,
         platform=get_platform_config())
     input_token_count = count_tokens(input)
 
-    # Generate keywords list every 5 messages
-    gen_keywords = (len(input.to_chat_messages()) % 5 == 0)
-
     async def stream() -> AsyncIterator[dict]:
         try:
             output = ""
@@ -91,12 +88,11 @@ async def stream_bot(bot_name: str,
                 "data": output_token_count + input_token_count
             }
 
-            if gen_keywords:
-                keywords = await ChatKeywordChain.ainvoke(context)
-                yield { 
-                    "event": "keywords",
-                    "data": serializer.dumps(keywords).decode("utf-8")
-                }
+            keywords = await ChatKeywordChain.ainvoke(context)
+            yield { 
+                "event": "keywords",
+                "data": serializer.dumps(keywords).decode("utf-8")
+            }
             
             yield { "event": "end" }
         except BaseException as ex:
