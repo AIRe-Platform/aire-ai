@@ -11,16 +11,15 @@ from aire.models.chat import AireChatContext
 from llm import DefaultModel
 
 llm_summary = DefaultModel(temperature=0, max_tokens=256)
-summary_prompt = """Progressively summarize the lines of conversation provided, adding onto the previous summary returning a new summary.
-
-Current summary:
-{summary}
+summary_prompt = """Progressively summarize the lines of conversation provided.
 
 New lines of conversation:
 {new_lines}
 
-Language:
-Use the same language the conversation is written in.
+Important:
+Do not copy the conversation word by word.
+Do not translate the messages from the original language.
+Write the summary in the SAME LANGUAGE the messages are written in.
 
 New summary:"""
 
