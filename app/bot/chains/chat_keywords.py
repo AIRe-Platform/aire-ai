@@ -10,11 +10,13 @@ from aire.models.chat import AireChatContext
 from aire.services.memory import get_keywords
 from llm import DefaultModel
 
-prompt = ChatPromptTemplate.from_template(
-    """
+prompt = ChatPromptTemplate.from_template("""
 Extract the keywords describing the topic of the following conversation.
 
-Only extract the keywords in the 'Keywords' function. Separate the keywords with commas.
+Important: 
+Use keywords sparingly, prefer to use as few as possible.
+If unsure, leave keywords empty.
+When you tag the conversation with a keyword, you have to be absolutely sure it is correct!
 
 Conversation:
 {input}

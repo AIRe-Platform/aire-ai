@@ -10,12 +10,12 @@ from langchain_openai.chat_models import AzureChatOpenAI, ChatOpenAI
 AZURE_OPENAI = os.getenv("OPENAI_API_TYPE") == "azure"
 
 # Azure deployments
-AZURE_DEFAULT_DEPLOYMENT_NAME = os.getenv("AZURE_DEFAULT_DEPLOYMENT", "chat")
+AZURE_DEFAULT_DEPLOYMENT_NAME = os.getenv("AZURE_DEFAULT_DEPLOYMENT", "gpt-4o")
 AZURE_CHAT_DEPLOYMENT_NAME = os.getenv("AZURE_CHAT_DEPLOYMENT", "gpt-4o")
 AZURE_EMBEDDINGS_DEPLOYMENT_NAME = os.getenv("AZURE_EMBEDDINGS_DEPLOYMENT_NAME", "embed")
 
 # Models
-LLM_DEFAULT_MODEL_NAME = os.getenv("LLM_DEFAULT_MODEL_NAME", "gpt-3.5-turbo-1106")
+LLM_DEFAULT_MODEL_NAME = os.getenv("LLM_DEFAULT_MODEL_NAME", "gpt-4o")
 LLM_CHAT_MODEL_NAME = os.getenv("LLM_CHAT_MODEL_NAME", "gpt-4o")
 LLM_EMBEDDINGS_MODEL_NAME = os.getenv("LLM_EMBEDDINGS_MODEL_NAME", "text-embedding-ada-002")
 
