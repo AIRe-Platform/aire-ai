@@ -19,7 +19,7 @@ New lines of conversation:
 Important:
 Do not copy the conversation word by word.
 Do not translate the messages from the original language.
-Write the summary in the SAME LANGUAGE the messages are written in.
+Write the summary in the same language the messages are written in.
 
 New summary:"""
 
