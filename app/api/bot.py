@@ -68,8 +68,7 @@ async def stream_bot(bot_name: str,
         platform=get_platform_config())
     input_token_count = count_tokens(input)
 
-    # Generate keywords list every 5 messages
-    gen_keywords = (len(input.to_chat_messages()) % 5 == 0)
+    gen_keywords = len(input.to_chat_messages()) > 4
 
     async def stream() -> AsyncIterator[dict]:
         try:

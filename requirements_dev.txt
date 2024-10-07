@@ -1,6 +1,6 @@
 langchain
 langchain-cli
-pydantic==1.10.13
+pydantic==1.10.18
 langchain-community
 langchain-openai
 langchain-postgres
