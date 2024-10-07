@@ -9,6 +9,7 @@ from langchain.schema.runnable import RunnableLambda
 from llm import ChatModel
 from aire.models.chat import AireChatContext, AireChatInput
 from .prompts.user_context import generate_user_context
+from .tools.events import create_scheduled_event_tool
 
 system_prompt_text = """
 You are AIRe, an AI advisor for health and rehabilitation topics.
@@ -47,7 +48,7 @@ You should answer only in this language:
 """
 
 system_prompt = SystemMessagePromptTemplate.from_template(system_prompt_text)
-llm = ChatModel(temperature=0.7)
+llm = ChatModel(temperature=0.7).bind_tools([create_scheduled_event_tool])
 
 def __messages(ctx: AireChatContext):
     language = None

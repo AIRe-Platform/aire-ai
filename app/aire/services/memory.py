@@ -9,10 +9,13 @@ from cachetools import cached, TTLCache
 from cachetools.keys import hashkey
 from pydantic import parse_obj_as
 from ..models.keyword import AireKeyword
+from ..models.event import AireScheduledEvent;
 from ..models.platform import (
     AirePlatformConfiguration, 
-    AireModuleType
+    AireModuleType,
+    AireModule
 )
+from ..models.auth import AireAuth;
 
 def hash_key(conf: AirePlatformConfiguration):
     return hashkey(conf.platform.name)
@@ -41,3 +44,19 @@ def get_keywords(conf: AirePlatformConfiguration):
         return list(map(lambda x: x.value, keywords))
     else:
         raise RuntimeError("Failed to get keywords")
+
+def post_event(svc: AireModule, auth: AireAuth, event: AireScheduledEvent) -> AireScheduledEvent:
+    url = svc.endpoint + "/v1/events"
+    headers = {
+        "Authorization": "Bearer " + auth.token,
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+    }
+
+    response = requests.post(url=url, headers=headers, json=event.dict())
+
+    if response.status_code == 200:
+        return AireScheduledEvent.parse_obj(response.json())
+    else:
+        raise RuntimeError("Failed to add event")
+    
