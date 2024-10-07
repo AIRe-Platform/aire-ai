@@ -4,6 +4,7 @@
 
 
 import tiktoken
+from datetime import datetime, UTC
 from langchain_core.prompts import SystemMessagePromptTemplate
 from langchain.schema.runnable import RunnableLambda
 from llm import ChatModel
@@ -45,6 +46,9 @@ Here's a summary of your patient:
 
 You should answer only in this language: 
 {language}
+
+The current time (UTC) is, please note that the user may be on a different timezone:
+{current_time}
 """
 
 system_prompt = SystemMessagePromptTemplate.from_template(system_prompt_text)
@@ -85,7 +89,8 @@ def __messages(ctx: AireChatContext):
     prompt = [
         prompt.format(
             user_summary=generate_user_context(ctx),
-            language=language),
+            language=language,
+            current_time=datetime.now(UTC).isoformat()),
         *ctx.input.to_chat_messages()
     ]
 
