@@ -11,14 +11,16 @@ from utils.current_user import get_current_user, get_platform_config
 from bot.default import *
 from bot.chains.chat_keywords import ChatKeywordChain
 from aire.models.chat import *
+from bot.tools.events import handle_event_tool_call
 
 import json
 from typing import Annotated, AsyncIterator
 from fastapi import Depends, HTTPException, status
 from fastapi.responses import Response
 from langserve.serialization import WellKnownLCSerializer
+from langchain_core.messages.tool import ToolCall, ToolCallChunk
 from sse_starlette import EventSourceResponse;
-from bot.agents.event import EventAgent
+# from bot.agents.event import EventAgent
 
 serializer = WellKnownLCSerializer()
 
@@ -65,7 +67,8 @@ async def stream_bot(bot_name: str,
         input=input, 
         user=user, 
         allow_custom_prompt=allow_prompt_override,
-        platform=get_platform_config())
+        platform=get_platform_config(),
+        auth=auth)
     input_token_count = count_tokens(input)
 
     gen_keywords = len(input.to_chat_messages()) > 4
@@ -74,6 +77,8 @@ async def stream_bot(bot_name: str,
         try:
             output = ""
             iter = bot.astream(context)
+            tool_calls: list[ToolCallChunk] = []
+
             async for chunk in iter:
                 buffer = serializer.dumpd(chunk)
                 yield {
@@ -83,12 +88,36 @@ async def stream_bot(bot_name: str,
 
                 if(buffer["content"]):
                     output += buffer["content"]
-                if(buffer["tool_calls"]):
-                    agent_result = EventAgent.invoke(
-                        {"messages": input.to_chat_messages()},
-                        config={"configurable": {"thread_id": 42}}
-                    )
-                    # print(agent_result) # TODO: when agent is done, handle response from it if it has any AIMessages
+
+                if(buffer["tool_call_chunks"]):
+                    tool_chunks: list[ToolCallChunk] = buffer["tool_call_chunks"]
+                    for tool_chunk in tool_chunks:
+                        index = tool_chunk["index"]
+
+                        if len(tool_calls) <= index:
+                            tool_calls.append(ToolCallChunk(id="", name="", args="", index=index))
+                        tc: ToolCallChunk = tool_calls[index]
+
+                        if tool_chunk["id"]:
+                            tc["id"] += tool_chunk["id"]
+                        if tool_chunk["name"]:
+                            tc["name"] += tool_chunk["name"]
+                        if tool_chunk["args"]:
+                            tc["args"] += tool_chunk["args"]
+
+            for complete_chunk in tool_calls:
+                call = ToolCall(
+                    id=complete_chunk["id"], 
+                    name=complete_chunk["name"], 
+                    args=json.loads(complete_chunk["args"]))
+                
+                if call.get("name") == "create_scheduled_event":
+                    call_result = handle_event_tool_call(context, call)
+                    if call_result != None:
+                        yield {
+                            "event": "event-scheduled",
+                            "data": serializer.dumps(call_result).decode("utf-8")
+                        }
 
             bot_message = ChatMessage(role="assistant", content=output)
             bot_input = AireChatInput(chat=[bot_message])

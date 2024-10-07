@@ -22,6 +22,10 @@ class AireScope(str, Enum):
     QuestionnaireWrite = "questionnaire-write"
     QuestionnaireDelete = "questionnaire-delete"
 
+    EventRead = "event-read"
+    EventWrite = "event-write"
+    EventDelete = "event-delete"
+
     ExperimentalCustomPrompt = "experimental-custom-prompt"
 
 
@@ -33,3 +37,4 @@ class AireAuth(BaseModel):
     scopes: list[str]
     user_key: str | None
     connected_services: list[AireUserServiceCredentials] | None
+    token: str | None
