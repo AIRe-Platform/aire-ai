@@ -33,6 +33,7 @@ class AireChatInputContext(BaseModel):
 class AireChatInput(BaseModel):
     """This class containst the information about a chat"""
 
+    chat_id: str | None
     chat: list[AireChatMessage]
     context: AireChatInputContext | None
 

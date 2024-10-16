@@ -34,7 +34,7 @@ create_reminder_tool = {
 def _create_reminder(ctx: AireChatContext, date_and_time: str, subject: str) -> AireReminder:
     timestamp = datetime.fromisoformat(date_and_time).timestamp()
     content = AireReminderContent(message=subject)
-    reminder = AireReminder(trigger_timestamp=timestamp, content=content)
+    reminder = AireReminder(trigger_timestamp=timestamp, content=content, chat_id=ctx.input.chat_id)
 
     memory = ctx.platform.platform.modules.get(AireModuleType.Memory)
     if memory != None:
