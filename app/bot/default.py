@@ -10,7 +10,7 @@ from langchain.schema.runnable import RunnableLambda
 from llm import ChatModel
 from aire.models.chat import AireChatContext, AireChatInput
 from .prompts.user_context import generate_user_context
-from .tools.events import create_scheduled_event_tool
+from .tools.reminders import create_reminder_tool
 
 system_prompt_text = """
 You are AIRe, an AI advisor for health and rehabilitation topics.
@@ -52,7 +52,7 @@ The current time (UTC) is, please note that the user may be on a different timez
 """
 
 system_prompt = SystemMessagePromptTemplate.from_template(system_prompt_text)
-llm = ChatModel(temperature=0.7).bind_tools([create_scheduled_event_tool])
+llm = ChatModel(temperature=0.7).bind_tools([create_reminder_tool])
 
 def __messages(ctx: AireChatContext):
     language = None

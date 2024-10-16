@@ -10,8 +10,8 @@ from utils.current_user import get_current_user, get_platform_config
 
 from bot.default import *
 from bot.chains.chat_keywords import ChatKeywordChain
+from bot.tools.reminders import handle_reminder_call
 from aire.models.chat import *
-from bot.tools.events import handle_event_tool_call
 
 import json
 from typing import Annotated, AsyncIterator
@@ -20,7 +20,6 @@ from fastapi.responses import Response
 from langserve.serialization import WellKnownLCSerializer
 from langchain_core.messages.tool import ToolCall, ToolCallChunk
 from sse_starlette import EventSourceResponse;
-# from bot.agents.event import EventAgent
 
 serializer = WellKnownLCSerializer()
 
@@ -111,11 +110,11 @@ async def stream_bot(bot_name: str,
                     name=complete_chunk["name"], 
                     args=json.loads(complete_chunk["args"]))
                 
-                if call.get("name") == "create_scheduled_event":
-                    call_result = handle_event_tool_call(context, call)
+                if call.get("name") == "create_reminder":
+                    call_result = handle_reminder_call(context, call)
                     if call_result != None:
                         yield {
-                            "event": "event-scheduled",
+                            "event": "reminder",
                             "data": serializer.dumps(call_result).decode("utf-8")
                         }
 
@@ -129,10 +128,11 @@ async def stream_bot(bot_name: str,
 
             if gen_keywords:
                 keywords = await ChatKeywordChain.ainvoke(context)
-                yield { 
-                    "event": "keywords",
-                    "data": serializer.dumps(keywords).decode("utf-8")
-                }
+                if len(keywords) > 0:
+                    yield { 
+                        "event": "keywords",
+                        "data": serializer.dumps(keywords).decode("utf-8")
+                    }
             
             yield { "event": "end" }
         except BaseException as ex:

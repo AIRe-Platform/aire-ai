@@ -5,11 +5,11 @@
 from typing import Optional
 from pydantic import BaseModel
 
-class AireEventContent(BaseModel):
+class AireReminderContent(BaseModel):
     message: str
 
-class AireScheduledEvent(BaseModel):
+class AireReminder(BaseModel):
     id: Optional[str]
     trigger_timestamp: int
     read_timestamp: Optional[int]
-    content: AireEventContent
+    content: AireReminderContent

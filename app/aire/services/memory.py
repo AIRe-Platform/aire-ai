@@ -9,7 +9,7 @@ from cachetools import cached, TTLCache
 from cachetools.keys import hashkey
 from pydantic import parse_obj_as
 from ..models.keyword import AireKeyword
-from ..models.event import AireScheduledEvent;
+from ..models.reminder import AireReminder;
 from ..models.platform import (
     AirePlatformConfiguration, 
     AireModuleType,
@@ -45,18 +45,16 @@ def get_keywords(conf: AirePlatformConfiguration):
     else:
         raise RuntimeError("Failed to get keywords")
 
-def post_event(svc: AireModule, auth: AireAuth, event: AireScheduledEvent) -> AireScheduledEvent:
-    url = svc.endpoint + "/v1/events"
+def create_reminder(svc: AireModule, auth: AireAuth, reminder: AireReminder) -> AireReminder:
+    url = svc.endpoint + "/v1/reminder"
     headers = {
         "Authorization": "Bearer " + auth.token,
         "Accept": "application/json",
         "Content-Type": "application/json"
     }
-
-    response = requests.post(url=url, headers=headers, json=event.dict())
-
+    response = requests.post(url=url, headers=headers, json=reminder.dict())
     if response.status_code == 200:
-        return AireScheduledEvent.parse_obj(response.json())
+        return AireReminder.parse_obj(response.json())
     else:
-        raise RuntimeError("Failed to add event")
+        raise RuntimeError("Failed to create reminder")
     

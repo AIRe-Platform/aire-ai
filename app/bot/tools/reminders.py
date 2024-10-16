@@ -4,16 +4,16 @@
 
 from datetime import datetime
 from langchain_core.messages.tool import ToolCall
-from aire.models.event import AireScheduledEvent, AireEventContent
+from aire.models.reminder import AireReminder, AireReminderContent
 from aire.models.chat import AireChatContext
 from aire.models.platform import AireModuleType
-from aire.services.memory import post_event
+from aire.services.memory import create_reminder
 
-create_scheduled_event_tool = {
+create_reminder_tool = {
     "type": "function",
     "function": {
-        "name": "create_scheduled_event",
-        "description": "Schedule events and reminders",
+        "name": "create_reminder",
+        "description": "Schedule reminders",
         "parameters": {
             "type": "object",
             "properties": {
@@ -23,7 +23,7 @@ create_scheduled_event_tool = {
                 },
                 "subject": {
                     "type": "string",
-                    "description": "The subject or content of the reminder event."
+                    "description": "The subject or content of the reminder."
                 }
             },
             "required": ["date_and_time", "subject"]
@@ -31,24 +31,22 @@ create_scheduled_event_tool = {
     }
 }
 
-def _create_scheduled_event(ctx: AireChatContext, date_and_time: str, subject: str) -> AireScheduledEvent:
-    print(f"Scheduled event '{subject}' at {date_and_time}")
-
+def _create_reminder(ctx: AireChatContext, date_and_time: str, subject: str) -> AireReminder:
     timestamp = datetime.fromisoformat(date_and_time).timestamp()
-    content = AireEventContent(message=subject)
-    event = AireScheduledEvent(trigger_timestamp=timestamp, content=content)
+    content = AireReminderContent(message=subject)
+    reminder = AireReminder(trigger_timestamp=timestamp, content=content)
 
     memory = ctx.platform.platform.modules.get(AireModuleType.Memory)
     if memory != None:
-        event = post_event(memory, ctx.auth, event)
+        event = create_reminder(memory, ctx.auth, reminder)
 
     return event
 
 
-def handle_event_tool_call(ctx: AireChatContext, call: ToolCall):
-    if call.get("name") == "create_scheduled_event":
+def handle_reminder_call(ctx: AireChatContext, call: ToolCall):
+    if call.get("name") == "create_reminder":
         args = call.get("args")
-        return _create_scheduled_event(ctx, args.get("date_and_time"), args.get("subject"))
+        return _create_reminder(ctx, args.get("date_and_time"), args.get("subject"))
     else:
         return None
     
