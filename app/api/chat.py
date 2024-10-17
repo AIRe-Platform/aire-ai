@@ -31,7 +31,7 @@ async def chat_abstract(
     if not AireScope.ChatSummary in auth.scopes:
         raise FORBIDDEN_EXCEPTION
     
-    context = AireChatContext(input=input, platform=get_platform_config())
+    context = AireChatContext(input=input, platform=get_platform_config(), auth=auth)
     return ChatAbstractChain.invoke(context)
 
 
@@ -49,7 +49,7 @@ async def chat_summary(
     if not AireScope.ChatSummary in auth.scopes:
         raise FORBIDDEN_EXCEPTION
     
-    context = AireChatContext(input=input, platform=get_platform_config())
+    context = AireChatContext(input=input, platform=get_platform_config(), auth=auth)
     return ChatSummaryChain.invoke(context)
 
 
@@ -69,7 +69,7 @@ async def chat_keywords(
     if not AireScope.ChatSummary in auth.scopes:
         raise FORBIDDEN_EXCEPTION
     
-    context = AireChatContext(input=input, regen=regen, platform=get_platform_config())
+    context = AireChatContext(input=input, regen=regen, platform=get_platform_config(), auth=auth)
     return ChatKeywordChain.invoke(context)
 
 

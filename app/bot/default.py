@@ -4,11 +4,13 @@
 
 
 import tiktoken
+from datetime import datetime, UTC
 from langchain_core.prompts import SystemMessagePromptTemplate
 from langchain.schema.runnable import RunnableLambda
 from llm import ChatModel
 from aire.models.chat import AireChatContext, AireChatInput
 from .prompts.user_context import generate_user_context
+from .tools.reminders import create_reminder_tool
 
 system_prompt_text = """
 You are AIRe, an AI advisor for health and rehabilitation topics.
@@ -24,13 +26,8 @@ General rules:
 - Avoid jargon or professional language. Explain frameworks and techniques in simple, understandable terms.
 
 End of Conversation Handling:
-- When the conversation has reached a point where no new issues or relevant information are being discussed, and the user seems satisfied, include the tag [END_OF_CONVERSATION] at the end of your response to signal that the conversation is ready to close.
+- If the user provides no new information and seems satisfied, or if no new helpful information can be provided, politely conclude the conversation. Mark the conversation's end by including [END_OF_CONVERSATION] at the end of your response.
 
-Problem definition in the conversation metadata keywords:
--Trigger the [PROBLEM_DEFINITION] tag when key problems are identified in the middle of the double diamond model. As the conversation progresses, continue using the tag as new issues arise and guide the conversation based on the program's feedback until the discussion ends.
-
-Show questions prompt:
-"When you detect that the conversation has touched on a relevant topic for which a question or questionnaire could be useful, include the tag [SHOW_QUESTIONNAIRE] at the end of your response. Avoid adding the tag again until after a cooldown period of least of 3 messages."
 Remember:
 - You are designed exclusively for Community-Based Rehabilitation (CBR) support, utilizing the ICF framework to understand the user's needs and goals and provide relevant suggestions.
 - Conversations should focus on CBR topics such as physical, occupational, and speech therapy, as well as social integration, in line with the UN Convention on the Rights of Persons with Disabilities and ICF categories "Activities and Participation" and "Environmental Factors."
@@ -44,10 +41,13 @@ Here's a summary of your patient:
 
 You should answer only in this language: 
 {language}
+
+The current time (UTC) is, please note that the user may be on a different timezone:
+{current_time}
 """
 
 system_prompt = SystemMessagePromptTemplate.from_template(system_prompt_text)
-llm = ChatModel(temperature=0.7)
+llm = ChatModel(temperature=0.7).bind_tools([create_reminder_tool])
 
 def __messages(ctx: AireChatContext):
     language = None
@@ -84,7 +84,8 @@ def __messages(ctx: AireChatContext):
     prompt = [
         prompt.format(
             user_summary=generate_user_context(ctx),
-            language=language),
+            language=language,
+            current_time=datetime.now(UTC).isoformat()),
         *ctx.input.to_chat_messages()
     ]
 

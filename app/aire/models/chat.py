@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from .user import AireUser
 from .questionnaire import AireQuestionnaireAnswer
 from .platform import AirePlatformConfiguration
+from .auth import AireAuth
 
 class AireChatMessage(BaseModel):
     """A chat message"""
@@ -32,6 +33,7 @@ class AireChatInputContext(BaseModel):
 class AireChatInput(BaseModel):
     """This class containst the information about a chat"""
 
+    chat_id: str | None
     chat: list[AireChatMessage]
     context: AireChatInputContext | None
 
@@ -55,6 +57,7 @@ class AireChatContext(CustomUserType):
     regen: bool = False
     allow_custom_prompt: bool = False
     platform: AirePlatformConfiguration
+    auth: AireAuth
 
 
 class AireChatAbstract(BaseModel):

@@ -10,6 +10,7 @@ from utils.current_user import get_current_user, get_platform_config
 
 from bot.default import *
 from bot.chains.chat_keywords import ChatKeywordChain
+from bot.tools.reminders import handle_reminder_call
 from aire.models.chat import *
 
 import json
@@ -17,9 +18,11 @@ from typing import Annotated, AsyncIterator
 from fastapi import Depends, HTTPException, status
 from fastapi.responses import Response
 from langserve.serialization import WellKnownLCSerializer
+from langchain_core.messages.tool import ToolCall, ToolCallChunk
 from sse_starlette import EventSourceResponse;
 
 serializer = WellKnownLCSerializer()
+
 
 @app.get("/bot", 
          description="List available bots",
@@ -63,7 +66,8 @@ async def stream_bot(bot_name: str,
         input=input, 
         user=user, 
         allow_custom_prompt=allow_prompt_override,
-        platform=get_platform_config())
+        platform=get_platform_config(),
+        auth=auth)
     input_token_count = count_tokens(input)
 
     gen_keywords = len(input.to_chat_messages()) > 4
@@ -72,6 +76,8 @@ async def stream_bot(bot_name: str,
         try:
             output = ""
             iter = bot.astream(context)
+            tool_calls: list[ToolCallChunk] = []
+
             async for chunk in iter:
                 buffer = serializer.dumpd(chunk)
                 yield {
@@ -81,6 +87,36 @@ async def stream_bot(bot_name: str,
 
                 if(buffer["content"]):
                     output += buffer["content"]
+
+                if(buffer["tool_call_chunks"]):
+                    tool_chunks: list[ToolCallChunk] = buffer["tool_call_chunks"]
+                    for tool_chunk in tool_chunks:
+                        index = tool_chunk["index"]
+
+                        if len(tool_calls) <= index:
+                            tool_calls.append(ToolCallChunk(id="", name="", args="", index=index))
+                        tc: ToolCallChunk = tool_calls[index]
+
+                        if tool_chunk["id"]:
+                            tc["id"] += tool_chunk["id"]
+                        if tool_chunk["name"]:
+                            tc["name"] += tool_chunk["name"]
+                        if tool_chunk["args"]:
+                            tc["args"] += tool_chunk["args"]
+
+            for complete_chunk in tool_calls:
+                call = ToolCall(
+                    id=complete_chunk["id"], 
+                    name=complete_chunk["name"], 
+                    args=json.loads(complete_chunk["args"]))
+                
+                if call.get("name") == "create_reminder":
+                    call_result = handle_reminder_call(context, call)
+                    if call_result != None:
+                        yield {
+                            "event": "reminder",
+                            "data": serializer.dumps(call_result).decode("utf-8")
+                        }
 
             bot_message = ChatMessage(role="assistant", content=output)
             bot_input = AireChatInput(chat=[bot_message])
@@ -92,10 +128,11 @@ async def stream_bot(bot_name: str,
 
             if gen_keywords:
                 keywords = await ChatKeywordChain.ainvoke(context)
-                yield { 
-                    "event": "keywords",
-                    "data": serializer.dumps(keywords).decode("utf-8")
-                }
+                if len(keywords) > 0:
+                    yield { 
+                        "event": "keywords",
+                        "data": serializer.dumps(keywords).decode("utf-8")
+                    }
             
             yield { "event": "end" }
         except BaseException as ex:

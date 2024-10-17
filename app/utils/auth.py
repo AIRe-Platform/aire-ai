@@ -59,7 +59,8 @@ def verify_token(authorization: Annotated[str | None, Header()] = None):
             role=payload.get("role"),
             scopes=scopes,
             user_key=payload.get("user_enc_key"),
-            connected_services=payload.get("connected_services"))
+            connected_services=payload.get("connected_services"),
+            token=token)
     
     except JWTError as e:
         print(f"Token decode error: {e}")
