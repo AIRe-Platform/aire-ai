@@ -28,8 +28,8 @@ def summary_from_profile(user: AireUser) -> str:
     if user.last_name != None:
         summary += f"\nLast name: {user.last_name}"
 
-    if user.age != None:
-        summary += f"\nAge: {user.age}"
+    if user.year_of_birth != None:
+        summary += f"\nYear_of_birth: {user.year_of_birth}"
 
     if user.gender != None:
         summary += f"\nGender: {user.gender.value}"

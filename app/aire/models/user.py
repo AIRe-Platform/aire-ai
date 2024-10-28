@@ -36,7 +36,7 @@ class AireUser(BaseModel):
     first_name: str | None
     last_name: str | None
     gender: AireUserGender | None
-    age: int | None
+    year_of_birth: int | None
     language: str | None
     country: str | None
     bio: str | None
