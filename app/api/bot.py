@@ -10,7 +10,7 @@ from utils.current_user import get_current_user, get_platform_config
 
 from bot.default import *
 from bot.chains.chat_keywords import ChatKeywordChain
-from bot.tools.reminders import handle_reminder_call
+from bot.toolbox import Toolbox
 from aire.models.chat import *
 
 import json
@@ -110,11 +110,12 @@ async def stream_bot(bot_name: str,
                     name=complete_chunk["name"], 
                     args=json.loads(complete_chunk["args"]))
                 
-                if call.get("name") == "create_reminder":
-                    call_result = handle_reminder_call(context, call)
+                if call.get("name") in Toolbox:
+                    tool = Toolbox[call.get("name")]
+                    call_result = tool.handler(context, call)
                     if call_result != None:
-                        yield {
-                            "event": "reminder",
+                        yield { 
+                            "event": tool.event_type.value, 
                             "data": serializer.dumps(call_result).decode("utf-8")
                         }
 
@@ -133,7 +134,7 @@ async def stream_bot(bot_name: str,
                         "event": "keywords",
                         "data": serializer.dumps(keywords).decode("utf-8")
                     }
-                    
+
             yield { "event": "end" }
         except BaseException as ex:
             print(f"Error: {ex}")

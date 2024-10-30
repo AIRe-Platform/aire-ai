@@ -5,14 +5,17 @@
 from datetime import datetime
 from langchain_core.messages.tool import ToolCall
 from aire.models.reminder import AireReminder, AireReminderContent
-from aire.models.chat import AireChatContext
+from aire.models.chat import AireChatContext, AireChatEvent
+from aire.models.auth import AireScope
 from aire.models.platform import AireModuleType
 from aire.services.memory import create_reminder
+from .callable_tool import CallableTool
 
-create_reminder_tool = {
+__tool_name = "create_reminder"
+__tool_description = {
     "type": "function",
     "function": {
-        "name": "create_reminder",
+        "name": __tool_name,
         "description": "Schedule reminders",
         "parameters": {
             "type": "object",
@@ -31,22 +34,31 @@ create_reminder_tool = {
     }
 }
 
-def _create_reminder(ctx: AireChatContext, date_and_time: str, subject: str) -> AireReminder:
+def __create_reminder_call(ctx: AireChatContext, date_and_time: str, subject: str) -> AireReminder:
     timestamp = datetime.fromisoformat(date_and_time).timestamp()
     content = AireReminderContent(message=subject)
     reminder = AireReminder(trigger_timestamp=timestamp, content=content, chat_id=ctx.input.chat_id)
 
     memory = ctx.platform.platform.modules.get(AireModuleType.Memory)
     if memory != None:
-        event = create_reminder(memory, ctx.auth, reminder)
-
-    return event
-
-
-def handle_reminder_call(ctx: AireChatContext, call: ToolCall):
-    if call.get("name") == "create_reminder":
-        args = call.get("args")
-        return _create_reminder(ctx, args.get("date_and_time"), args.get("subject"))
+        return create_reminder(memory, ctx.auth, reminder)
     else:
         return None
+
+def __create_reminder(ctx: AireChatContext, call: ToolCall) -> AireReminder | None:
+    if call.get("name") != "create_reminder":
+        return None
     
+    if not AireScope.ContentRead in ctx.auth.scopes:
+        return None
+    
+    args = call.get("args")
+    return __create_reminder_call(ctx, args.get("date_and_time"), args.get("subject"))
+
+
+ReminderTool = CallableTool(
+    name=__tool_name,
+    descriptor=__tool_description,
+    event_type=AireChatEvent.Reminder,
+    handler=__create_reminder
+)
