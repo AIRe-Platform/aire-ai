@@ -111,3 +111,11 @@ class AireQuestionnaireProcessingRequest(BaseModel):
 
     questionnaire_id: str
     answers: list[AireQuestionnaireAnswer]
+
+
+class AireQuestionnaireMetadata(BaseModel):
+    """Questionnaire embedding metadata"""
+
+    id: str
+    language: str | None
+    relevance: float | None

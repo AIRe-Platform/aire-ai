@@ -9,8 +9,8 @@ from langchain_community.document_loaders.pdf import PyPDFLoader
 from langchain_community.document_loaders.markdown  import UnstructuredMarkdownLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from llm import EmbeddingsModel
-from aire.models.questionnaire import AireQuestionnaire
-from aire.models.document import AireDocumentMetadata
+from aire.models.questionnaire import AireQuestionnaire, AireQuestionnaireMetadata
+from aire.models.content import AireContent, AireContentMetadata
 from pathlib import Path
 
 class BaseVectorStore:
@@ -25,6 +25,11 @@ class BaseVectorStore:
     def similarity_search(self, query: str):
         return self.store.similarity_search(query)
     
+    def similarity_search_by_relevance(self, query: str, count: int = 1):
+        results = self.store.similarity_search_with_relevance_scores(query, count)
+        results.sort(key=lambda x: x[1], reverse=True)
+        return results
+
     def add_documents(self, docs: list[Document]) -> list[str]:
         ids = self.store.add_documents(docs)
         return ids
@@ -92,16 +97,78 @@ class QuestionnaireVectorStore(BaseVectorStore):
             raise RuntimeError("Unexpected count of IDs")
         return ids[0]
 
-    def query_keywords(self, keywords: list[str]) -> list[AireDocumentMetadata]:
+    def query_keywords(self, keywords: list[str]) -> list[AireQuestionnaireMetadata]:
         # Perform similarity search with the keywords and retrieve document
         query = " ".join(list(set(keywords)))
-        results = self.store.similarity_search_with_relevance_scores(query, 8)
-        results.sort(key=lambda x: x[1], reverse=True)
-        
+        return self.query(query)
+
+    
+    def query(self, search: str, max_items: int = 8, min_relevance: float = 0.0) -> list[AireQuestionnaireMetadata]:
+        results = self.similarity_search_by_relevance(search, max_items)
+
+        if min_relevance > 0.0:
+            results = filter(lambda x: x[1] >= min_relevance, results)
+
         # Read questionnaire id from the document metadata
-        questionnaires = list(map(lambda x: AireDocumentMetadata(
-            source=x[0].metadata["source"], 
+        questionnaires = list(map(lambda x: AireQuestionnaireMetadata(
+            id=x[0].metadata["source"], 
             language=x[0].metadata["language"],
             relevance=x[1])
         , results))
+
         return questionnaires
+
+
+class ContentVectorStore(BaseVectorStore):
+    def __init__(self):
+        super().__init__(
+            PGVector.from_existing_index(EmbeddingsModel(), collection_name="content")
+        )
+
+    def add_content(self, content: AireContent) -> str | None:
+        embedding = ""
+
+        if content.name != None:
+            embedding += content.name + "\n"
+
+        keywords = ""
+        if content.keywords != None:
+            keywords = " ".join(content.keywords)
+            embedding += keywords+ "\n"
+
+        if content.description != None:
+            embedding += content.description + "\n"
+
+        embedding = embedding.strip()
+        if len(embedding) == 0:
+            return None
+
+        # Create a document of the keywords and mark the questionnaire id as source of the documents
+        # Store it in the vector store
+        doc = Document(page_content=embedding)
+        doc.metadata = {
+            "source": content.id,
+            "type": content.type,
+            "keywords": keywords
+        }
+
+        ids = self.add_documents([doc])
+        return ids[0]
+
+    def query(self, search: str, max_items: int = 8, min_relevance: float = 0.0) -> list[AireContentMetadata]:
+        results = self.similarity_search_by_relevance(search, max_items)
+
+        if min_relevance > 0.0:
+            results = filter(lambda x: x[1] >= min_relevance, results)
+
+        def convert(doc: Document, relevance: float) -> AireContentMetadata:
+            keywords: str = doc.metadata["keywords"]
+            kw_list = keywords.split(" ")
+            return AireContentMetadata(
+                id=doc.metadata["source"],
+                type=doc.metadata["type"],
+                keywords=kw_list,
+                relevance=relevance)
+
+        content = list(map(lambda x: convert(x[0], x[1]), results))
+        return content
