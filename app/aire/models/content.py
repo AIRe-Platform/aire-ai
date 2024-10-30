@@ -41,5 +41,5 @@ class AireContentMetadata(BaseModel):
 
     id: str | None
     type: AireContentType | None
-    keywords: str | None
+    keywords: list[str] | None
     relevance: float | None

@@ -10,7 +10,7 @@ from langchain_community.document_loaders.markdown  import UnstructuredMarkdownL
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from llm import EmbeddingsModel
 from aire.models.questionnaire import AireQuestionnaire, AireQuestionnaireMetadata
-from aire.models.content import AireContent, AireContentMetadata
+from aire.models.content import AireContent, AireContentMetadata, AireContentType
 from pathlib import Path
 
 class BaseVectorStore:
@@ -163,11 +163,10 @@ class ContentVectorStore(BaseVectorStore):
 
         def convert(doc: Document, relevance: float) -> AireContentMetadata:
             keywords: str = doc.metadata["keywords"]
-            kw_list = keywords.split(" ")
             return AireContentMetadata(
                 id=doc.metadata["source"],
-                type=doc.metadata["type"],
-                keywords=kw_list,
+                type=AireContentType(doc.metadata["type"]),
+                keywords=keywords.split(" "),
                 relevance=relevance)
 
         content = list(map(lambda x: convert(x[0], x[1]), results))
