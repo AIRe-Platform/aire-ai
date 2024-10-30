@@ -10,8 +10,8 @@ def summary_from_chat_context(context: AireChatInputContext | None) -> str:
     summary = ""
 
     if context != None:
-        if context.age != None:
-            summary += f"\nThe user is {context.age} years old."
+        if context.year_of_birth != None:
+            summary += f"\nThe user was born in {context.year_of_birth}."
             
         if context.occupation != None:
             summary += f"\nThe user's occupation is {context.occupation}."

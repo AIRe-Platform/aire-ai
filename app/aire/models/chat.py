@@ -24,7 +24,7 @@ class AireChatMessage(BaseModel):
 class AireChatInputContext(BaseModel):
     """Additional chat context"""
 
-    age: int | None
+    year_of_birth: int | None
     occupation: str | None
     topic: str | None
     language: str | None

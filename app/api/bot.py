@@ -133,7 +133,7 @@ async def stream_bot(bot_name: str,
                         "event": "keywords",
                         "data": serializer.dumps(keywords).decode("utf-8")
                     }
-            
+                    
             yield { "event": "end" }
         except BaseException as ex:
             print(f"Error: {ex}")
