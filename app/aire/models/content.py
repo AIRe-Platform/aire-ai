@@ -8,7 +8,7 @@ from enum import Enum
 from datetime import datetime
 
 class AireContentType(str, Enum):
-    """ Content types """
+    """Content types"""
 
     URL = "url"
     Image = "image"
@@ -17,7 +17,7 @@ class AireContentType(str, Enum):
 
 
 class AireContent(BaseModel):
-    """ Content model """
+    """Content model"""
 
     id: str
     type: AireContentType
@@ -37,9 +37,15 @@ class AireContent(BaseModel):
 
 
 class AireContentMetadata(BaseModel):
-    """ Content embedding metadata """
+    """Content embedding metadata"""
 
     id: str | None
     type: AireContentType | None
     keywords: list[str] | None
     relevance: float | None
+
+
+class AireContentEvent(BaseModel):
+    """Content suggestions event"""
+    search: str
+    results: list[AireContentMetadata]

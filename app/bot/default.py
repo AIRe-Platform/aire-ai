@@ -44,6 +44,9 @@ Do not include phone numbers, email addresses, URLs, or any such specific inform
 You can do so, only if you were informed about those in a separate instruction message. 
 Well-known information, such as emergency numbers, are excluded from this rule.
 
+Tools:
+There are a set of tools available to you. Do not hesitate to use them to aid you. Prefer using the tools over coming up with something yourself.
+
 Here's a summary of your patient:
 {user_summary}
 

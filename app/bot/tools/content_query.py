@@ -4,7 +4,7 @@
 
 from langchain_core.messages.tool import ToolCall
 from aire.models.chat import AireChatContext, AireChatEvent
-from aire.models.content import AireContentMetadata
+from aire.models.content import AireContentEvent
 from aire.models.auth import AireScope
 from bot.vector_stores import ContentVectorStore
 from .callable_tool import CallableTool
@@ -14,7 +14,10 @@ __tool_description = {
     "type": "function",
     "function": {
         "name": __tool_name,
-        "description": "Query content such as documents, images, videos, and websites.",
+        "description": """
+            Query content such as documents, images, videos, and websites.
+            Use this tool to find useful resources that are shown as content suggestions to the user.
+        """,
         "parameters": {
             "type": "object",
             "properties": {
@@ -28,7 +31,8 @@ __tool_description = {
     }
 }
 
-def __content_query(ctx: AireChatContext, call: ToolCall) -> list[AireContentMetadata] | None:
+
+def __content_query(ctx: AireChatContext, call: ToolCall) -> AireContentEvent | None:
     if call.get("name") != "query_content":
         return None
     
@@ -37,9 +41,11 @@ def __content_query(ctx: AireChatContext, call: ToolCall) -> list[AireContentMet
     
     args = call.get("args")
     search = args.get("search")
+    results = ContentVectorStore().query(search, 4)
 
-    return ContentVectorStore().query(search, 4)
+    return AireContentEvent(search=search, results=results)
     
+
 ContentQueryTool = CallableTool(
     name=__tool_name, 
     descriptor=__tool_description, 

@@ -119,3 +119,9 @@ class AireQuestionnaireMetadata(BaseModel):
     id: str
     language: str | None
     relevance: float | None
+
+class AireQuestionnaireEvent(BaseModel):
+    """Questionnaire event"""
+    search: str
+    results: list[AireQuestionnaireMetadata]
+    

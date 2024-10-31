@@ -5,7 +5,7 @@
 from langchain_core.messages.tool import ToolCall
 from aire.models.auth import AireScope
 from aire.models.chat import AireChatContext, AireChatEvent
-from aire.models.questionnaire import AireQuestionnaireMetadata
+from aire.models.questionnaire import AireQuestionnaireEvent
 from bot.vector_stores import QuestionnaireVectorStore
 from .callable_tool import CallableTool
 
@@ -14,7 +14,12 @@ __tool_description = {
     "type": "function",
     "function": {
         "name": __tool_name,
-        "description": "Query questionnaires from database using similarity search",
+        "description": """
+            Query questionnaires from database using similarity search.
+            Questionnaires can help you assess the situation by providing curated forms
+            that provide a set of logical steps. You will see the questions and answers after
+            the user has filled the questionnaire.
+        """,
         "parameters": {
             "type": "object",
             "properties": {
@@ -28,7 +33,8 @@ __tool_description = {
     }
 }
 
-def __query_questionnaires(ctx: AireChatContext, call: ToolCall) -> list[AireQuestionnaireMetadata] | None:
+
+def __query_questionnaires(ctx: AireChatContext, call: ToolCall) -> AireQuestionnaireEvent | None:
     if call.get("name") != "query_questionnaires":
         return None
     
@@ -37,8 +43,10 @@ def __query_questionnaires(ctx: AireChatContext, call: ToolCall) -> list[AireQue
 
     args = call.get("args")
     search = args.get("search")
+    results = QuestionnaireVectorStore().query(search, 8)
 
-    return QuestionnaireVectorStore().query(search, 8)
+    return AireQuestionnaireEvent(search=search, results=results)
+
 
 QuestionnaireQueryTool = CallableTool(
     name=__tool_name,

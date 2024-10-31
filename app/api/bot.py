@@ -75,18 +75,22 @@ async def stream_bot(bot_name: str,
     async def stream() -> AsyncIterator[dict]:
         try:
             output = ""
+            tool_called = False
             iter = bot.astream(context)
             tool_calls: list[ToolCallChunk] = []
 
             async for chunk in iter:
                 buffer = serializer.dumpd(chunk)
-                yield {
-                    "event": "message",
-                    "data": serializer.dumps(chunk).decode("utf-8")
-                }
 
                 if(buffer["content"]):
                     output += buffer["content"]
+                    yield {
+                        "event": "message",
+                        "data": serializer.dumps({ 
+                            "type": buffer["type"], 
+                            "content": buffer["content"]
+                        }).decode("utf-8")
+                    }
 
                 if(buffer["tool_call_chunks"]):
                     tool_chunks: list[ToolCallChunk] = buffer["tool_call_chunks"]
@@ -110,10 +114,11 @@ async def stream_bot(bot_name: str,
                     name=complete_chunk["name"], 
                     args=json.loads(complete_chunk["args"]))
                 
-                if call.get("name") in Toolbox:
+                if call.get("name") in Toolbox and not tool_called:
                     tool = Toolbox[call.get("name")]
                     call_result = tool.handler(context, call)
                     if call_result != None:
+                        tool_called = True
                         yield { 
                             "event": tool.event_type.value, 
                             "data": serializer.dumps(call_result).decode("utf-8")
