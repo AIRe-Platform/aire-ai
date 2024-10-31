@@ -132,7 +132,7 @@ async def stream_bot(bot_name: str,
                 "data": output_token_count + input_token_count
             }
 
-            if gen_keywords:
+            if gen_keywords and not tool_called:
                 keywords = await ChatKeywordChain.ainvoke(context)
                 if len(keywords) > 0:
                     yield { 

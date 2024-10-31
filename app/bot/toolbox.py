@@ -7,6 +7,7 @@ from aire.models.chat import AireChatEvent
 from .tools.reminders import ReminderTool
 from .tools.questionnaire_query import QuestionnaireQueryTool
 from .tools.content_query import ContentQueryTool
+from .tools.keyword_tagging import KeywordTaggingTool
 
 class CallableTool:
     name: str
@@ -18,11 +19,13 @@ class CallableTool:
 ToolBindings = [
     ReminderTool.descriptor, 
     QuestionnaireQueryTool.descriptor, 
-    ContentQueryTool.descriptor
+    ContentQueryTool.descriptor,
+    KeywordTaggingTool.descriptor
 ]
 
 Toolbox = {
     ReminderTool.name: ReminderTool,
     QuestionnaireQueryTool.name: QuestionnaireQueryTool,
-    ContentQueryTool.name: ContentQueryTool
+    ContentQueryTool.name: ContentQueryTool,
+    KeywordTaggingTool.name: KeywordTaggingTool
 }

@@ -46,7 +46,7 @@ def __create_reminder_call(ctx: AireChatContext, date_and_time: str, subject: st
         return None
 
 def __create_reminder(ctx: AireChatContext, call: ToolCall) -> AireReminder | None:
-    if call.get("name") != "create_reminder":
+    if call.get("name") != __tool_name:
         return None
     
     if not AireScope.ContentRead in ctx.auth.scopes:

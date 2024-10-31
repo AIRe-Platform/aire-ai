@@ -33,7 +33,7 @@ __tool_description = {
 
 
 def __content_query(ctx: AireChatContext, call: ToolCall) -> AireContentEvent | None:
-    if call.get("name") != "query_content":
+    if call.get("name") != __tool_name:
         return None
     
     if not AireScope.ContentRead in ctx.auth.scopes:

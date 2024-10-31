@@ -35,7 +35,7 @@ __tool_description = {
 
 
 def __query_questionnaires(ctx: AireChatContext, call: ToolCall) -> AireQuestionnaireEvent | None:
-    if call.get("name") != "query_questionnaires":
+    if call.get("name") != __tool_name:
         return None
     
     if not AireScope.QuestionnaireRead in ctx.auth.scopes:
