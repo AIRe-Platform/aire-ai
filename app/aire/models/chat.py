@@ -19,7 +19,7 @@ class AireChatEvent(str, Enum):
     Metadata = "metadata"
     Keywords = "keywords"
     TokenCount = "token-count"
-    Reminder = "remindner"
+    Reminder = "reminder"
     Questionnaire = "questionnaire"
     ContentSuggestions = "content-suggestions"
     End = "end"
