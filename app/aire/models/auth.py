@@ -22,6 +22,10 @@ class AireScope(str, Enum):
     QuestionnaireWrite = "questionnaire-write"
     QuestionnaireDelete = "questionnaire-delete"
 
+    ContentRead = "content-read",
+    ContentWrite = "content-write",
+    ContentDelete = "content-delete",
+
     EventRead = "event-read"
     EventWrite = "event-write"
     EventDelete = "event-delete"

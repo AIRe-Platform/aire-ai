@@ -10,12 +10,17 @@ from utils.temp_files import create_temporary_file
 
 from aire.models.chat import *
 from aire.models.questionnaire import *
-from aire.models.document import *
+from aire.models.content import *
 
 from bot.default import *
-from bot.vector_stores import DocumentVectorStore, QuestionnaireVectorStore
+from bot.vector_stores import (
+    DocumentVectorStore, 
+    QuestionnaireVectorStore,
+    ContentVectorStore
+)
 
 from typing import Annotated
+from pydantic import BaseModel
 from fastapi import Depends, Query, Body, status, UploadFile
 from fastapi.responses import Response
 from langchain_core.documents import Document
@@ -24,14 +29,17 @@ class DocumentQueryResponse(BaseModel):
     documents: list[Document]
 
 class QuestionnaireQueryResponse(BaseModel):
-    results: list[AireDocumentMetadata]
+    results: list[AireQuestionnaireMetadata]
+
+class ContentQueryResponse(BaseModel):
+    results: list[AireContentMetadata]
 
 class EmbedResponse(BaseModel):
     ids: list[str]
 
 @app.get("/embeddings/document",
          description="Find documents using similarity search",
-         tags=["Documents"],
+         tags=["Document embeddings"],
          response_model=DocumentQueryResponse)
 async def query_document(
     is_service: Annotated[bool, Depends(check_service_key)],
@@ -51,7 +59,7 @@ async def query_document(
 
 @app.post("/embeddings/document",
           description="Create embeddings and store a PDF or Markdown document",
-          tags=["Documents"],
+          tags=["Document embeddings"],
           response_model=EmbedResponse)
 async def embed_document(
     document: UploadFile,
@@ -97,8 +105,8 @@ async def embed_document(
 
 
 @app.delete("/embeddings/document/{id}",
-            description="Delete a document",
-            tags=["Documents"])
+            description="Delete document embedding",
+            tags=["Document embeddings"])
 async def delete_document(
     is_service: Annotated[bool, Depends(check_service_key)],
     auth: Annotated[AireAuth | None, Depends(verify_token)],
@@ -119,8 +127,8 @@ async def delete_document(
 # ------------------------
 
 @app.post("/embeddings/questionnaire",
-          description="Create a document of the questionnaire for keyword searches",
-          tags=["Questionnaires"],
+          description="Create an embedding for a questionnaire",
+          tags=["Questionnaire embeddings"],
           response_description="Returns a document ID for the created embedding",
           response_model=EmbedResponse)
 async def embed_survey(
@@ -141,8 +149,8 @@ async def embed_survey(
 
 @app.get("/embeddings/questionnaire",
          description="Perform similarity search using keywords to find questionnaires",
-         tags=["Questionnaires"],
-         response_description="Returns matching questionnaire IDs in the order of relevance",
+         tags=["Questionnaire embeddings"],
+         response_description="Returns matching questionnaires' metadata in the order of relevance",
          response_model=QuestionnaireQueryResponse)
 async def query_questionnaire(
     is_service: Annotated[bool, Depends(check_service_key)],
@@ -164,8 +172,8 @@ async def query_questionnaire(
 
 
 @app.delete("/embeddings/questionnaire/{id}",
-            description="Delete a questionnaire",
-            tags=["Questionnaires"])
+            description="Delete questionnaire embedding",
+            tags=["Questionnaire embeddings"])
 async def delete_survey(
     is_service: Annotated[bool, Depends(check_service_key)],
     auth: Annotated[AireAuth | None, Depends(verify_token)],
@@ -178,5 +186,72 @@ async def delete_survey(
             raise FORBIDDEN_EXCEPTION
 
     store = QuestionnaireVectorStore()
+    store.remove_document(id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+# Content embeddings
+# ------------------
+
+@app.post("/embeddings/content",
+          description="Create an embedding for content",
+          tags=["Content embeddings"],
+          response_description="Returns a document ID for the created embedding",
+          response_model=EmbedResponse)
+async def embed_content(
+    content: Annotated[AireContent, Body()],
+    is_service: Annotated[bool, Depends(check_service_key)],
+    auth: Annotated[AireAuth | None, Depends(verify_token)]):
+
+    if not is_service:
+        if auth == None:
+            raise UNAUTH_EXCEPTION
+        if not AireScope.ContentWrite in auth.scopes:
+            raise FORBIDDEN_EXCEPTION
+        
+    store = ContentVectorStore()
+    id = store.add_content(content)
+    return EmbedResponse(ids=[id])
+
+
+@app.get("/embeddings/content",
+         description="Perform similarity search to find content",
+         tags=["Content embeddings"],
+         response_description="Returns matching contents' metadata in the order of relevance",
+         response_model=ContentQueryResponse)
+async def query_content(
+    is_service: Annotated[bool, Depends(check_service_key)],
+    auth: Annotated[AireAuth | None, Depends(verify_token)],
+    query: Annotated[str | None, Query()] = None):
+
+    if not is_service:
+        if auth == None:
+            raise UNAUTH_EXCEPTION
+        if not AireScope.ContentRead in auth.scopes:
+            raise FORBIDDEN_EXCEPTION
+        
+    if query == None or len(query) == 0:
+        raise BAD_REQUEST_EXCEPTION
+    
+    store = ContentVectorStore()
+    results = store.query(query)
+    return ContentQueryResponse(results=results)
+
+
+@app.delete("/embeddings/content/{id}",
+            description="Delete content embeddings",
+            tags=["Content embeddings"])
+async def delete_content(
+    is_service: Annotated[bool, Depends(check_service_key)],
+    auth: Annotated[AireAuth | None, Depends(verify_token)],
+    id: str):
+    
+    if not is_service:
+        if auth == None:
+            raise UNAUTH_EXCEPTION
+        if not AireScope.ContentDelete in auth.scopes:
+            raise FORBIDDEN_EXCEPTION
+
+    store = ContentVectorStore()
     store.remove_document(id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

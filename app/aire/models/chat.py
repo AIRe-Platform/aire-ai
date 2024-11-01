@@ -6,10 +6,24 @@
 from langserve.schema import CustomUserType
 from langchain_core.messages import ChatMessage
 from pydantic import BaseModel
+from enum import Enum
 from .user import AireUser
 from .questionnaire import AireQuestionnaireAnswer
 from .platform import AirePlatformConfiguration
 from .auth import AireAuth
+
+class AireChatEvent(str, Enum):
+    """Chatbot event types"""
+    Message = "message"
+    Error = "error"
+    Metadata = "metadata"
+    Keywords = "keywords"
+    TokenCount = "token-count"
+    Reminder = "reminder"
+    Questionnaire = "questionnaire"
+    ContentSuggestions = "content-suggestions"
+    End = "end"
+
 
 class AireChatMessage(BaseModel):
     """A chat message"""
@@ -24,7 +38,7 @@ class AireChatMessage(BaseModel):
 class AireChatInputContext(BaseModel):
     """Additional chat context"""
 
-    age: int | None
+    year_of_birth: int | None
     occupation: str | None
     topic: str | None
     language: str | None
