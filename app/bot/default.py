@@ -12,9 +12,7 @@ from aire.models.chat import AireChatContext, AireChatInput
 from .prompts.user_context import generate_user_context
 from .toolbox import ToolBindings
 
-
-#Default prompt - Can be overwritten if user has permission
-default_aire_promt = """
+__default_prompt = """
 Description:
 - You are AIRe, an AI advisor for health and rehabilitation topics. 
 - You are designed exclusively for Community-Based Rehabilitation (CBR) support, utilizing the ICF framework to understand the user's needs and goals and provide relevant suggestions.
@@ -33,10 +31,10 @@ Your role:
 - Avoid jumping to conclusions or suggestions too early.
 - Help the user to determine their rehabilitation goals that are related to everyday life and utilise the SMART technique, but again, don't use professional terms.
 - Provide suggestions and content that could improve the user's situation, reduce limitations in everyday functioning and participation, and increase well-being.
+
 """
 
-# General Rules and Guidelines for AIRe
-general_aire_rules = """
+__system_instructions = """
 End of Conversation Handling:
 - If the user provides no new information and seems satisfied, or if no new helpful information can be provided, politely conclude the conversation. Mark the conversation's end by including [END_OF_CONVERSATION] at the end of your response.
 
@@ -48,10 +46,8 @@ Reliability:
 - Do not include phone numbers, email addresses, URLs, or any such specific information, in your responses.
 - You can do so, only if you were informed about those in a separate instruction message. 
 - Well-known information, such as emergency numbers, are excluded from this rule.
-"""
 
-#Extra handly tools for AIRe
-Tools = """
+Tools:
 - There are a set of tools available to you. Do not hesitate to use them to aid you. Prefer using the tools over coming up with something yourself.
 
 - Here's a summary of your patient:
@@ -60,24 +56,21 @@ Tools = """
    {language}
 - The current time (UTC) is, please note that the user may be on a different timezone:
    {current_time}
+
 """
 
-# Initialize system prompt template with default prompt content
-def get_system_prompt(ctx):
+def __get_system_prompt(ctx: AireChatContext):
     # Use custom prompt if allowed and available; otherwise, use the default
     if (ctx.allow_custom_prompt and 
         hasattr(ctx.user.preferences, "experimental_custom_prompt") and 
         ctx.user.preferences.experimental_custom_prompt is not None):
         
-        prompt_content = ctx.user.preferences.experimental_custom_prompt
+        prompt = ctx.user.preferences.experimental_custom_prompt
     else:
-        prompt_content = default_aire_promt
+        prompt = __default_prompt
 
-
-    # Combine the sections into the full prompt text
-    full_prompt_text = prompt_content + general_aire_rules + Tools
-
-    return SystemMessagePromptTemplate.from_template(full_prompt_text)
+    system_prompt = prompt + __system_instructions
+    return SystemMessagePromptTemplate.from_template(system_prompt)
 
 
 llm = ChatModel(temperature=0.7).bind_tools(ToolBindings)
@@ -101,10 +94,10 @@ def __messages(ctx: AireChatContext):
         pass
 
     # Get system prompt
-    prompt = get_system_prompt(ctx)
+    prompt = __get_system_prompt(ctx)
 
     if topic is not None:
-        prompt += f"\nThe user wants to speak about: {topic}."
+        prompt += f"\nSelected topic: {topic}."
 
     prompt = [
         prompt.format(
