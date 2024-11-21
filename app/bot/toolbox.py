@@ -19,7 +19,7 @@ class CallableTool:
 ToolBindings = [
     ReminderTool.descriptor, 
     QuestionnaireQueryTool.descriptor, 
-    ContentQueryTool.descriptor,
+#    ContentQueryTool.descriptor,
     KeywordTaggingTool.descriptor
 ]
 
