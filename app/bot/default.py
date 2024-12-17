@@ -9,10 +9,11 @@ from langchain_core.prompts import SystemMessagePromptTemplate
 from langchain.schema.runnable import RunnableLambda
 from llm import ChatModel
 from aire.models.chat import AireChatContext, AireChatInput
+from aire.models.platform import AireModuleType
 from .prompts.user_context import generate_user_context
 from .toolbox import ToolBindings
 
-__default_prompt = """
+__fallback_personality_prompt = """
 Description:
 - You are AIRe, an AI advisor for health and rehabilitation topics. 
 - You are designed exclusively for Community-Based Rehabilitation (CBR) support, utilizing the ICF framework to understand the user's needs and goals and provide relevant suggestions.
@@ -33,10 +34,11 @@ Your role:
 - Avoid jumping to conclusions or suggestions too early.
 - Help the user to determine their rehabilitation goals that are related to everyday life and utilise the SMART technique, but again, don't use professional terms.
 - Provide suggestions and content that could improve the user's situation, reduce limitations in everyday functioning and participation, and increase well-being.
-
 """
 
-__system_instructions = """
+__system_prompt = """
+{personality_prompt}
+
 End of Conversation Handling:
 - If the user provides no new information and seems satisfied, or if no new helpful information can be provided, politely conclude the conversation. Mark the conversation's end by including [END_OF_CONVERSATION] at the end of your response.
 
@@ -60,20 +62,24 @@ Tools:
 - The current time (UTC) is, please note that the user may be on a different timezone:
    {current_time}
 
+{additional_prompt}
 """
 
-def __get_system_prompt(ctx: AireChatContext):
-    # Use custom prompt if allowed and available; otherwise, use the default
+def __get_personality_prompt(ctx: AireChatContext):
+    personality_prompt = __fallback_personality_prompt
+
+    try:
+        module_settings = ctx.platform.platform.modules.get(AireModuleType.AI).settings
+        personality_prompt = module_settings['personality_prompt']
+    except AttributeError:
+        pass
+
     if (ctx.allow_custom_prompt and 
         hasattr(ctx.user.preferences, "experimental_custom_prompt") and 
         ctx.user.preferences.experimental_custom_prompt is not None):
+        personality_prompt = ctx.user.preferences.experimental_custom_prompt
         
-        prompt = ctx.user.preferences.experimental_custom_prompt
-    else:
-        prompt = __default_prompt
-
-    system_prompt = prompt + __system_instructions
-    return SystemMessagePromptTemplate.from_template(system_prompt)
+    return personality_prompt
 
 
 llm = ChatModel(temperature=0.7).bind_tools(ToolBindings)
@@ -97,16 +103,20 @@ def __messages(ctx: AireChatContext):
         pass
 
     # Get system prompt
-    prompt = __get_system_prompt(ctx)
+    system_prompt = SystemMessagePromptTemplate.from_template(__system_prompt)
+    personality_prompt = __get_personality_prompt(ctx)
+    additional_prompt = ""
 
     if topic is not None:
-        prompt += f"\nSelected topic: {topic}."
+        additional_prompt += f"Selected topic: {topic}.\n"
 
     prompt = [
-        prompt.format(
+        system_prompt.format(
             user_summary=generate_user_context(ctx),
             language=language,
-            current_time=datetime.now(UTC).isoformat()),
+            current_time=datetime.now(UTC).isoformat(),
+            personality_prompt=personality_prompt,
+            additional_prompt=additional_prompt),
         *ctx.input.to_chat_messages()
     ]
 
