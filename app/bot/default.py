@@ -70,7 +70,8 @@ def __get_personality_prompt(ctx: AireChatContext):
 
     try:
         module_settings = ctx.platform.platform.modules.get(AireModuleType.AI).settings
-        personality_prompt = module_settings['personality_prompt']
+        if module_settings != None:
+            personality_prompt = module_settings['personality_prompt']
     except AttributeError:
         pass
 
