@@ -42,6 +42,7 @@ class AireChatInputContext(BaseModel):
     occupation: str | None
     topic: str | None
     language: str | None
+    keywords: list[str] | None
 
 
 class AireChatInput(BaseModel):

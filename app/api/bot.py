@@ -70,7 +70,8 @@ async def stream_bot(bot_name: str,
         auth=auth)
     input_token_count = count_tokens(input)
 
-    gen_keywords = len(input.to_chat_messages()) > 4
+    has_keywords = input.context.keywords != None and len(input.context.keywords) > 0
+    gen_keywords = len(input.to_chat_messages()) > 4 and not has_keywords
 
     async def stream() -> AsyncIterator[dict]:
         try:

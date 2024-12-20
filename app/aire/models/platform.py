@@ -28,6 +28,7 @@ class AireModule(BaseModel):
     endpoint: str
     access: AireModuleAccess
     token: Optional[str]
+    settings: dict | None
 
 class AireService(BaseModel):
     """Describes an external service"""

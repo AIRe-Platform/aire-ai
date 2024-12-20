@@ -20,6 +20,8 @@ Important:
 Do not copy the conversation word by word.
 Do not translate the messages from the original language.
 Write the summary in the same language the messages are written in.
+The summary must be anonymized. 
+Do not include any information that could identify the user.
 
 New summary:"""
 
