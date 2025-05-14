@@ -90,3 +90,21 @@ LLM_EMBEDDINGS_MODEL_NAME=my-model-for-embeddings
 
 You may use `ALLOW_ANONYMOUS_USERS=1` to skip authentication for testing purposes.
 
+## Manual Deployment to Azure Container Registry
+
+```sh
+CONTAINER_REG=your_container_registry_name
+IMAGE_NAME=aire-ai
+IMAGE_TAG=latest
+
+# Login to Azure CLI and Azure Container Registry
+az login
+az acr login --name $CONTAINER_REG
+
+# Build and tag Docker image
+docker build --platform linux/amd64 . -t $IMAGE_NAME
+docker tag $IMAGE_NAME $CONTAINER_REG.azurecr.io/$IMAGE_NAME:$IMAGE_TAG
+
+# Push image to container registry
+docker push $CONTAINER_REG.azurecr.io/$IMAGE_NAME:$IMAGE_TAG
+```
