@@ -1,20 +1,3 @@
-## TODO: Refactor this document to have an structure like this:
-## Table of Contents
-1. [Introduction](#introduction)
-2. [Installation](#installation)
-3. [Usage](#usage)
-4. [Configuration](#configuration)
-5. [Contributing](#contributing)
-6. [API Reference](#api-reference)
-7. [Testing](#testing)
-8. [Deployment](#deployment)
-9. [Roadmap](#roadmap)
-10. [FAQ](#faq)
-11. [Troubleshooting](#troubleshooting)
-12. [License](#license)
-13. [Acknowledgments](#acknowledgments)
-14. [Contact](#contact)
-
 # AIRe AI
 
 This is the repository for the AIRe AI module.
@@ -62,7 +45,7 @@ AIRE_SERVICE_BASE=http://localhost:7071/api
 AIRE_SERVICE_KEY=<use the same key as with other platform modules>
 TOKEN_SIGNING_KEY=<use the same key as with other platform modules>
 TOKEN_ENCRYPTION_KEY=<use the same key as with other platform modules>
-PGVECTOR_CONNECTION_STRING=postgresql+psycopg2://<connection string here>
+AZURE_COSMOS_DB_CONNECTION_STRING=<your Azure Cosmos DB for NoSQL connection string>
 ```
 
 ## Configuring Inference
