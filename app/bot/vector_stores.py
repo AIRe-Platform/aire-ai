@@ -2,9 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-
+import os
+from azure.cosmos import CosmosClient, PartitionKey
 from langchain_core.documents import Document
-from langchain_community.vectorstores.pgvector import PGVector
+from langchain_community.vectorstores.azure_cosmos_db_no_sql import AzureCosmosDBNoSqlVectorSearch
 from langchain_community.document_loaders.pdf import PyPDFLoader
 from langchain_community.document_loaders.markdown  import UnstructuredMarkdownLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -13,14 +14,44 @@ from aire.models.questionnaire import AireQuestionnaire, AireQuestionnaireMetada
 from aire.models.content import AireContent, AireContentMetadata, AireContentType
 from pathlib import Path
 
+AZURE_COSMOS_DB_CONNECTION_STRING = os.getenv("AZURE_COSMOS_DB_CONNECTION_STRING")
+
 class BaseVectorStore:
-    store: PGVector
+    store: AzureCosmosDBNoSqlVectorSearch
 
-    def __init__(self, store: PGVector):
-        self.store = store
-
-    def retriever(self):
-        return self.store.as_retriever()
+    def __init__(self, collection: str):
+        self.store = AzureCosmosDBNoSqlVectorSearch(
+            cosmos_client=CosmosClient.from_connection_string(AZURE_COSMOS_DB_CONNECTION_STRING),
+            embedding=EmbeddingsModel(),
+            database_name="langchain_python_db",
+            container_name=collection,
+            vector_embedding_policy={
+                "vectorEmbeddings": [
+                    {
+                        "path": "/embedding",
+                        "dataType": "float32",
+                        "distanceFunction": "cosine",
+                        "dimensions": 1536,
+                    }
+                ]
+            },
+            indexing_policy={
+                "indexingMode": "consistent",
+                "includedPaths": [{"path": "/*"}],
+                "excludedPaths": [{"path": '/"_etag"/?'}],
+                "vectorIndexes": [{"path": "/embedding", "type": "diskANN"}],
+                "fullTextIndexes": [{"path": "/text"}],
+            },
+            cosmos_container_properties={ 
+                "partition_key": PartitionKey(path="/id") 
+            },
+            cosmos_database_properties={},
+            full_text_search_enabled=True,
+            full_text_policy={
+                "defaultLanguage": "en-US",
+                "fullTextPaths": [{"path": "/text", "language": "en-US"}],
+            },
+        )
     
     def similarity_search(self, query: str):
         return self.store.similarity_search(query)
@@ -39,9 +70,7 @@ class BaseVectorStore:
 
 class DocumentVectorStore(BaseVectorStore):
     def __init__(self):
-        super().__init__(
-            PGVector.from_existing_index(EmbeddingsModel(), collection_name="documents")
-        )
+        super().__init__("documents")
         
         self.splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000, chunk_overlap=200, add_start_index=True)
@@ -65,9 +94,7 @@ class DocumentVectorStore(BaseVectorStore):
 
 class QuestionnaireVectorStore(BaseVectorStore):
     def __init__(self):
-        super().__init__(
-            PGVector.from_existing_index(EmbeddingsModel(), collection_name="questionnaires")
-        )
+        super().__init__("questionnaires")
 
     def add_questionnaire(self, questionnaire: AireQuestionnaire) -> str:
 
@@ -121,9 +148,7 @@ class QuestionnaireVectorStore(BaseVectorStore):
 
 class ContentVectorStore(BaseVectorStore):
     def __init__(self):
-        super().__init__(
-            PGVector.from_existing_index(EmbeddingsModel(), collection_name="content")
-        )
+        super().__init__("content")
 
     def add_content(self, content: AireContent) -> str | None:
         embedding = ""

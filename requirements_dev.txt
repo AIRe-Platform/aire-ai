@@ -3,12 +3,9 @@ langchain-cli
 pydantic==1.10.18
 langchain-community
 langchain-openai
-langchain-postgres
 langchain-text-splitters
 langserve[server]
 openai
-pgvector
-psycopg2-binary
 pypdf
 python-multipart
 unstructured
@@ -16,3 +13,4 @@ markdown
 tiktoken
 python-jose[cryptography]
 cachetools
+azure-cosmos
