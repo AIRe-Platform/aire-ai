@@ -34,10 +34,10 @@ __tool_description = {
     }
 }
 
-def __create_reminder_call(ctx: AireChatContext, date_and_time: str, subject: str) -> AireReminder:
+def __create_reminder_call(ctx: AireChatContext, date_and_time: str, subject: str) -> AireReminder | None:
     timestamp = datetime.fromisoformat(date_and_time).timestamp()
-    content = AireReminderContent(message=subject)
-    reminder = AireReminder(trigger_timestamp=timestamp, content=content, chat_id=ctx.input.chat_id)
+    content = AireReminderContent(message=subject)    
+    reminder = AireReminder(trigger_timestamp=int(timestamp), content=content, chat_id=ctx.input.chat_id)
 
     memory = ctx.platform.platform.modules.get(AireModuleType.Memory)
     if memory != None:
@@ -53,7 +53,13 @@ def __create_reminder(ctx: AireChatContext, call: ToolCall) -> AireReminder | No
         return None
     
     args = call.get("args")
-    return __create_reminder_call(ctx, args.get("date_and_time"), args.get("subject"))
+    datetime = args.get("date_and_time")
+    subject = args.get("subject")
+
+    if datetime == None or subject == None:
+        return None
+
+    return __create_reminder_call(ctx, datetime, subject)
 
 
 ReminderTool = CallableTool(

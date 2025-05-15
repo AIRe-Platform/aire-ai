@@ -52,6 +52,9 @@ async def query_document(
         if not AireScope.DocumentRead in auth.scopes:
             raise FORBIDDEN_EXCEPTION
         
+    if query == None:
+        raise BAD_REQUEST_EXCEPTION
+        
     store = DocumentVectorStore()
     docs = store.similarity_search(query)
     return DocumentQueryResponse(documents=docs)
@@ -64,7 +67,7 @@ async def query_document(
 async def embed_document(
     document: UploadFile,
     is_service: Annotated[bool, Depends(check_service_key)],
-    auth: Annotated[AireAuth | None, Depends(verify_token)]) -> Response:
+    auth: Annotated[AireAuth | None, Depends(verify_token)]):
 
     if not is_service:
         if auth == None:
@@ -72,7 +75,7 @@ async def embed_document(
         if not AireScope.DocumentWrite in auth.scopes:
             raise FORBIDDEN_EXCEPTION
 
-    if document.size > 1024 * 16:
+    if document.size == None or document.size > 1024 * 16:
         return Response(status_code=status.HTTP_400_BAD_REQUEST, 
                         content="The file is too large. The file must be 16 MB max.")
     
@@ -92,7 +95,7 @@ async def embed_document(
         path = await create_temporary_file(document)
         if path == None:
             raise Exception("Failed to store uploaded file")
-        ids = handler(path)
+        ids = handler(path, None)
     except BaseException as ex:
         print(f"Failed to process document: {ex}")
     finally:
@@ -211,6 +214,10 @@ async def embed_content(
         
     store = ContentVectorStore()
     id = store.add_content(content)
+
+    if id == None:
+        raise BAD_REQUEST_EXCEPTION
+    
     return EmbedResponse(ids=[id])
 
 

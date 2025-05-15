@@ -5,6 +5,7 @@
 
 from enum import Enum
 from pydantic import BaseModel
+from typing import Optional
 from .user import AireRole, AireUserServiceCredentials
 
 class AireScope(str, Enum):
@@ -36,9 +37,9 @@ class AireScope(str, Enum):
 class AireAuth(BaseModel):
     """User token payload"""
 
-    subject: str | None
+    subject: Optional[str] = None
     role: AireRole | str = AireRole.User
     scopes: list[str]
-    user_key: str | None
-    connected_services: list[AireUserServiceCredentials] | None
-    token: str | None
+    user_key: Optional[str] = None
+    connected_services: Optional[list[AireUserServiceCredentials]] = None
+    token: Optional[str] = None

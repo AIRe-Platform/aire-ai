@@ -30,7 +30,6 @@ def get_user(conf: AirePlatformConfiguration, auth: str):
 
     response = requests.get(url=url, headers=headers)
     if response.status_code == 200:
-        json = response.json()
-        return AireUser.parse_obj(json)
+        return AireUser.model_validate(response.json())
     else:
         raise RuntimeError("Failed to get user data")

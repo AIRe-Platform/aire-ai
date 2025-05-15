@@ -7,7 +7,6 @@ import requests
 import os
 from cachetools import cached, TTLCache
 from cachetools.keys import hashkey
-from pydantic import parse_obj_as
 from ..models.keyword import AireKeyword
 from ..models.reminder import AireReminder;
 from ..models.platform import (
@@ -16,6 +15,7 @@ from ..models.platform import (
     AireModule
 )
 from ..models.auth import AireAuth;
+from pydantic.type_adapter import TypeAdapter
 
 def hash_key(conf: AirePlatformConfiguration):
     return hashkey(conf.platform.name)
@@ -39,8 +39,8 @@ def get_keywords(conf: AirePlatformConfiguration):
 
     response = requests.get(url=url, headers=headers)
     if response.status_code == 200:
-        json = response.json()    
-        keywords = parse_obj_as(list[AireKeyword], json)
+        adapter = TypeAdapter(list[AireKeyword])
+        keywords = adapter.validate_python(response.json())
         return list(map(lambda x: x.value, keywords))
     else:
         raise RuntimeError("Failed to get keywords")
@@ -48,13 +48,13 @@ def get_keywords(conf: AirePlatformConfiguration):
 def create_reminder(svc: AireModule, auth: AireAuth, reminder: AireReminder) -> AireReminder:
     url = svc.endpoint + "/v1/reminder"
     headers = {
-        "Authorization": "Bearer " + auth.token,
+        "Authorization": "Bearer " + (auth.token or ""),
         "Accept": "application/json",
         "Content-Type": "application/json"
     }
-    response = requests.post(url=url, headers=headers, json=reminder.dict())
+    response = requests.post(url=url, headers=headers, json=reminder.model_dump())
     if response.status_code == 200:
-        return AireReminder.parse_obj(response.json())
+        return AireReminder.model_validate(response.json())
     else:
         raise RuntimeError("Failed to create reminder")
     

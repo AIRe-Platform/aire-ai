@@ -70,7 +70,7 @@ async def stream_bot(bot_name: str,
         auth=auth)
     input_token_count = count_tokens(input)
 
-    has_keywords = input.context.keywords != None and len(input.context.keywords) > 0
+    has_keywords = input.context != None and input.context.keywords != None and len(input.context.keywords) > 0
     gen_keywords = len(input.to_chat_messages()) > 4 and not has_keywords
 
     async def stream() -> AsyncIterator[dict]:
@@ -98,22 +98,23 @@ async def stream_bot(bot_name: str,
                     for tool_chunk in tool_chunks:
                         index = tool_chunk["index"]
 
-                        if len(tool_calls) <= index:
-                            tool_calls.append(ToolCallChunk(id="", name="", args="", index=index))
-                        tc: ToolCallChunk = tool_calls[index]
+                        if index != None:
+                            if len(tool_calls) <= index:
+                                tool_calls.append(ToolCallChunk(id="", name="", args="", index=index))
+                            tc: ToolCallChunk = tool_calls[index]
 
-                        if tool_chunk["id"]:
-                            tc["id"] += tool_chunk["id"]
-                        if tool_chunk["name"]:
-                            tc["name"] += tool_chunk["name"]
-                        if tool_chunk["args"]:
-                            tc["args"] += tool_chunk["args"]
+                            if tool_chunk["id"]:
+                                tc["id"] += tool_chunk["id"] # type: ignore
+                            if tool_chunk["name"]:
+                                tc["name"] += tool_chunk["name"] # type: ignore
+                            if tool_chunk["args"]:
+                                tc["args"] += tool_chunk["args"] # type: ignore
 
             for complete_chunk in tool_calls:
                 call = ToolCall(
                     id=complete_chunk["id"], 
-                    name=complete_chunk["name"], 
-                    args=json.loads(complete_chunk["args"]))
+                    name=complete_chunk["name"] or "", 
+                    args=json.loads(complete_chunk["args"] or "{}"))
                 
                 if call.get("name") in Toolbox and not tool_called:
                     tool = Toolbox[call.get("name")]
@@ -125,8 +126,8 @@ async def stream_bot(bot_name: str,
                             "data": serializer.dumps(call_result).decode("utf-8")
                         }
 
-            bot_message = ChatMessage(role="assistant", content=output)
-            bot_input = AireChatInput(chat=[bot_message])
+            bot_message = AireChatMessage(role="assistant", content=output)
+            bot_input = AireChatInput(chat_id=None, chat=[bot_message], context=None)
             output_token_count = count_tokens(bot_input)
             yield { 
                 "event": "token-count",

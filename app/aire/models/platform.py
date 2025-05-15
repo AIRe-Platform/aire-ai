@@ -27,14 +27,14 @@ class AireModule(BaseModel):
     type: AireModuleType
     endpoint: str
     access: AireModuleAccess
-    token: Optional[str]
-    settings: dict | None
+    token: Optional[str] = None
+    settings: Optional[dict] = None
 
 class AireService(BaseModel):
     """Describes an external service"""
 
     name: str
-    modules: Optional[list[AireModule]]
+    modules: Optional[list[AireModule]] = None
 
 class AirePlatform(BaseModel):
     """Describes the platform's core modules"""

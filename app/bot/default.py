@@ -70,39 +70,41 @@ def __get_personality_prompt(ctx: AireChatContext):
     personality_prompt = __fallback_personality_prompt
 
     try:
-        module_settings = ctx.platform.platform.modules.get(AireModuleType.AI).settings
-        if module_settings != None and "personality_prompt" in module_settings:
-            personality_prompt = module_settings['personality_prompt']
+        module = ctx.platform.platform.modules.get(AireModuleType.AI)
+        if module != None and module.settings != None:
+            if "personality_prompt" in module.settings:
+                personality_prompt = module.settings['personality_prompt']
     except AttributeError:
         pass
 
-    if (ctx.allow_custom_prompt and 
-        hasattr(ctx.user.preferences, "experimental_custom_prompt") and 
-        ctx.user.preferences.experimental_custom_prompt is not None):
-        personality_prompt = ctx.user.preferences.experimental_custom_prompt
+    if ctx.allow_custom_prompt:
+        if ctx.user and ctx.user.preferences:
+            if ctx.user.preferences.experimental_custom_prompt is not None:
+                personality_prompt = ctx.user.preferences.experimental_custom_prompt
         
     return personality_prompt
 
 
-llm = ChatModel(temperature=0.7).bind_tools(ToolBindings)
+llm = ChatModel(temperature=0.7)
 
 def __messages(ctx: AireChatContext):
     language = None
     topic = None
     prompt = None
 
-    try:
-        language = ctx.input.context.language
-    except AttributeError:
-        pass
+    if ctx.input.context != None:
+        try:
+            language = ctx.input.context.language
+        except AttributeError:
+            pass
     
+        try:
+            topic = ctx.input.context.topic
+        except AttributeError:
+            pass
+
     if language == None:
         language = "English"
-
-    try:
-        topic = ctx.input.context.topic
-    except AttributeError:
-        pass
 
     # Get system prompt
     system_prompt = SystemMessagePromptTemplate.from_template(__system_prompt)
@@ -127,16 +129,17 @@ def __messages(ctx: AireChatContext):
 
 def count_tokens(chat_input: AireChatInput):
     model = llm.model_name
-    encoding = tiktoken.encoding_for_model(model)
+    encoding = tiktoken.encoding_for_model(model or "gpt-4o")
     tokens_per_message = 4
 
     chat_messages = chat_input.to_chat_messages()
 
     num_tokens = 0
     for message in chat_messages:
-        num_tokens += len(encoding.encode(message.content))
-        num_tokens += len(encoding.encode(message.role))
-        num_tokens += tokens_per_message
+        if isinstance(message.content, str):
+            num_tokens += len(encoding.encode(message.content))
+            num_tokens += len(encoding.encode(message.role))
+            num_tokens += tokens_per_message
     return num_tokens
 
-DefaultBot = RunnableLambda(__messages) | llm
+DefaultBot = RunnableLambda(__messages) | llm.bind_tools(ToolBindings)

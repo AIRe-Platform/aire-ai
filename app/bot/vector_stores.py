@@ -14,7 +14,7 @@ from aire.models.questionnaire import AireQuestionnaire, AireQuestionnaireMetada
 from aire.models.content import AireContent, AireContentMetadata, AireContentType
 from pathlib import Path
 
-AZURE_COSMOS_DB_CONNECTION_STRING = os.getenv("AZURE_COSMOS_DB_CONNECTION_STRING")
+AZURE_COSMOS_DB_CONNECTION_STRING = os.getenv("AZURE_COSMOS_DB_CONNECTION_STRING", "")
 
 class BaseVectorStore:
     store: AzureCosmosDBNoSqlVectorSearch

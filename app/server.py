@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 
-app = FastAPI(
+app: FastAPI = FastAPI(
     root_path="/api",
     docs_url="/swagger/ui",
     openapi_url="/swagger.json"

@@ -7,6 +7,7 @@ from langserve.schema import CustomUserType
 from langchain_core.messages import ChatMessage
 from pydantic import BaseModel
 from enum import Enum
+from typing import Optional, Sequence
 from .user import AireUser
 from .questionnaire import AireQuestionnaireAnswer
 from .platform import AirePlatformConfiguration
@@ -29,32 +30,32 @@ class AireChatMessage(BaseModel):
     """A chat message"""
 
     role: str
-    content: str | None
-    timestamp: int | None
-    rating: int | None
-    question: AireQuestionnaireAnswer | None
+    content: Optional[str] = None
+    timestamp: Optional[int] = None
+    rating: Optional[int] = None
+    question: Optional[AireQuestionnaireAnswer] = None
 
 
 class AireChatInputContext(BaseModel):
     """Additional chat context"""
 
-    year_of_birth: int | None
-    occupation: str | None
-    topic: str | None
-    language: str | None
-    keywords: list[str] | None
+    year_of_birth: Optional[int] = None
+    occupation: Optional[str] = None
+    topic: Optional[str] = None
+    language: Optional[str] = None
+    keywords: Optional[list[str]] = None
 
 
 class AireChatInput(BaseModel):
     """This class containst the information about a chat"""
 
-    chat_id: str | None
+    chat_id: Optional[str] = None
     chat: list[AireChatMessage]
-    context: AireChatInputContext | None
+    context: Optional[AireChatInputContext] = None
 
-    def to_chat_messages(self) -> list[ChatMessage]:
+    def to_chat_messages(self) -> Sequence[ChatMessage]:
         messages = filter(lambda msg: msg.content != None, self.chat)
-        return list(map(lambda msg: ChatMessage(role=msg.role, content=msg.content), messages))
+        return list(map(lambda msg: ChatMessage(role=msg.role, content=msg.content or ""), messages))
 
 
 class AireChatbotInfo(BaseModel):
@@ -68,7 +69,7 @@ class AireChatContext(CustomUserType):
     """The context for the chat"""
 
     input: AireChatInput
-    user: AireUser | None = None
+    user: Optional[AireUser] = None
     regen: bool = False
     allow_custom_prompt: bool = False
     platform: AirePlatformConfiguration

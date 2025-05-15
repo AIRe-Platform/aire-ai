@@ -43,8 +43,11 @@ def __query_questionnaires(ctx: AireChatContext, call: ToolCall) -> AireQuestion
 
     args = call.get("args")
     search = args.get("search")
-    results = QuestionnaireVectorStore().query(search, 8)
 
+    if search == None:
+        return None
+    
+    results = QuestionnaireVectorStore().query(search, 8)
     return AireQuestionnaireEvent(search=search, results=results)
 
 

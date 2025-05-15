@@ -5,6 +5,7 @@
 
 from pydantic import BaseModel
 from enum import Enum
+from typing import Optional
 
 class AireUserServiceCredentials(BaseModel):
     """Service credentials"""
@@ -25,24 +26,24 @@ class AireUserPreferences(BaseModel):
     """User preferences"""
 
     # Requires access scope 'experimental-custom-prompt' to apply
-    experimental_custom_prompt: str | None
+    experimental_custom_prompt: Optional[str] = None
 
 
 class AireUser(BaseModel):
     """User account details"""
     
     uuid: str
-    email: str | None
-    first_name: str | None
-    last_name: str | None
-    gender: AireUserGender | None
-    year_of_birth: int | None
-    language: str | None
-    country: str | None
-    bio: str | None
-    connected_services: list[AireUserServiceCredentials] | None
-    preferences: AireUserPreferences | None
-    summary: str | None
+    email: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    gender: Optional[AireUserGender] = None
+    year_of_birth: Optional[int] = None
+    language: Optional[str] = None
+    country: Optional[str] = None
+    bio: Optional[str] = None
+    connected_services: Optional[list[AireUserServiceCredentials]] = None
+    preferences: Optional[AireUserPreferences] = None
+    summary: Optional[str] = None
 
 
 class AireRole(str, Enum):
