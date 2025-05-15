@@ -57,7 +57,7 @@ class BaseVectorStore:
         return self.store.similarity_search(query)
     
     def similarity_search_by_relevance(self, query: str, count: int = 1):
-        results = self.store.similarity_search_with_relevance_scores(query, count)
+        results = self.store.similarity_search_with_score(query, count)
         results.sort(key=lambda x: x[1], reverse=True)
         return results
 
