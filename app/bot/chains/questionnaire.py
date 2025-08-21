@@ -20,7 +20,7 @@ def __build_prompt(item: AireQuestionnaireAnswer):
     if type(answer) is list:
         answer = ", ".join(answer)
 
-    if item.prompt is str and item.options:
+    if item.prompt and item.options:
         if type(answer) is dict[str, Any]:
             return item.prompt.format(question=item.question, **answer, **item.options)
         else:
