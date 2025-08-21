@@ -15,6 +15,7 @@ from aire.models.content import AireContent, AireContentMetadata, AireContentTyp
 from pathlib import Path
 
 AZURE_COSMOS_DB_CONNECTION_STRING = os.getenv("AZURE_COSMOS_DB_CONNECTION_STRING", "")
+AZURE_COSMOS_DB_DATABASE_NAME = os.getenv("AZURE_COSMOS_DB_DATABASE_NAME", "langchain_python_db")
 
 class BaseVectorStore:
     store: AzureCosmosDBNoSqlVectorSearch
@@ -23,7 +24,7 @@ class BaseVectorStore:
         self.store = AzureCosmosDBNoSqlVectorSearch(
             cosmos_client=CosmosClient.from_connection_string(AZURE_COSMOS_DB_CONNECTION_STRING),
             embedding=EmbeddingsModel(),
-            database_name="langchain_python_db",
+            database_name=AZURE_COSMOS_DB_DATABASE_NAME,
             container_name=collection,
             vector_embedding_policy={
                 "vectorEmbeddings": [
