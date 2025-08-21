@@ -66,7 +66,11 @@ class BaseVectorStore:
         return ids
     
     def remove_document(self, id: str):
-        self.store.delete([id])
+        try:
+            self.store.delete([id])
+        except:
+            pass
+        
 
 class DocumentVectorStore(BaseVectorStore):
     def __init__(self):
