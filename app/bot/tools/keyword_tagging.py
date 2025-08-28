@@ -4,7 +4,6 @@
 
 from langchain_core.messages.tool import ToolCall
 from aire.models.chat import AireChatContext, AireChatEvent
-from aire.models.auth import AireScope
 from ..chains.chat_keywords import ChatKeywordChain
 from .callable_tool import CallableTool
 

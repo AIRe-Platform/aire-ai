@@ -32,7 +32,7 @@ def DefaultModel(temperature: float = 0.0, max_tokens: int = 256):
         return ChatOpenAI(
             model=LLM_DEFAULT_MODEL_NAME,
             temperature=temperature,
-            max_tokens=max_tokens
+            max_completion_tokens=max_tokens
         )
     
 def ChatModel(temperature: float = 0.7):

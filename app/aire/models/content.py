@@ -21,19 +21,19 @@ class AireContent(BaseModel):
 
     id: str
     type: AireContentType
-    name: Optional[str]
-    description: Optional[str]
-    hidden: Optional[bool]
-    url: Optional[str]
-    thumbnail_url: Optional[str]
-    views: Optional[int]
-    score: Optional[int]
-    thumbs_up: Optional[int]
-    thumbs_down: Optional[int]
-    modified: Optional[datetime]
-    keywords: Optional[list[str]]
-    file_name: Optional[str]
-    thumbnail_file_name: Optional[str]
+    name: Optional[str] = None
+    description: Optional[str] = None
+    hidden: Optional[bool] = None
+    url: Optional[str] = None
+    thumbnail_url: Optional[str] = None
+    views: Optional[int] = None
+    score: Optional[int] = None
+    thumbs_up: Optional[int] = None
+    thumbs_down: Optional[int] = None
+    modified: Optional[datetime] = None
+    keywords: Optional[list[str]] = None
+    file_name: Optional[str] = None
+    thumbnail_file_name: Optional[str] = None
 
 
 class AireContentMetadata(BaseModel):

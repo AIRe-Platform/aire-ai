@@ -6,7 +6,7 @@
 import os
 from jose import jwt, jwe, JWTError
 from jose.exceptions import JWEError
-from typing import Annotated
+from typing import Annotated, Sequence
 from fastapi import Header
 from aire.models.auth import *
 
@@ -15,7 +15,7 @@ TOKEN_ENCRYPTION_KEY = os.getenv("TOKEN_ENCRYPTION_KEY")
 SERVICE_KEY = os.getenv("AIRE_SERVICE_KEY")
 
 allow_anonymous_users = os.getenv("ALLOW_ANONYMOUS_USERS") == "1"
-AnonymousScopes = [
+AnonymousScopes: Sequence[AireScope] = [
     AireScope.ChatCompletion, 
     AireScope.ChatSummary,
     AireScope.QuestionnaireRead,
@@ -29,7 +29,7 @@ def verify_token(authorization: Annotated[str | None, Header()] = None):
         if not allow_anonymous_users:
             return None
         else:
-            return AireAuth(scopes=AnonymousScopes)
+            return AireAuth(scopes=list(AnonymousScopes))
     
     header = authorization.split(" ")
     if len(header) != 2:
@@ -41,6 +41,9 @@ def verify_token(authorization: Annotated[str | None, Header()] = None):
         enc_key = bytes(TOKEN_ENCRYPTION_KEY, "ascii")
         dec_token = jwe.decrypt(token, enc_key)
 
+        if not dec_token:
+            return None
+
         sig_key = bytes(TOKEN_SIGNING_KEY, "ascii")
         payload = jwt.decode(dec_token, sig_key, "HS256", {
             "verify_aud": False,
@@ -50,13 +53,13 @@ def verify_token(authorization: Annotated[str | None, Header()] = None):
         })
 
         payload_scopes = payload.get("scope")
-
+        scopes = []
         if isinstance(payload_scopes, str):
             scopes = payload_scopes.split(" ")
             
         return AireAuth(
             subject=payload.get("sub"),
-            role=payload.get("role"),
+            role=payload.get("role", ""),
             scopes=scopes,
             user_key=payload.get("user_enc_key"),
             connected_services=payload.get("connected_services"),
