@@ -41,8 +41,11 @@ def __content_query(ctx: AireChatContext, call: ToolCall) -> AireContentEvent | 
     
     args = call.get("args")
     search = args.get("search")
-    results = ContentVectorStore().query(search, 4)
 
+    if search == None:
+        return None
+    
+    results = ContentVectorStore().query(search, 4)
     return AireContentEvent(search=search, results=results)
     
 

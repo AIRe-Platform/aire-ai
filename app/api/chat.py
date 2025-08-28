@@ -20,11 +20,11 @@ from fastapi.responses import Response
           name="Chat abstract (summary and keywords)",
           description="Generate abstract from a chat",
           tags=["Chat Processing"],
-          response_description="Returns the generated abstract")
+          response_description="Returns the generated abstract",
+          response_model=AireChatAbstract)
 async def chat_abstract(
     input: AireChatInput,
-    auth: Annotated[AireAuth | None, Depends(verify_token)]
-    ) -> AireChatAbstract:
+    auth: Annotated[AireAuth | None, Depends(verify_token)]):
 
     if auth == None:
         raise UNAUTH_EXCEPTION
@@ -76,11 +76,12 @@ async def chat_keywords(
 @app.post("/chat/{bot_name}/stats", 
          description="Get statistics for a chat",
          tags=["Chat Processing"],
-         response_description="Returns token count")
+         response_description="Returns token count",
+         response_model=AireChatStats)
 async def chat_tokens(
     bot_name: str, 
     input: AireChatInput,
-    auth: Annotated[AireAuth | None, Depends(verify_token)]) -> AireChatStats:
+    auth: Annotated[AireAuth | None, Depends(verify_token)]):
 
     if auth == None:
         raise UNAUTH_EXCEPTION

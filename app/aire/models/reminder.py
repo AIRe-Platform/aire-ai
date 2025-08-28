@@ -9,8 +9,8 @@ class AireReminderContent(BaseModel):
     message: str
 
 class AireReminder(BaseModel):
-    id: Optional[str]
+    id: Optional[str] = None
     trigger_timestamp: int
-    read_timestamp: Optional[int]
-    chat_id: Optional[str]
+    read_timestamp: Optional[int] = None
+    chat_id: Optional[str] = None
     content: AireReminderContent

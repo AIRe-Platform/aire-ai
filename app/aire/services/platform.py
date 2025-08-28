@@ -9,7 +9,7 @@ from cachetools import cached, TTLCache
 from ..models.platform import AirePlatformConfiguration
 
 @cached(cache=TTLCache(maxsize=1, ttl=1800))
-def get_platform_config():
+def get_platform_config() -> AirePlatformConfiguration:
     base = os.getenv("AIRE_SERVICE_BASE")
     key = os.getenv("AIRE_SERVICE_KEY")
 
@@ -24,8 +24,7 @@ def get_platform_config():
 
     response = requests.get(url=url, headers=headers)
     if response.status_code == 200:
-        json = response.json()
-        return AirePlatformConfiguration.parse_obj(json)
+        return AirePlatformConfiguration.model_validate(response.json())
     else:
         raise RuntimeError("Failed to request platform configuration")
     

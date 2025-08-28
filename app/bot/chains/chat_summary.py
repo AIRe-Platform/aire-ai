@@ -33,7 +33,7 @@ def __chat_summary(ctx: AireChatContext) -> str:
     prompt = SUMMARY_PROMPT
     prompt.template = summary_prompt
 
-    history = ChatMessageHistory(messages=messages)
+    history = ChatMessageHistory(messages=list(messages))
     memory = ConversationSummaryBufferMemory(chat_memory=history, llm=llm_summary, prompt=prompt)
     return memory.predict_new_summary(memory.chat_memory.messages, "").strip("\n ")
 

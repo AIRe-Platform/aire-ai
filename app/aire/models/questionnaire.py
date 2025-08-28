@@ -6,6 +6,7 @@
 from pydantic import BaseModel
 from enum import Enum
 from datetime import datetime
+from typing import Optional, Any
 
 class AireQuestionnaireOptionType(str, Enum):
     """Questionnaire option types"""
@@ -39,16 +40,16 @@ class AireQuestionnaireOptionOpen(AireQuestionnaireOption):
     """Questionnaire options for type 'open'"""
 
     max_len: int
-    match: str | None
+    match: Optional[str] = None
     multiline: bool = False
 
 
 class AireQuestionnaireOptionNumber(AireQuestionnaireOption):
     """Questionnaire options for type 'number'"""
 
-    min: int | None
-    max: int | None
-    default: int | None
+    min: Optional[int] = None
+    max: Optional[int] = None
+    default: Optional[int] = None
 
 
 class AireQuestionnaireQuestion(BaseModel):
@@ -56,8 +57,8 @@ class AireQuestionnaireQuestion(BaseModel):
 
     id: str
     question: str
-    keywords: list[str] | None
-    prompt: str | None
+    keywords: Optional[list[str]] = None
+    prompt: Optional[str] = None
     type: AireQuestionnaireOptionType
     options: AireQuestionnaireOption
     required: bool = False
@@ -68,7 +69,7 @@ class AireQuestionnaireSection(BaseModel):
 
     id: str
     name: str
-    keywords: list[str] | None
+    keywords: Optional[list[str]] = None
     questions: list[AireQuestionnaireQuestion]
 
 
@@ -78,7 +79,7 @@ class AireQuestionnaire(BaseModel):
     id: str
     name: str
     lang: str
-    modified: datetime | None
+    modified: Optional[datetime] = None
     keywords: list[str]
     content: list[AireQuestionnaireSection]
 
@@ -90,20 +91,20 @@ class AireQuestionnaireAnswer(BaseModel):
     question_id: str
     type: AireQuestionnaireOptionType
     question: str
-    prompt: str | None
-    answer: int | str | list[str] | dict | None
-    options: dict | None
+    prompt: Optional[str] = None
+    answer: Optional[int | str | list[str] | dict] = None
+    options: Optional[dict[str, Any]] = None
 
 
 class AireQuestionnaireResult(BaseModel):
     """Processed Questionnaire results"""
 
-    id: str | None
+    id: Optional[str] = None
     questionnaire_id: str
     timestamp: datetime
     answers: list[AireQuestionnaireAnswer]
     summary: str
-    prompts: list[str] | None
+    prompts: Optional[list[str]] = None
 
 
 class AireQuestionnaireProcessingRequest(BaseModel):
@@ -117,8 +118,8 @@ class AireQuestionnaireMetadata(BaseModel):
     """Questionnaire embedding metadata"""
 
     id: str
-    language: str | None
-    relevance: float | None
+    language: Optional[str] = None
+    relevance: Optional[float] = None
 
 class AireQuestionnaireEvent(BaseModel):
     """Questionnaire event"""
