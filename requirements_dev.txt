@@ -5,6 +5,7 @@ pydantic
 langchain-community
 langchain-openai
 langchain-text-splitters
+langchain-azure-ai
 langserve[server]
 openai
 pypdf
