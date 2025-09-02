@@ -23,6 +23,7 @@ class AireChatEvent(str, Enum):
     Reminder = "reminder"
     Questionnaire = "questionnaire"
     ContentSuggestions = "content-suggestions"
+    DocumentResults = "document-results"
     End = "end"
 
 
@@ -44,6 +45,7 @@ class AireChatInputContext(BaseModel):
     topic: Optional[str] = None
     language: Optional[str] = None
     keywords: Optional[list[str]] = None
+    documents: Optional[list[str]] = None
 
 
 class AireChatInput(BaseModel):
@@ -56,6 +58,10 @@ class AireChatInput(BaseModel):
     def to_chat_messages(self) -> Sequence[ChatMessage]:
         messages = filter(lambda msg: msg.content != None, self.chat)
         return list(map(lambda msg: ChatMessage(role=msg.role, content=msg.content or ""), messages))
+    
+    def inject_system_message(self, content: str):
+        message = AireChatMessage(role="system", content=content)
+        self.chat.append(message)
 
 
 class AireChatbotInfo(BaseModel):

@@ -3,15 +3,26 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import os
+from typing import Optional
 from azure.cosmos import CosmosClient, PartitionKey
 from langchain_core.documents import Document
-from langchain_community.vectorstores.azure_cosmos_db_no_sql import AzureCosmosDBNoSqlVectorSearch
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+from langchain_community.vectorstores.azure_cosmos_db_no_sql import PreFilter, Condition
+from langchain_community.vectorstores import AzureCosmosDBNoSqlVectorSearch #! Deprecated
+#from langchain_azure_ai.vectorstores import AzureCosmosDBNoSqlVectorSearch #! Vector search mappings currently broken
+
+from langchain_community.document_loaders.base import BaseLoader
 from langchain_community.document_loaders.pdf import PyPDFLoader
 from langchain_community.document_loaders.markdown  import UnstructuredMarkdownLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_community.document_loaders.text import TextLoader
+from langchain_community.document_loaders.word_document import UnstructuredWordDocumentLoader
+from langchain_community.document_loaders.odt import UnstructuredODTLoader
+
 from llm import EmbeddingsModel
 from aire.models.questionnaire import AireQuestionnaire, AireQuestionnaireMetadata
 from aire.models.content import AireContent, AireContentMetadata, AireContentType
+from aire.models.documents import AireDocumentSearchResult, AireDocumentMetadata
 from pathlib import Path
 
 AZURE_COSMOS_DB_CONNECTION_STRING = os.getenv("AZURE_COSMOS_DB_CONNECTION_STRING", "")
@@ -52,13 +63,19 @@ class BaseVectorStore:
                 "defaultLanguage": "en-US",
                 "fullTextPaths": [{"path": "/text", "language": "en-US"}],
             },
+            #? Add these when transitioning to langchain_azure_ai
+            #? The text_field mapping is currently broken with the newer package
+            # vector_search_fields={
+            #     "text_field": "text",
+            #     "embedding_field": "embedding"
+            # }
         )
     
-    def similarity_search(self, query: str):
-        return self.store.similarity_search(query)
+    def similarity_search(self, query: str, prefilter: Optional[PreFilter] = None):
+        return self.store.similarity_search(query, pre_filter=prefilter)
     
-    def similarity_search_by_relevance(self, query: str, count: int = 1):
-        results = self.store.similarity_search_with_score(query, count)
+    def similarity_search_by_relevance(self, query: str, count: int = 1, prefilter: Optional[PreFilter] = None):
+        results = self.store.similarity_search_with_score(query, count, pre_filter=prefilter)
         results.sort(key=lambda x: x[1], reverse=True)
         return results
 
@@ -79,22 +96,60 @@ class DocumentVectorStore(BaseVectorStore):
         
         self.splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000, chunk_overlap=200, add_start_index=True)
+        
+    def __convert_document_to_search_result(self, doc: Document, relevance: float) -> AireDocumentSearchResult:
+        return AireDocumentSearchResult(
+            id=doc.id,
+            relevance=relevance,
+            content=doc.page_content,
+            metadata=AireDocumentMetadata.model_validate(doc.metadata))
+    
+    def add_file(self, loader: BaseLoader, filepath: Path, metadata: AireDocumentMetadata | None) -> list[str]:
+        docs = loader.load_and_split(self.splitter)
+        if metadata == None:
+            metadata = AireDocumentMetadata(filename=filepath.name)
+        for d in docs:
+            d.metadata = metadata.model_dump()
+        return self.add_documents(docs)
 
-    def add_pdf(self, filepath: Path, source: str | None) -> list[str]:
+    def add_pdf(self, filepath: Path, metadata: AireDocumentMetadata | None) -> list[str]:
         loader = PyPDFLoader(file_path=filepath.as_posix())
-        docs = loader.load_and_split(self.splitter)
-        if source != None:
-            for d in docs:
-                d.metadata["source"] = source
-        return self.add_documents(docs)
+        return self.add_file(loader, filepath, metadata)
 
-    def add_markdown(self, filepath: Path, source: str | None) -> list[str]:
+    def add_markdown(self, filepath: Path, metadata: AireDocumentMetadata | None) -> list[str]:
         loader = UnstructuredMarkdownLoader(file_path=filepath.as_posix())
-        docs = loader.load_and_split(self.splitter)
-        if source != None:
-            for d in docs:
-                d.metadata["source"] = source
-        return self.add_documents(docs)
+        return self.add_file(loader, filepath, metadata)
+    
+    def add_plain_text(self, filepath: Path, metadata: AireDocumentMetadata | None) -> list[str]:
+        loader = TextLoader(file_path=filepath, autodetect_encoding=True)
+        return self.add_file(loader, filepath, metadata)
+    
+    def add_word_document(self, filepath: Path, metadata: AireDocumentMetadata | None) -> list[str]:
+        loader = UnstructuredWordDocumentLoader(filepath)
+        return self.add_file(loader, filepath, metadata)
+    
+    def add_odt_document(self, filepath: Path, metadata: AireDocumentMetadata | None) -> list[str]:
+        loader = UnstructuredODTLoader(filepath)
+        return self.add_file(loader, filepath, metadata)
+    
+    def query(self, search: str, max_items: int = 8, min_relevance: float = 0.0) -> list[AireDocumentSearchResult]:
+        results = self.similarity_search_by_relevance(search, max_items)
+
+        if min_relevance > 0.0:
+            results = filter(lambda x: x[1] >= min_relevance, results)
+
+        documents = list(map(lambda x: self.__convert_document_to_search_result(x[0], x[1]), results))
+        return documents
+    
+    def query_from_doc(self, source_id: str, search: str, max_items: int = 8, min_relevance: float = 0.0) -> list[AireDocumentSearchResult]:
+        prefilter = PreFilter(conditions=[Condition(property="metadata.source", operator="$eq", value=source_id)])
+        results = self.similarity_search_by_relevance(search, max_items, prefilter)
+
+        if min_relevance > 0.0:
+            results = filter(lambda x: x[1] >= min_relevance, results)
+
+        documents = list(map(lambda x: self.__convert_document_to_search_result(x[0], x[1]), results))
+        return documents
 
 
 class QuestionnaireVectorStore(BaseVectorStore):
