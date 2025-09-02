@@ -41,7 +41,7 @@ def get_keywords(conf: AirePlatformConfiguration):
     if response.status_code == 200:
         adapter = TypeAdapter(list[AireKeyword])
         keywords = adapter.validate_python(response.json())
-        return list(map(lambda x: x.value, keywords))
+        return keywords
     else:
         raise RuntimeError("Failed to get keywords")
 

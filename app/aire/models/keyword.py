@@ -4,8 +4,11 @@
 
 
 from pydantic import BaseModel
+from typing import Optional
 
 class AireKeyword(BaseModel):
     """Keyword"""
     value: str
+    prompt: Optional[str] = None
+    documents: Optional[list[str]] = None
     

@@ -39,10 +39,10 @@ class AireContent(BaseModel):
 class AireContentMetadata(BaseModel):
     """Content embedding metadata"""
 
-    id: str | None
-    type: AireContentType | None
-    keywords: list[str] | None
-    relevance: float | None
+    id: Optional[str] = None
+    type: Optional[AireContentType] = None
+    keywords: Optional[list[str]] = None
+    relevance: Optional[float] = None
 
 
 class AireContentEvent(BaseModel):
