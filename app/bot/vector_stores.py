@@ -218,8 +218,8 @@ class ContentVectorStore(BaseVectorStore):
 
         keywords = ""
         if content.keywords != None:
-            keywords = " ".join(content.keywords)
-            embedding += keywords+ "\n"
+            keywords = ",".join(content.keywords)
+            embedding += " ".join(content.keywords) + "\n"
 
         if content.description != None:
             embedding += content.description + "\n"
@@ -251,7 +251,7 @@ class ContentVectorStore(BaseVectorStore):
             return AireContentMetadata(
                 id=doc.metadata["source"],
                 type=AireContentType(doc.metadata["type"]),
-                keywords=keywords.split(" "),
+                keywords=keywords.split(","),
                 relevance=relevance)
 
         content = list(map(lambda x: convert(x[0], x[1]), results))
