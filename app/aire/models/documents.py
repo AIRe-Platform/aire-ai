@@ -12,7 +12,8 @@ class AireDocumentMetadata(BaseModel):
     filename: Optional[str] = None
     lang: Optional[str] = None
     copyright: Optional[str] = None
-
+    url: Optional[str] = None
+    
 
 class AireDocumentSearchResult(BaseModel):
     """Document search result (RAG)"""

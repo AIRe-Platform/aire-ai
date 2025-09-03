@@ -22,8 +22,9 @@ from bot.vector_stores import (
 
 from typing import Annotated
 from pydantic import BaseModel
-from fastapi import Depends, Query, Body, Form, status, UploadFile
+from fastapi import Depends, Query, Body, File, Form, status, UploadFile
 from fastapi.responses import Response
+import json
 
 class DocumentQueryResponse(BaseModel):
     results: list[AireDocumentSearchResult]
@@ -67,7 +68,7 @@ async def search_from_document(
     is_service: Annotated[bool, Depends(check_service_key)],
     auth: Annotated[AireAuth | None, Depends(verify_token)],
     id: str,
-    query: Annotated[str | None, Query(description="Query")] = None):
+    search: Annotated[str | None, Query()] = None):
 
     if not is_service:
         if auth == None:
@@ -75,11 +76,11 @@ async def search_from_document(
         if not AireScope.DocumentRead in auth.scopes:
             raise FORBIDDEN_EXCEPTION
         
-    if query == None:
+    if search == None:
         raise BAD_REQUEST_EXCEPTION
         
     store = DocumentVectorStore()
-    results = store.query_from_doc(id, query, max_items=8, min_relevance=0.75)
+    results = store.query_from_doc(id, search, max_items=8, min_relevance=0.75)
     return DocumentQueryResponse(results=results)
 
 @app.post("/embeddings/document",
@@ -87,11 +88,11 @@ async def search_from_document(
           tags=["Document embeddings"],
           response_model=EmbedResponse)
 async def embed_document(
-    document: UploadFile,
-    metadata: Annotated[AireDocumentMetadata | None, Form()],
+    document: Annotated[UploadFile, File()],
+    metadata: Annotated[str, Form()],
     is_service: Annotated[bool, Depends(check_service_key)],
     auth: Annotated[AireAuth | None, Depends(verify_token)]):
-
+    
     if not is_service:
         if auth == None:
             raise UNAUTH_EXCEPTION
@@ -103,6 +104,7 @@ async def embed_document(
                         content="The file is too large. The file must be 32 MB max.")
     
     store = DocumentVectorStore()
+    doc_metadata = AireDocumentMetadata.model_validate_json(metadata)
     
     if document.content_type == "application/pdf":
         handler = store.add_pdf
@@ -110,10 +112,6 @@ async def embed_document(
         handler = store.add_markdown
     elif document.content_type == "text/plain":
         handler = store.add_plain_text
-    elif document.content_type == "application/vnd.oasis.opendocument.text":
-        handler = store.add_odt_document
-    elif document.content_type == "application/msword":
-        handler = store.add_word_document
     elif document.content_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
         handler = store.add_word_document
     else:
@@ -126,7 +124,7 @@ async def embed_document(
         path = await create_temporary_file(document)
         if path == None:
             raise Exception("Failed to store uploaded file")
-        ids = handler(path, metadata)
+        ids = handler(path, doc_metadata)
     except BaseException as ex:
         print(f"Failed to process document: {ex}")
     finally:
