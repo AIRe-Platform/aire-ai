@@ -6,7 +6,7 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableLambda
 from aire.models.chat import AireChatContext
-from aire.services.memory import get_keywords
+from aire.services.memory import get_keywords, AireKeyword
 from llm import DefaultModel
 from pydantic import BaseModel, Field
 
@@ -14,34 +14,39 @@ prompt = ChatPromptTemplate.from_template("""
 Extract the keywords describing the topic of the following conversation.
 
 Important: 
-Use keywords sparingly, prefer to use as few as possible.
+Pick only from the list of keywords provided below.
+You may pick more than one keywords, separate the words with a comma.
 If unsure, leave keywords empty.
-When you tag the conversation with a keyword, you have to be absolutely sure it is correct!
+                                          
+List of keywords:
+{keywords}
 
 Conversation:
 {input}
 """
 )
 
-def __keyword_tagging_chain(ctx: AireChatContext):
+def __keyword_tagging_chain(ctx: AireChatContext) -> list[AireKeyword]:
     messages = ctx.input.to_chat_messages()
     if len(messages) < 1:
-        return list[str]()
+        return []
     
     keywords = get_keywords(ctx.platform)
-    keyword_values = list(map(lambda x: x.value, keywords))
-    enum = { "enum": keyword_values }
+    dictionary = {k.value: k for k in keywords}
+    keyword_list = "\n".join(dictionary.keys())
     
     class Keywords(BaseModel):
         keywords: str = Field(..., 
-                        description="Keywords describing the topic of the conversation. Empty if no suitable keywords are found.",
-                        json_schema_extra=enum) # type: ignore
+                        description="Comma separated list of keywords describing the topic of the conversation. Empty if no suitable keywords are found.") # type: ignore
 
     llm = DefaultModel(temperature=0.0).with_structured_output(Keywords)
     chain = prompt | llm
-    output = chain.invoke({"input": messages})
+    output = chain.invoke({"input": messages, "keywords": keyword_list})
     keyword_output = Keywords.model_validate(output)
-    keywords = map(lambda x: x.strip(), keyword_output.keywords.split(","))
-    return list(filter(lambda x: len(x) > 0, keywords))
+
+    keyword_output_stripped = map(lambda x: x.strip(), keyword_output.keywords.split(","))
+    keywords_valid = filter(lambda x: dictionary.get(x) != None, keyword_output_stripped)
+
+    return list(map(lambda x: dictionary[x], keywords_valid))
 
 ChatKeywordChain = RunnableLambda(__keyword_tagging_chain)

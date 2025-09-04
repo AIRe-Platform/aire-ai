@@ -26,8 +26,8 @@ __tool_description = {
 def __gen_keywords(ctx: AireChatContext, call: ToolCall) -> list[str] | None:
     if call.get("name") != __tool_name:
         return None
-    
-    return ChatKeywordChain.invoke(ctx)
+    results = ChatKeywordChain.invoke(ctx)
+    return list(map(lambda x: x.value, results))
 
 
 KeywordTaggingTool = CallableTool(
