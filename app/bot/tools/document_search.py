@@ -9,14 +9,16 @@ from aire.models.auth import AireScope
 from bot.vector_stores import DocumentVectorStore
 from .callable_tool import CallableTool
 
+__store = DocumentVectorStore()
+
 __tool_name = "search_documents"
 __tool_description = {
     "type": "function",
     "function": {
         "name": __tool_name,
         "description": """
-            Search document store for additional knowledge for RAG.
-            Use this tool to find more information about a topic.
+            Search document store for additional knowledge.
+            You may also use document ID to search the content of a particular document.
         """,
         "parameters": {
             "type": "object",
@@ -24,7 +26,11 @@ __tool_description = {
                 "search": {
                     "type": "string",
                     "description": "Search string"
-                }
+                },
+                "document_id": {
+                    "type": "string",
+                    "description": "Document ID as lower-case GUID"
+                },
             },
             "required": ["search"]
         }
@@ -41,11 +47,16 @@ def __document_search(ctx: AireChatContext, call: ToolCall) -> AireDocumentSearc
     
     args = call.get("args")
     search = args.get("search")
+    document_id = args.get("document_id")
 
     if search == None:
         return None
     
-    results = DocumentVectorStore().query(search, 4, 0.75)
+    if document_id == None:
+        results = __store.query(search, 4, 0.75)
+    else:
+        results = __store.query_from_doc(document_id, search, 2, 0.75)
+
     return AireDocumentSearchEvent(search=search, results=results)
     
 
