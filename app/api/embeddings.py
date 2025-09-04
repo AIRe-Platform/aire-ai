@@ -24,7 +24,6 @@ from typing import Annotated
 from pydantic import BaseModel
 from fastapi import Depends, Query, Body, File, Form, status, UploadFile
 from fastapi.responses import Response
-import json
 
 class DocumentQueryResponse(BaseModel):
     results: list[AireDocumentSearchResult]
