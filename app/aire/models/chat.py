@@ -9,9 +9,11 @@ from pydantic import BaseModel
 from enum import Enum
 from typing import Optional, Sequence
 from .user import AireUser
+from .documents import AireDocumentMetadata
 from .questionnaire import AireQuestionnaireAnswer
 from .platform import AirePlatformConfiguration
 from .auth import AireAuth
+from .keyword import AireKeyword
 
 class AireChatEvent(str, Enum):
     """Chatbot event types"""
@@ -29,7 +31,6 @@ class AireChatEvent(str, Enum):
 
 class AireChatMessage(BaseModel):
     """A chat message"""
-
     role: str
     content: Optional[str] = None
     timestamp: Optional[int] = None
@@ -39,18 +40,13 @@ class AireChatMessage(BaseModel):
 
 class AireChatInputContext(BaseModel):
     """Additional chat context"""
-
-    year_of_birth: Optional[int] = None
-    occupation: Optional[str] = None
-    topic: Optional[str] = None
     language: Optional[str] = None
-    keywords: Optional[list[str]] = None
-    documents: Optional[list[str]] = None
+    themes: Optional[list[AireKeyword]] = None
+    documents: Optional[list[AireDocumentMetadata]] = None
 
 
 class AireChatInput(BaseModel):
     """This class containst the information about a chat"""
-
     chat_id: Optional[str] = None
     chat: list[AireChatMessage]
     context: Optional[AireChatInputContext] = None
@@ -66,14 +62,12 @@ class AireChatInput(BaseModel):
 
 class AireChatbotInfo(BaseModel):
     """Details a chatbot"""
-
     name: str
     description: str
 
 
 class AireChatContext(CustomUserType):
     """The context for the chat"""
-
     input: AireChatInput
     user: Optional[AireUser] = None
     regen: bool = False
@@ -84,13 +78,11 @@ class AireChatContext(CustomUserType):
 
 class AireChatAbstract(BaseModel):
     """Contains the abstract generated from chat messages."""
-
     summary: str
     keywords: list[str]
     
 
 class AireChatStats(BaseModel):
     """Contains statistics for a chat log"""
-
     token_count: int
     

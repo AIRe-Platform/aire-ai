@@ -10,6 +10,7 @@ from langchain.schema.runnable import RunnableLambda
 from llm import ChatModel
 from aire.models.chat import AireChatContext, AireChatInput
 from aire.models.platform import AireModuleType
+from aire.models.documents import AireDocumentMetadata
 from .prompts.user_context import generate_user_context
 from .toolbox import ToolBindings
 
@@ -63,7 +64,12 @@ Tools:
 - The current time (UTC) is, please note that the user may be on a different timezone:
    {current_time}
 
-{additional_prompt}
+Current themes:
+{keywords}
+
+Documents for additional knowledge:
+{documents}
+
 """
 
 def __get_personality_prompt(ctx: AireChatContext):
@@ -88,31 +94,46 @@ def __get_personality_prompt(ctx: AireChatContext):
 llm = ChatModel(temperature=0.7)
 
 def __messages(ctx: AireChatContext):
-    language = None
-    topic = None
     prompt = None
-
+    language = "English"
+    keywords = "No themes currently detected."
+    documents = "No documents currently available."
+    document_keywords: dict[str, list[str]] = {}
+    
     if ctx.input.context != None:
         try:
             language = ctx.input.context.language
-        except AttributeError:
-            pass
-    
-        try:
-            topic = ctx.input.context.topic
-        except AttributeError:
+        except:
             pass
 
-    if language == None:
-        language = "English"
+        try:
+            if ctx.input.context.themes != None:
+                entries = map(lambda x: x.value, ctx.input.context.themes)
+                keywords = ", ".join(entries)
+
+                for theme in ctx.input.context.themes:
+                    if theme.document != None:
+                        if theme.document in document_keywords:
+                            document_keywords[theme.document].append(theme.value)
+        except:
+            pass
+
+        try:
+            if ctx.input.context.documents != None:
+                def map_entry(doc: AireDocumentMetadata):
+                    label = f"ID({doc.source}) Title({doc.title})"
+                    if doc.source in document_keywords:
+                        label += f" Themes({", ".join(document_keywords[doc.source])})"
+                    return label
+                    
+                entries = map(map_entry, ctx.input.context.documents)
+                documents = "\n".join(entries)
+        except:
+            pass
 
     # Get system prompt
     system_prompt = SystemMessagePromptTemplate.from_template(__system_prompt)
     personality_prompt = __get_personality_prompt(ctx)
-    additional_prompt = ""
-
-    if topic is not None:
-        additional_prompt += f"Selected topic: {topic}.\n"
 
     prompt = [
         system_prompt.format(
@@ -120,7 +141,8 @@ def __messages(ctx: AireChatContext):
             language=language,
             current_time=datetime.now(UTC).isoformat(),
             personality_prompt=personality_prompt,
-            additional_prompt=additional_prompt),
+            keywords=keywords,
+            documents=documents),
         *ctx.input.to_chat_messages()
     ]
 
