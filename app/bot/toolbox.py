@@ -8,6 +8,7 @@ from .tools.reminders import ReminderTool
 from .tools.questionnaire_query import QuestionnaireQueryTool
 from .tools.content_query import ContentQueryTool
 from .tools.keyword_tagging import KeywordTaggingTool
+from .tools.document_search import DocumentSearchTool
 
 class CallableTool:
     name: str
@@ -20,12 +21,14 @@ ToolBindings = [
     ReminderTool.descriptor, 
     QuestionnaireQueryTool.descriptor, 
 #    ContentQueryTool.descriptor,
-    KeywordTaggingTool.descriptor
+    KeywordTaggingTool.descriptor,
+    DocumentSearchTool.descriptor
 ]
 
 Toolbox = {
     ReminderTool.name: ReminderTool,
     QuestionnaireQueryTool.name: QuestionnaireQueryTool,
     ContentQueryTool.name: ContentQueryTool,
-    KeywordTaggingTool.name: KeywordTaggingTool
+    KeywordTaggingTool.name: KeywordTaggingTool,
+    DocumentSearchTool.name: DocumentSearchTool
 }

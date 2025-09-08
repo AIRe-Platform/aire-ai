@@ -5,6 +5,7 @@ pydantic
 langchain-community
 langchain-openai
 langchain-text-splitters
+langchain-azure-ai
 langserve[server]
 openai
 pypdf
@@ -15,3 +16,4 @@ tiktoken
 python-jose[cryptography]
 cachetools
 azure-cosmos
+python-docx

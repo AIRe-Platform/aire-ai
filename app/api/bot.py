@@ -23,7 +23,6 @@ from sse_starlette import EventSourceResponse;
 
 serializer = WellKnownLCSerializer()
 
-
 @app.get("/bot", 
          description="List available bots",
          tags=["Chatbot"],
@@ -68,14 +67,12 @@ async def stream_bot(bot_name: str,
         allow_custom_prompt=allow_prompt_override,
         platform=get_platform_config(),
         auth=auth)
-    input_token_count = count_tokens(input)
-
-    # has_keywords = input.context != None and input.context.keywords != None and len(input.context.keywords) > 0
-    gen_keywords = len(input.to_chat_messages()) > 4
 
     async def stream() -> AsyncIterator[dict]:
         try:
             output = ""
+            input_token_count = count_tokens(input)
+            gen_keywords = len(input.to_chat_messages()) > 4
             tool_called = False
             iter = bot.astream(context)
             tool_calls: list[ToolCallChunk] = []
@@ -129,14 +126,15 @@ async def stream_bot(bot_name: str,
             bot_message = AireChatMessage(role="assistant", content=output)
             bot_input = AireChatInput(chat_id=None, chat=[bot_message], context=None)
             output_token_count = count_tokens(bot_input)
+            
             yield { 
                 "event": "token-count",
                 "data": output_token_count + input_token_count
             }
 
-            if gen_keywords and not tool_called:
+            if gen_keywords:
                 keywords = await ChatKeywordChain.ainvoke(context)
-                if len(keywords) > 0:
+                if keywords != None and len(keywords) > 0:
                     yield { 
                         "event": "keywords",
                         "data": serializer.dumps(keywords).decode("utf-8")

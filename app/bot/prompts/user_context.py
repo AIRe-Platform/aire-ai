@@ -3,20 +3,8 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 
-from aire.models.chat import AireChatContext, AireChatInputContext
+from aire.models.chat import AireChatContext
 from aire.models.user import AireUser
-
-def summary_from_chat_context(context: AireChatInputContext | None) -> str:
-    summary = ""
-
-    if context != None:
-        if context.year_of_birth != None:
-            summary += f"\nThe user was born in {context.year_of_birth}."
-            
-        if context.occupation != None:
-            summary += f"\nThe user's occupation is {context.occupation}."
-
-    return summary
 
 
 def summary_from_profile(user: AireUser) -> str:
@@ -46,9 +34,7 @@ def summary_from_profile(user: AireUser) -> str:
 def generate_user_context(ctx: AireChatContext) -> str:
     summary = ""
 
-    if ctx.user == None:
-        summary = summary_from_chat_context(ctx.input.context)
-    else:
+    if ctx.user != None:
         summary = summary_from_profile(ctx.user)
 
     if len(summary) == 0:

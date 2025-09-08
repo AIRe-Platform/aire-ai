@@ -70,7 +70,8 @@ async def chat_keywords(
         raise FORBIDDEN_EXCEPTION
     
     context = AireChatContext(input=input, regen=regen, platform=get_platform_config(), auth=auth)
-    return ChatKeywordChain.invoke(context)
+    keywords = ChatKeywordChain.invoke(context)
+    return list(map(lambda x: x.value, keywords or []))
 
 
 @app.post("/chat/{bot_name}/stats", 
