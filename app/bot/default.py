@@ -115,6 +115,9 @@ def __messages(ctx: AireChatContext):
                     if theme.document != None:
                         if theme.document in document_keywords:
                             document_keywords[theme.document].append(theme.value)
+                        else:
+                            document_keywords[theme.document] = [theme.value]
+
         except:
             pass
 
