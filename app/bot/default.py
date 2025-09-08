@@ -56,19 +56,19 @@ Content:
 
 Tools:
 - There are a set of tools available to you. Do not hesitate to use them to aid you. Prefer using the tools over coming up with something yourself.
+- You are allowed to search the attached document and freely cite them. You may also provide a direct URL to the document if it is available.
 
+Context:
 - Here's a summary of your patient:
-   {user_summary}
+    {user_summary}
 - You should answer only in this language: 
-   {language}
+    {language}
 - The current time (UTC) is, please note that the user may be on a different timezone:
-   {current_time}
-
-Current themes:
-{keywords}
-
-Documents for additional knowledge:
-{documents}
+    {current_time}
+- Current themes:
+    {keywords}
+- Attached documents:
+    {documents}
 
 """
 
@@ -124,7 +124,7 @@ def __messages(ctx: AireChatContext):
         try:
             if ctx.input.context.documents != None:
                 def map_entry(doc: AireDocumentMetadata):
-                    label = f"ID({doc.source}) Title({doc.title})"
+                    label = f"ID({doc.source}) Title({doc.title}) URL({doc.url})"
                     if doc.source in document_keywords:
                         label += f" Themes({", ".join(document_keywords[doc.source])})"
                     return label
