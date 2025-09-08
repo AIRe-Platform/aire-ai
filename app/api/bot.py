@@ -134,7 +134,7 @@ async def stream_bot(bot_name: str,
 
             if gen_keywords:
                 keywords = await ChatKeywordChain.ainvoke(context)
-                if len(keywords) > 0:
+                if keywords != None and len(keywords) > 0:
                     yield { 
                         "event": "keywords",
                         "data": serializer.dumps(keywords).decode("utf-8")

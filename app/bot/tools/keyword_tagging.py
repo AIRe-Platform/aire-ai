@@ -26,7 +26,12 @@ __tool_description = {
 def __gen_keywords(ctx: AireChatContext, call: ToolCall) -> list[str] | None:
     if call.get("name") != __tool_name:
         return None
+    
     results = ChatKeywordChain.invoke(ctx)
+    
+    if results == None:
+        return None
+    
     return list(map(lambda x: x.value, results))
 
 

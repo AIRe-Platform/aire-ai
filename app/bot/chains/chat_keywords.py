@@ -26,7 +26,7 @@ Conversation:
 """
 )
 
-def __keyword_tagging_chain(ctx: AireChatContext) -> list[AireKeyword]:
+def __keyword_tagging_chain(ctx: AireChatContext) -> list[AireKeyword] | None:
     messages = ctx.input.to_chat_messages()
     if len(messages) < 1:
         return []
@@ -41,9 +41,13 @@ def __keyword_tagging_chain(ctx: AireChatContext) -> list[AireKeyword]:
 
     llm = DefaultModel(temperature=0.0).with_structured_output(Keywords)
     chain = prompt | llm
-    output = chain.invoke({"input": messages, "keywords": keyword_list})
-    keyword_output = Keywords.model_validate(output)
 
+    try:
+        output = chain.invoke({"input": messages, "keywords": keyword_list})
+    except:
+        return None
+
+    keyword_output = Keywords.model_validate(output)
     keyword_output_stripped = map(lambda x: x.strip(), keyword_output.keywords.split(","))
     keywords_valid = filter(lambda x: dictionary.get(x) != None, keyword_output_stripped)
 

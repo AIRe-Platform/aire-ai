@@ -71,7 +71,7 @@ async def chat_keywords(
     
     context = AireChatContext(input=input, regen=regen, platform=get_platform_config(), auth=auth)
     keywords = ChatKeywordChain.invoke(context)
-    return list(map(lambda x: x.value, keywords))
+    return list(map(lambda x: x.value, keywords or []))
 
 
 @app.post("/chat/{bot_name}/stats", 
