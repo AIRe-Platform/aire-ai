@@ -36,6 +36,7 @@ class AireChatMessage(BaseModel):
     timestamp: Optional[int] = None
     rating: Optional[int] = None
     question: Optional[AireQuestionnaireAnswer] = None
+    theme: Optional[str] = None
 
 
 class AireChatInputContext(BaseModel):
