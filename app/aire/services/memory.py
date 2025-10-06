@@ -20,7 +20,9 @@ from pydantic.type_adapter import TypeAdapter
 def hash_key(conf: AirePlatformConfiguration):
     return hashkey(conf.platform.name)
 
-@cached(cache=TTLCache(maxsize=1, ttl=1800), key=hash_key)
+cache = TTLCache(maxsize=1, ttl=300)
+
+@cached(cache=cache, key=hash_key)
 def get_keywords(conf: AirePlatformConfiguration):
     key = os.getenv("AIRE_SERVICE_KEY")
 
@@ -41,7 +43,7 @@ def get_keywords(conf: AirePlatformConfiguration):
     if response.status_code == 200:
         adapter = TypeAdapter(list[AireKeyword])
         keywords = adapter.validate_python(response.json())
-        return list(map(lambda x: x.value, keywords))
+        return keywords
     else:
         raise RuntimeError("Failed to get keywords")
 

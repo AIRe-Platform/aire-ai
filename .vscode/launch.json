@@ -6,7 +6,7 @@
   "configurations": [
     {
       "name": "Python: FastAPI",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "module": "uvicorn",
       "cwd": "${workspaceFolder}/app",
@@ -16,7 +16,7 @@
         "--port", "7074"
       ],
       "jinja": true,
-      "justMyCode": true
+      "justMyCode": false
     }
   ]
 }

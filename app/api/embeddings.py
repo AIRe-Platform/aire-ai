@@ -11,6 +11,7 @@ from utils.temp_files import create_temporary_file
 from aire.models.chat import *
 from aire.models.questionnaire import *
 from aire.models.content import *
+from aire.models.documents import *
 
 from bot.default import *
 from bot.vector_stores import (
@@ -21,12 +22,11 @@ from bot.vector_stores import (
 
 from typing import Annotated
 from pydantic import BaseModel
-from fastapi import Depends, Query, Body, status, UploadFile
+from fastapi import Depends, Query, Body, File, Form, status, UploadFile
 from fastapi.responses import Response
-from langchain_core.documents import Document
 
 class DocumentQueryResponse(BaseModel):
-    documents: list[Document]
+    results: list[AireDocumentSearchResult]
 
 class QuestionnaireQueryResponse(BaseModel):
     results: list[AireQuestionnaireMetadata]
@@ -56,35 +56,63 @@ async def query_document(
         raise BAD_REQUEST_EXCEPTION
         
     store = DocumentVectorStore()
-    docs = store.similarity_search(query)
-    return DocumentQueryResponse(documents=docs)
+    results = store.query(query)
+    return DocumentQueryResponse(results=results)
 
+@app.get("/embeddings/document/{id}",
+         description="Search document using similarity search",
+         tags=["Document embeddings"],
+         response_model=DocumentQueryResponse)
+async def search_from_document(
+    is_service: Annotated[bool, Depends(check_service_key)],
+    auth: Annotated[AireAuth | None, Depends(verify_token)],
+    id: str,
+    search: Annotated[str | None, Query()] = None):
+
+    if not is_service:
+        if auth == None:
+            raise UNAUTH_EXCEPTION
+        if not AireScope.DocumentRead in auth.scopes:
+            raise FORBIDDEN_EXCEPTION
+        
+    if search == None:
+        raise BAD_REQUEST_EXCEPTION
+        
+    store = DocumentVectorStore()
+    results = store.query_from_doc(id, search, max_items=8, min_relevance=0.75)
+    return DocumentQueryResponse(results=results)
 
 @app.post("/embeddings/document",
           description="Create embeddings and store a PDF or Markdown document",
           tags=["Document embeddings"],
           response_model=EmbedResponse)
 async def embed_document(
-    document: UploadFile,
+    document: Annotated[UploadFile, File()],
+    metadata: Annotated[str, Form()],
     is_service: Annotated[bool, Depends(check_service_key)],
     auth: Annotated[AireAuth | None, Depends(verify_token)]):
-
+    
     if not is_service:
         if auth == None:
             raise UNAUTH_EXCEPTION
         if not AireScope.DocumentWrite in auth.scopes:
             raise FORBIDDEN_EXCEPTION
 
-    if document.size == None or document.size > 1024 * 16:
+    if document.size == None or document.size > 1024 * 1024 * 32:
         return Response(status_code=status.HTTP_400_BAD_REQUEST, 
-                        content="The file is too large. The file must be 16 MB max.")
+                        content="The file is too large. The file must be 32 MB max.")
     
     store = DocumentVectorStore()
+    doc_metadata = AireDocumentMetadata.model_validate_json(metadata)
     
     if document.content_type == "application/pdf":
         handler = store.add_pdf
     elif document.content_type == "text/markdown":
         handler = store.add_markdown
+    elif document.content_type == "text/plain":
+        handler = store.add_plain_text
+    elif document.content_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        handler = store.add_word_document
     else:
         raise UNSUPPORTED_MEDIA_EXCEPTION
     
@@ -95,7 +123,7 @@ async def embed_document(
         path = await create_temporary_file(document)
         if path == None:
             raise Exception("Failed to store uploaded file")
-        ids = handler(path, None)
+        ids = handler(path, doc_metadata)
     except BaseException as ex:
         print(f"Failed to process document: {ex}")
     finally:
