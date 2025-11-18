@@ -5,7 +5,8 @@
 from langchain_core.messages.tool import ToolCall
 from aire.models.auth import AireScope
 from aire.models.chat import AireChatContext, AireChatEvent
-from aire.models.questionnaire import AireQuestionnaireEvent
+from aire.models.questionnaire import AireQuestionnaireEvent, AireQuestionnaireMetadata
+from aire.models.platform import AireModuleSetting
 from bot.vector_stores import QuestionnaireVectorStore
 from .callable_tool import CallableTool
 
@@ -43,12 +44,22 @@ def __query_questionnaires(ctx: AireChatContext, call: ToolCall) -> AireQuestion
 
     args = call.get("args")
     search = args.get("search")
+    agent = ctx.current_agent()
 
-    if search == None:
+    if search == None or agent == None:
         return None
     
-    results = QuestionnaireVectorStore().query(search, 8)
-    return AireQuestionnaireEvent(search=search, results=results)
+    memories = ctx.platform.get_agent_memories(agent)
+    questionnaires: list[AireQuestionnaireMetadata] = []
+    
+    for svc in memories:
+        if svc.settings != None:
+            database = svc.settings.get(AireModuleSetting.VectorDatabaseName, None)
+            if database != None:
+                results = QuestionnaireVectorStore(database).query(search, 8)
+                questionnaires.extend(results)
+
+    return AireQuestionnaireEvent(search=search, results=questionnaires)
 
 
 QuestionnaireQueryTool = CallableTool(

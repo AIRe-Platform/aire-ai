@@ -4,8 +4,9 @@
 
 from langchain_core.messages.tool import ToolCall
 from aire.models.chat import AireChatContext, AireChatEvent
-from aire.models.content import AireContentEvent
+from aire.models.content import AireContentEvent, AireContentMetadata
 from aire.models.auth import AireScope
+from aire.models.platform import AireModuleSetting
 from bot.vector_stores import ContentVectorStore
 from .callable_tool import CallableTool
 
@@ -41,12 +42,22 @@ def __content_query(ctx: AireChatContext, call: ToolCall) -> AireContentEvent | 
     
     args = call.get("args")
     search = args.get("search")
+    agent = ctx.current_agent()
 
-    if search == None:
+    if search == None or agent == None:
         return None
     
-    results = ContentVectorStore().query(search, 4)
-    return AireContentEvent(search=search, results=results)
+    content: list[AireContentMetadata] = []
+    memories = ctx.platform.get_agent_memories(agent)
+    
+    for memory in memories:
+        if memory.settings != None:
+            database = memory.settings.get(AireModuleSetting.VectorDatabaseName, None)
+            if database != None:
+                results = ContentVectorStore(database).query(search, 4)
+                content.extend(results)
+
+    return AireContentEvent(search=search, results=content)
     
 
 ContentQueryTool = CallableTool(

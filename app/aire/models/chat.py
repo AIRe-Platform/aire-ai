@@ -48,6 +48,7 @@ class AireChatInputContext(BaseModel):
 
 class AireChatInput(BaseModel):
     """This class containst the information about a chat"""
+    agent: Optional[str] = None
     chat_id: Optional[str] = None
     chat: list[AireChatMessage]
     context: Optional[AireChatInputContext] = None
@@ -75,6 +76,9 @@ class AireChatContext(CustomUserType):
     allow_custom_prompt: bool = False
     platform: AirePlatformConfiguration
     auth: AireAuth
+
+    def current_agent(self):
+        return next(iter([x for x in self.platform.agents if x.name == self.input.agent]), None)
 
 
 class AireChatAbstract(BaseModel):

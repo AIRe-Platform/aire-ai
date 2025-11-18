@@ -8,30 +8,22 @@ import os
 from cachetools import cached, TTLCache
 from cachetools.keys import hashkey
 from ..models.keyword import AireKeyword
-from ..models.reminder import AireReminder;
-from ..models.platform import (
-    AirePlatformConfiguration, 
-    AireModuleType,
-    AireModule
-)
+from ..models.reminder import AireReminder
+from ..models.platform import AireModule
 from ..models.auth import AireAuth;
 from pydantic.type_adapter import TypeAdapter
 
-def hash_key(conf: AirePlatformConfiguration):
-    return hashkey(conf.platform.name)
+def keywords_hash_key(svc: AireModule):
+    return hashkey(svc.endpoint)
 
 cache = TTLCache(maxsize=1, ttl=300)
 
-@cached(cache=cache, key=hash_key)
-def get_keywords(conf: AirePlatformConfiguration):
+@cached(cache=cache, key=keywords_hash_key)
+def get_keywords(svc: AireModule) -> list[AireKeyword]:
     key = os.getenv("AIRE_SERVICE_KEY")
 
     if key == None:
         raise RuntimeError("Missing AIRe service configuration")
-    
-    svc = conf.platform.modules.get(AireModuleType.Memory)
-    if svc == None:
-        raise RuntimeError("Memory Module is not configured")
     
     url = svc.endpoint + "/v1/keywords"
     headers = {
@@ -46,6 +38,7 @@ def get_keywords(conf: AirePlatformConfiguration):
         return keywords
     else:
         raise RuntimeError("Failed to get keywords")
+    
 
 def create_reminder(svc: AireModule, auth: AireAuth, reminder: AireReminder) -> AireReminder:
     url = svc.endpoint + "/v1/reminder"

@@ -28,10 +28,13 @@ Conversation:
 
 def __keyword_tagging_chain(ctx: AireChatContext) -> list[AireKeyword] | None:
     messages = ctx.input.to_chat_messages()
-    if len(messages) < 1:
+    agent = ctx.current_agent()
+
+    if len(messages) < 1 or agent == None:
         return []
     
-    keywords = get_keywords(ctx.platform)
+    memories = ctx.platform.get_agent_memories(agent)
+    keywords = sum([get_keywords(x) for x in memories], [])
     dictionary = {k.value: k for k in keywords}
     keyword_list = "\n".join(dictionary.keys())
     

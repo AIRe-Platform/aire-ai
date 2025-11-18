@@ -4,12 +4,11 @@
 
 from langchain_core.messages.tool import ToolCall
 from aire.models.chat import AireChatContext, AireChatEvent
-from aire.models.documents import AireDocumentSearchEvent
+from aire.models.documents import AireDocumentSearchEvent, AireDocumentSearchResult
 from aire.models.auth import AireScope
+from aire.models.platform import AireModuleSetting
 from bot.vector_stores import DocumentVectorStore
 from .callable_tool import CallableTool
-
-__store = DocumentVectorStore()
 
 __tool_name = "search_documents"
 __tool_description = {
@@ -48,16 +47,26 @@ def __document_search(ctx: AireChatContext, call: ToolCall) -> AireDocumentSearc
     args = call.get("args")
     search = args.get("search")
     document_id = args.get("document_id")
+    agent = ctx.current_agent()
 
-    if search == None:
+    if search == None or agent == None:
         return None
     
-    if document_id == None:
-        results = __store.query(search, 4, 0.75)
-    else:
-        results = __store.query_from_doc(document_id, search, 2, 0.75)
+    documents: list[AireDocumentSearchResult] = []
+    memories = ctx.platform.get_agent_memories(agent)
 
-    return AireDocumentSearchEvent(search=search, results=results)
+    for memory in memories:
+        if memory.settings != None:
+            database = memory.settings.get(AireModuleSetting.VectorDatabaseName, None)
+            if database != None:
+                store = DocumentVectorStore(database)
+                if document_id == None:
+                    results = store.query(search, 4, 0.75)
+                else:
+                    results = store.query_from_doc(document_id, search, 2, 0.75)
+                documents.extend(results)
+
+    return AireDocumentSearchEvent(search=search, results=documents)
     
 
 DocumentSearchTool = CallableTool(

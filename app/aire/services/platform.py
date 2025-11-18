@@ -6,17 +6,23 @@
 import requests
 import os
 from cachetools import cached, TTLCache
+from cachetools.keys import hashkey
 from ..models.platform import AirePlatformConfiguration
 
-@cached(cache=TTLCache(maxsize=1, ttl=1800))
-def get_platform_config() -> AirePlatformConfiguration:
+def hash_key(id: str):
+    return hashkey(id)
+
+cache = TTLCache(maxsize=1, ttl=1800)
+
+@cached(cache=cache, key=hash_key)
+def get_platform_config(id: str) -> AirePlatformConfiguration:
     base = os.getenv("AIRE_SERVICE_BASE")
     key = os.getenv("AIRE_SERVICE_KEY")
-
+    
     if base == None or key == None:
         raise RuntimeError("Missing AIRe service configuration")
     
-    url = base + "/v1/config/internal"
+    url = base + "/v1/config/" + id + "/internal"
     headers = {
         "Aire-Service-Key": key,
         "Accept": "application/json"

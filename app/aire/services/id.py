@@ -17,7 +17,7 @@ def get_user(conf: AirePlatformConfiguration, auth: str):
     if key == None:
         raise RuntimeError("Missing AIRe service configuration")
     
-    svc = conf.platform.modules.get(AireModuleType.ID)
+    svc = conf.get_default_module(AireModuleType.ID)
     if svc == None:
         raise RuntimeError("ID Module is not configured")
     

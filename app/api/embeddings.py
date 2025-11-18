@@ -37,52 +37,47 @@ class ContentQueryResponse(BaseModel):
 class EmbedResponse(BaseModel):
     ids: list[str]
 
-@app.get("/embeddings/document",
+@app.get("/embeddings/{database}/document",
          description="Find documents using similarity search",
          tags=["Document embeddings"],
          response_model=DocumentQueryResponse)
 async def query_document(
     is_service: Annotated[bool, Depends(check_service_key)],
-    auth: Annotated[AireAuth | None, Depends(verify_token)],
+    database: str,
     query: Annotated[str | None, Query(description="Query")] = None):
 
     if not is_service:
-        if auth == None:
-            raise UNAUTH_EXCEPTION
-        if not AireScope.DocumentRead in auth.scopes:
-            raise FORBIDDEN_EXCEPTION
+        raise UNAUTH_EXCEPTION
         
     if query == None:
         raise BAD_REQUEST_EXCEPTION
-        
-    store = DocumentVectorStore()
+
+    store = DocumentVectorStore(database)
     results = store.query(query)
     return DocumentQueryResponse(results=results)
 
-@app.get("/embeddings/document/{id}",
+@app.get("/embeddings/{database}/document/{id}",
          description="Search document using similarity search",
          tags=["Document embeddings"],
          response_model=DocumentQueryResponse)
 async def search_from_document(
     is_service: Annotated[bool, Depends(check_service_key)],
-    auth: Annotated[AireAuth | None, Depends(verify_token)],
+    database: str,
     id: str,
     search: Annotated[str | None, Query()] = None):
 
     if not is_service:
-        if auth == None:
-            raise UNAUTH_EXCEPTION
-        if not AireScope.DocumentRead in auth.scopes:
-            raise FORBIDDEN_EXCEPTION
+        raise UNAUTH_EXCEPTION
         
     if search == None:
         raise BAD_REQUEST_EXCEPTION
-        
-    store = DocumentVectorStore()
+    
+    store = DocumentVectorStore(database)
     results = store.query_from_doc(id, search, max_items=8, min_relevance=0.75)
+
     return DocumentQueryResponse(results=results)
 
-@app.post("/embeddings/document",
+@app.post("/embeddings/{database}/document",
           description="Create embeddings and store a PDF or Markdown document",
           tags=["Document embeddings"],
           response_model=EmbedResponse)
@@ -90,19 +85,16 @@ async def embed_document(
     document: Annotated[UploadFile, File()],
     metadata: Annotated[str, Form()],
     is_service: Annotated[bool, Depends(check_service_key)],
-    auth: Annotated[AireAuth | None, Depends(verify_token)]):
+    database: str):
     
     if not is_service:
-        if auth == None:
-            raise UNAUTH_EXCEPTION
-        if not AireScope.DocumentWrite in auth.scopes:
-            raise FORBIDDEN_EXCEPTION
+        raise UNAUTH_EXCEPTION
 
     if document.size == None or document.size > 1024 * 1024 * 32:
         return Response(status_code=status.HTTP_400_BAD_REQUEST, 
                         content="The file is too large. The file must be 32 MB max.")
     
-    store = DocumentVectorStore()
+    store = DocumentVectorStore(database)
     doc_metadata = AireDocumentMetadata.model_validate_json(metadata)
     
     if document.content_type == "application/pdf":
@@ -135,21 +127,18 @@ async def embed_document(
         return Response(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
 
-@app.delete("/embeddings/document/{id}",
+@app.delete("/embeddings/{database}/document/{id}",
             description="Delete document embedding",
             tags=["Document embeddings"])
 async def delete_document(
     is_service: Annotated[bool, Depends(check_service_key)],
-    auth: Annotated[AireAuth | None, Depends(verify_token)],
-    id: str):
+    id: str,
+    database: str):
 
     if not is_service:
-        if auth == None:
-            raise UNAUTH_EXCEPTION
-        if not AireScope.DocumentDelete in auth.scopes:
-            raise FORBIDDEN_EXCEPTION
+        raise UNAUTH_EXCEPTION
         
-    store = DocumentVectorStore()
+    store = DocumentVectorStore(database)
     store.remove_document(id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
@@ -157,7 +146,7 @@ async def delete_document(
 # Questionnaire embeddings
 # ------------------------
 
-@app.post("/embeddings/questionnaire",
+@app.post("/embeddings/{database}/questionnaire",
           description="Create an embedding for a questionnaire",
           tags=["Questionnaire embeddings"],
           response_description="Returns a document ID for the created embedding",
@@ -165,58 +154,49 @@ async def delete_document(
 async def embed_survey(
     questionnaire: Annotated[AireQuestionnaire, Body()],
     is_service: Annotated[bool, Depends(check_service_key)],
-    auth: Annotated[AireAuth | None, Depends(verify_token)]):
+    database: str):
 
     if not is_service:
-        if auth == None:
-            raise UNAUTH_EXCEPTION
-        if not AireScope.QuestionnaireWrite in auth.scopes:
-            raise FORBIDDEN_EXCEPTION
+        raise UNAUTH_EXCEPTION
         
-    store = QuestionnaireVectorStore()
+    store = QuestionnaireVectorStore(database)
     id = store.add_questionnaire(questionnaire)
     return EmbedResponse(ids=[id])
 
 
-@app.get("/embeddings/questionnaire",
+@app.get("/embeddings/{database}/questionnaire",
          description="Perform similarity search using keywords to find questionnaires",
          tags=["Questionnaire embeddings"],
          response_description="Returns matching questionnaires' metadata in the order of relevance",
          response_model=QuestionnaireQueryResponse)
 async def query_questionnaire(
     is_service: Annotated[bool, Depends(check_service_key)],
-    auth: Annotated[AireAuth | None, Depends(verify_token)],
+    database: str,
     query: Annotated[str | None, Query()] = None):
 
     if not is_service:
-        if auth == None:
-            raise UNAUTH_EXCEPTION
-        if not AireScope.QuestionnaireRead in auth.scopes:
-            raise FORBIDDEN_EXCEPTION
+        raise UNAUTH_EXCEPTION
         
     if query == None or len(query) == 0:
         raise BAD_REQUEST_EXCEPTION
     
-    store = QuestionnaireVectorStore()
+    store = QuestionnaireVectorStore(database)
     results = store.query_keywords(query.split(","))
     return QuestionnaireQueryResponse(results=results)
 
 
-@app.delete("/embeddings/questionnaire/{id}",
+@app.delete("/embeddings/{database}/questionnaire/{id}",
             description="Delete questionnaire embedding",
             tags=["Questionnaire embeddings"])
 async def delete_survey(
     is_service: Annotated[bool, Depends(check_service_key)],
-    auth: Annotated[AireAuth | None, Depends(verify_token)],
-    id: str):
+    id: str,
+    database: str):
     
     if not is_service:
-        if auth == None:
-            raise UNAUTH_EXCEPTION
-        if not AireScope.QuestionnaireDelete in auth.scopes:
-            raise FORBIDDEN_EXCEPTION
+        raise UNAUTH_EXCEPTION
 
-    store = QuestionnaireVectorStore()
+    store = QuestionnaireVectorStore(database)
     store.remove_document(id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
@@ -224,7 +204,7 @@ async def delete_survey(
 # Content embeddings
 # ------------------
 
-@app.post("/embeddings/content",
+@app.post("/embeddings/{database}/content",
           description="Create an embedding for content",
           tags=["Content embeddings"],
           response_description="Returns a document ID for the created embedding",
@@ -232,15 +212,12 @@ async def delete_survey(
 async def embed_content(
     content: Annotated[AireContent, Body()],
     is_service: Annotated[bool, Depends(check_service_key)],
-    auth: Annotated[AireAuth | None, Depends(verify_token)]):
+    database: str):
 
     if not is_service:
-        if auth == None:
-            raise UNAUTH_EXCEPTION
-        if not AireScope.ContentWrite in auth.scopes:
-            raise FORBIDDEN_EXCEPTION
+        raise UNAUTH_EXCEPTION
         
-    store = ContentVectorStore()
+    store = ContentVectorStore(database)
     id = store.add_content(content)
 
     if id == None:
@@ -249,44 +226,38 @@ async def embed_content(
     return EmbedResponse(ids=[id])
 
 
-@app.get("/embeddings/content",
+@app.get("/embeddings/{database}/content",
          description="Perform similarity search to find content",
          tags=["Content embeddings"],
          response_description="Returns matching contents' metadata in the order of relevance",
          response_model=ContentQueryResponse)
 async def query_content(
     is_service: Annotated[bool, Depends(check_service_key)],
-    auth: Annotated[AireAuth | None, Depends(verify_token)],
+    database: str,
     query: Annotated[str | None, Query()] = None):
 
     if not is_service:
-        if auth == None:
-            raise UNAUTH_EXCEPTION
-        if not AireScope.ContentRead in auth.scopes:
-            raise FORBIDDEN_EXCEPTION
+        raise UNAUTH_EXCEPTION
         
     if query == None or len(query) == 0:
         raise BAD_REQUEST_EXCEPTION
     
-    store = ContentVectorStore()
+    store = ContentVectorStore(database)
     results = store.query(query)
     return ContentQueryResponse(results=results)
 
 
-@app.delete("/embeddings/content/{id}",
+@app.delete("/embeddings/{database}/content/{id}",
             description="Delete content embeddings",
             tags=["Content embeddings"])
 async def delete_content(
     is_service: Annotated[bool, Depends(check_service_key)],
-    auth: Annotated[AireAuth | None, Depends(verify_token)],
+    database: str,
     id: str):
     
     if not is_service:
-        if auth == None:
-            raise UNAUTH_EXCEPTION
-        if not AireScope.ContentDelete in auth.scopes:
-            raise FORBIDDEN_EXCEPTION
+        raise UNAUTH_EXCEPTION
 
-    store = ContentVectorStore()
+    store = ContentVectorStore(database)
     store.remove_document(id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

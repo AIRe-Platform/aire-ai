@@ -7,7 +7,6 @@ from langchain_core.messages.tool import ToolCall
 from aire.models.reminder import AireReminder, AireReminderContent
 from aire.models.chat import AireChatContext, AireChatEvent
 from aire.models.auth import AireScope
-from aire.models.platform import AireModuleType
 from aire.services.memory import create_reminder
 from .callable_tool import CallableTool
 
@@ -39,11 +38,16 @@ def __create_reminder_call(ctx: AireChatContext, date_and_time: str, subject: st
     content = AireReminderContent(message=subject)    
     reminder = AireReminder(trigger_timestamp=int(timestamp), content=content, chat_id=ctx.input.chat_id)
 
-    memory = ctx.platform.platform.modules.get(AireModuleType.Memory)
-    if memory != None:
-        return create_reminder(memory, ctx.auth, reminder)
-    else:
+    agent = ctx.current_agent()
+    if agent == None:
         return None
+    
+    memory = next(iter(ctx.platform.get_agent_memories(agent)), None)
+    if memory == None:
+        return None
+    
+    return create_reminder(memory, ctx.auth, reminder)
+
 
 def __create_reminder(ctx: AireChatContext, call: ToolCall) -> AireReminder | None:
     if call.get("name") != __tool_name:

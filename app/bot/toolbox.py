@@ -4,6 +4,7 @@
 
 from typing import Callable
 from aire.models.chat import AireChatEvent
+from aire.models.agent import AireAgentToolConfig
 from .tools.reminders import ReminderTool
 from .tools.questionnaire_query import QuestionnaireQueryTool
 from .tools.content_query import ContentQueryTool
@@ -16,15 +17,6 @@ class CallableTool:
     event: AireChatEvent
     call: Callable
 
-
-ToolBindings = [
-    ReminderTool.descriptor, 
-    QuestionnaireQueryTool.descriptor, 
-#    ContentQueryTool.descriptor,
-    KeywordTaggingTool.descriptor,
-    DocumentSearchTool.descriptor
-]
-
 Toolbox = {
     ReminderTool.name: ReminderTool,
     QuestionnaireQueryTool.name: QuestionnaireQueryTool,
@@ -32,3 +24,13 @@ Toolbox = {
     KeywordTaggingTool.name: KeywordTaggingTool,
     DocumentSearchTool.name: DocumentSearchTool
 }
+
+def create_bindings(tools: dict[str, AireAgentToolConfig]) -> list[dict]:
+    """Create a list of tool descriptors to bind with LLM"""
+    bindings: list[dict] = []
+    for tool_name in tools:
+        config = tools[tool_name]
+        tool = Toolbox.get(tool_name, None)
+        if tool != None and config.enabled == True:
+            bindings.append(tool.descriptor)
+    return bindings
