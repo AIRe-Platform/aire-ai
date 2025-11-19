@@ -17,7 +17,7 @@ from fastapi import Depends, Body
           description="Process questionnaire results",
           tags=["Questionnaires"])
 async def process_questionnaire(
-    is_service: Annotated[bool, Depends(check_service_key)],
+    is_service: Annotated[bool, Depends(check_service_key_optional)],
     auth: Annotated[AireAuth | None, Depends(verify_token)],
     results: Annotated[AireQuestionnaireProcessingRequest, Body()]
 ) -> AireQuestionnaireResult:

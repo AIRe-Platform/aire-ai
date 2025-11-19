@@ -42,7 +42,7 @@ class EmbedResponse(BaseModel):
          tags=["Document embeddings"],
          response_model=DocumentQueryResponse)
 async def query_document(
-    is_service: Annotated[bool, Depends(check_service_key)],
+    is_service: Annotated[bool, Depends(check_service_key_required)],
     database: str,
     query: Annotated[str | None, Query(description="Query")] = None):
 
@@ -61,7 +61,7 @@ async def query_document(
          tags=["Document embeddings"],
          response_model=DocumentQueryResponse)
 async def search_from_document(
-    is_service: Annotated[bool, Depends(check_service_key)],
+    is_service: Annotated[bool, Depends(check_service_key_required)],
     database: str,
     id: str,
     search: Annotated[str | None, Query()] = None):
@@ -84,7 +84,7 @@ async def search_from_document(
 async def embed_document(
     document: Annotated[UploadFile, File()],
     metadata: Annotated[str, Form()],
-    is_service: Annotated[bool, Depends(check_service_key)],
+    is_service: Annotated[bool, Depends(check_service_key_required)],
     database: str):
     
     if not is_service:
@@ -131,7 +131,7 @@ async def embed_document(
             description="Delete document embedding",
             tags=["Document embeddings"])
 async def delete_document(
-    is_service: Annotated[bool, Depends(check_service_key)],
+    is_service: Annotated[bool, Depends(check_service_key_required)],
     id: str,
     database: str):
 
@@ -153,7 +153,7 @@ async def delete_document(
           response_model=EmbedResponse)
 async def embed_survey(
     questionnaire: Annotated[AireQuestionnaire, Body()],
-    is_service: Annotated[bool, Depends(check_service_key)],
+    is_service: Annotated[bool, Depends(check_service_key_required)],
     database: str):
 
     if not is_service:
@@ -170,7 +170,7 @@ async def embed_survey(
          response_description="Returns matching questionnaires' metadata in the order of relevance",
          response_model=QuestionnaireQueryResponse)
 async def query_questionnaire(
-    is_service: Annotated[bool, Depends(check_service_key)],
+    is_service: Annotated[bool, Depends(check_service_key_required)],
     database: str,
     query: Annotated[str | None, Query()] = None):
 
@@ -189,7 +189,7 @@ async def query_questionnaire(
             description="Delete questionnaire embedding",
             tags=["Questionnaire embeddings"])
 async def delete_survey(
-    is_service: Annotated[bool, Depends(check_service_key)],
+    is_service: Annotated[bool, Depends(check_service_key_required)],
     id: str,
     database: str):
     
@@ -211,7 +211,7 @@ async def delete_survey(
           response_model=EmbedResponse)
 async def embed_content(
     content: Annotated[AireContent, Body()],
-    is_service: Annotated[bool, Depends(check_service_key)],
+    is_service: Annotated[bool, Depends(check_service_key_required)],
     database: str):
 
     if not is_service:
@@ -232,7 +232,7 @@ async def embed_content(
          response_description="Returns matching contents' metadata in the order of relevance",
          response_model=ContentQueryResponse)
 async def query_content(
-    is_service: Annotated[bool, Depends(check_service_key)],
+    is_service: Annotated[bool, Depends(check_service_key_required)],
     database: str,
     query: Annotated[str | None, Query()] = None):
 
@@ -251,7 +251,7 @@ async def query_content(
             description="Delete content embeddings",
             tags=["Content embeddings"])
 async def delete_content(
-    is_service: Annotated[bool, Depends(check_service_key)],
+    is_service: Annotated[bool, Depends(check_service_key_required)],
     database: str,
     id: str):
     
