@@ -78,7 +78,10 @@ class AireChatContext(CustomUserType):
     auth: AireAuth
 
     def current_agent(self):
-        return next(iter([x for x in self.platform.agents if x.name == self.input.agent]), None)
+        if self.input.agent != None:
+            return next(iter([x for x in self.platform.agents if x.name == self.input.agent]), None)
+        else:
+            return next(iter(self.platform.agents), None)
 
 
 class AireChatAbstract(BaseModel):
