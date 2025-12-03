@@ -11,7 +11,7 @@ from ..models.platform import (
 )
 from ..models.user import AireUser
 
-def get_user(conf: AirePlatformConfiguration, auth: str):
+def get_user(conf: AirePlatformConfiguration, token: str):
     key = os.getenv("AIRE_SERVICE_KEY")
 
     if key == None:
@@ -25,7 +25,7 @@ def get_user(conf: AirePlatformConfiguration, auth: str):
     headers = {
         "Aire-Service-Key": key,
         "Accept": "application/json",
-        "Authorization": auth
+        "Authorization": "Bearer " + token
     }
 
     response = requests.get(url=url, headers=headers)
