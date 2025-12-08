@@ -3,8 +3,9 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from langchain_core.messages.tool import ToolCall
-from aire.models.chat import AireChatContext, AireChatEvent
-from aire.models.documents import AireDocumentSearchEvent, AireDocumentSearchResult
+from aire.models.chat import AireChatContext
+from aire.models.events import AireEvent, AireDocumentResultEvent
+from aire.models.documents import AireDocumentSearchResult
 from aire.models.auth import AireScope
 from aire.models.platform import AireModuleSetting
 from bot.vector_stores import DocumentVectorStore
@@ -37,7 +38,7 @@ __tool_description = {
 }
 
 
-def __document_search(ctx: AireChatContext, call: ToolCall) -> AireDocumentSearchEvent | None:
+def __document_search(ctx: AireChatContext, call: ToolCall) -> AireDocumentResultEvent | None:
     if call.get("name") != __tool_name:
         return None
     
@@ -66,12 +67,12 @@ def __document_search(ctx: AireChatContext, call: ToolCall) -> AireDocumentSearc
                     results = store.query_from_doc(document_id, search, 2, 0.75)
                 documents.extend(results)
 
-    return AireDocumentSearchEvent(search=search, results=documents)
+    return AireDocumentResultEvent(search=search, results=documents)
     
 
 DocumentSearchTool = CallableTool(
     name=__tool_name, 
     descriptor=__tool_description, 
-    event_type=AireChatEvent.DocumentResults,
+    event_type=AireEvent.DocumentResults,
     handler=__document_search
 )

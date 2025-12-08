@@ -2,11 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-
 from langserve.schema import CustomUserType
 from langchain_core.messages import ChatMessage
 from pydantic import BaseModel
-from enum import Enum
 from typing import Optional, Sequence
 from .user import AireUser
 from .documents import AireDocumentMetadata
@@ -14,19 +12,6 @@ from .questionnaire import AireQuestionnaireAnswer
 from .platform import AirePlatformConfiguration
 from .auth import AireAuth
 from .keyword import AireKeyword
-
-class AireChatEvent(str, Enum):
-    """Chatbot event types"""
-    Message = "message"
-    Error = "error"
-    Metadata = "metadata"
-    Keywords = "keywords"
-    TokenCount = "token-count"
-    Reminder = "reminder"
-    Questionnaire = "questionnaire"
-    ContentSuggestions = "content-suggestions"
-    DocumentResults = "document-results"
-    End = "end"
 
 
 class AireChatMessage(BaseModel):

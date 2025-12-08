@@ -3,8 +3,9 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from langchain_core.messages.tool import ToolCall
-from aire.models.chat import AireChatContext, AireChatEvent
-from aire.models.content import AireContentEvent, AireContentMetadata
+from aire.models.chat import AireChatContext
+from aire.models.events import AireEvent, AireContentEvent
+from aire.models.content import AireContentMetadata
 from aire.models.auth import AireScope
 from aire.models.platform import AireModuleSetting
 from bot.vector_stores import ContentVectorStore
@@ -63,6 +64,6 @@ def __content_query(ctx: AireChatContext, call: ToolCall) -> AireContentEvent | 
 ContentQueryTool = CallableTool(
     name=__tool_name, 
     descriptor=__tool_description, 
-    event_type=AireChatEvent.ContentSuggestions,
+    event_type=AireEvent.ContentSuggestions,
     handler=__content_query
 )

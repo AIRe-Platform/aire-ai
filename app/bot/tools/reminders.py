@@ -5,7 +5,8 @@
 from datetime import datetime
 from langchain_core.messages.tool import ToolCall
 from aire.models.reminder import AireReminder, AireReminderContent
-from aire.models.chat import AireChatContext, AireChatEvent
+from aire.models.chat import AireChatContext
+from aire.models.events import AireEvent
 from aire.models.auth import AireScope
 from aire.services.memory import create_reminder
 from .callable_tool import CallableTool
@@ -69,6 +70,6 @@ def __create_reminder(ctx: AireChatContext, call: ToolCall) -> AireReminder | No
 ReminderTool = CallableTool(
     name=__tool_name,
     descriptor=__tool_description,
-    event_type=AireChatEvent.Reminder,
+    event_type=AireEvent.Reminder,
     handler=__create_reminder
 )

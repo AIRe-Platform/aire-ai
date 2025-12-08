@@ -4,8 +4,9 @@
 
 from langchain_core.messages.tool import ToolCall
 from aire.models.auth import AireScope
-from aire.models.chat import AireChatContext, AireChatEvent
-from aire.models.questionnaire import AireQuestionnaireEvent, AireQuestionnaireMetadata
+from aire.models.chat import AireChatContext
+from aire.models.events import AireEvent, AireQuestionnaireEvent
+from aire.models.questionnaire import AireQuestionnaireMetadata
 from aire.models.platform import AireModuleSetting
 from bot.vector_stores import QuestionnaireVectorStore
 from .callable_tool import CallableTool
@@ -65,6 +66,6 @@ def __query_questionnaires(ctx: AireChatContext, call: ToolCall) -> AireQuestion
 QuestionnaireQueryTool = CallableTool(
     name=__tool_name,
     descriptor=__tool_description,
-    event_type=AireChatEvent.Questionnaire,
+    event_type=AireEvent.Questionnaire,
     handler=__query_questionnaires
 )

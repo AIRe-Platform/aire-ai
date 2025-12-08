@@ -4,11 +4,12 @@
 
 from pydantic import BaseModel
 from typing import Callable, Any
-from aire.models.chat import AireChatEvent, AireChatContext
+from aire.models.events import AireEvent
+from aire.models.chat import AireChatContext
 from langchain_core.messages.tool import ToolCall
 
 class CallableTool(BaseModel):
     name: str
     descriptor: dict
-    event_type: AireChatEvent
+    event_type: AireEvent
     handler: Callable[[AireChatContext, ToolCall], Any]

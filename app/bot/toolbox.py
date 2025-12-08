@@ -3,7 +3,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from typing import Callable
-from aire.models.chat import AireChatEvent
+from aire.models.events import AireEvent
 from aire.models.agent import AireAgentToolConfig
 from .tools.reminders import ReminderTool
 from .tools.questionnaire_query import QuestionnaireQueryTool
@@ -14,7 +14,7 @@ from .tools.document_search import DocumentSearchTool
 class CallableTool:
     name: str
     descriptor: dict
-    event: AireChatEvent
+    event: AireEvent
     call: Callable
 
 Toolbox = {

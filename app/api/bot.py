@@ -13,6 +13,7 @@ from bot.default import *
 from bot.chains.chat_keywords import ChatKeywordChain
 from bot.toolbox import Toolbox
 from aire.models.chat import *
+from aire.models.events import *
 
 import json
 from typing import Annotated, AsyncIterator
@@ -85,7 +86,7 @@ async def stream_bot(bot_name: str,
                 if(buffer["content"]):
                     output += buffer["content"]
                     yield {
-                        "event": "message",
+                        "event": AireEvent.Message,
                         "data": serializer.dumps({ 
                             "type": buffer["type"], 
                             "content": buffer["content"]
@@ -121,7 +122,7 @@ async def stream_bot(bot_name: str,
                     if call_result != None:
                         tool_called = True
                         yield { 
-                            "event": tool.event_type.value, 
+                            "event": tool.event_type, 
                             "data": serializer.dumps(call_result).decode("utf-8")
                         }
 
@@ -130,7 +131,7 @@ async def stream_bot(bot_name: str,
             output_token_count = count_tokens(llm.model_name, bot_input)
             
             yield { 
-                "event": "token-count",
+                "event": AireEvent.TokenCount,
                 "data": output_token_count + input_token_count
             }
 
@@ -138,15 +139,15 @@ async def stream_bot(bot_name: str,
                 keywords = await ChatKeywordChain.ainvoke(context)
                 if keywords != None and len(keywords) > 0:
                     yield { 
-                        "event": "keywords",
+                        "event": AireEvent.Keywords,
                         "data": serializer.dumps(keywords).decode("utf-8")
                     }
 
-            yield { "event": "end" }
+            yield { "event": AireEvent.End }
         except BaseException as ex:
             print(f"Error: {ex}")
             yield {
-                "event": "error",
+                "event": AireEvent.Error,
                 "data": json.dumps({ 
                     "status_code": 500, 
                     "message": "Internal Server Error"

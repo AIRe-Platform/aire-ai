@@ -9,7 +9,6 @@ from datetime import datetime
 
 class AireContentType(str, Enum):
     """Content types"""
-
     URL = "url"
     Image = "image"
     Video = "video"
@@ -18,7 +17,6 @@ class AireContentType(str, Enum):
 
 class AireContent(BaseModel):
     """Content model"""
-
     id: str
     type: AireContentType
     name: Optional[str] = None
@@ -34,7 +32,7 @@ class AireContent(BaseModel):
     keywords: Optional[list[str]] = None
     file_name: Optional[str] = None
     thumbnail_file_name: Optional[str] = None
-
+    
 
 class AireContentMetadata(BaseModel):
     """Content embedding metadata"""
@@ -43,9 +41,3 @@ class AireContentMetadata(BaseModel):
     type: Optional[AireContentType] = None
     keywords: Optional[list[str]] = None
     relevance: Optional[float] = None
-
-
-class AireContentEvent(BaseModel):
-    """Content suggestions event"""
-    search: str
-    results: list[AireContentMetadata]
