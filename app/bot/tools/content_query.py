@@ -65,5 +65,6 @@ ContentQueryTool = CallableTool(
     name=__tool_name, 
     descriptor=__tool_description, 
     event_type=AireEvent.ContentSuggestions,
+    prompt_gen=None,
     handler=__content_query
 )

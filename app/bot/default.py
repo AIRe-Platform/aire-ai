@@ -7,7 +7,7 @@ from langchain_core.prompts import SystemMessagePromptTemplate
 from langchain.schema.runnable import RunnableLambda
 from llm import ChatModel
 from aire.models.chat import AireChatContext
-from .toolbox import create_bindings
+from .toolbox import create_tool_bindings, create_tool_prompts
 from .prompts.agent_prompt import create_agent_prompt
 from .prompts.personality_prompt import create_personality_prompt
 from .prompts.context_prompt import create_context_prompt
@@ -18,6 +18,7 @@ __system_prompt_template = """
 {agent_prompt}
 {system_instructions}
 {context_prompt}
+{tool_prompts}
 """
 
 llm = ChatModel(temperature=0.7)
@@ -29,27 +30,22 @@ def __messages(ctx: AireChatContext):
     personality_prompt = create_personality_prompt(ctx)
     agent_prompt = create_agent_prompt(ctx)
     context_prompt = create_context_prompt(ctx)
+    tool_prompts = create_tool_prompts(ctx)
 
     prompt = [
         system_prompt.format(
             personality_prompt=personality_prompt,
             agent_prompt=agent_prompt,
             system_instructions=SYSTEM_INSTRUCTIONS_PROMPT,
-            context_prompt=context_prompt),
+            context_prompt=context_prompt,
+            tool_prompts=tool_prompts),
         *ctx.input.to_chat_messages()
     ]
 
     return prompt
 
-def __tools(ctx: AireChatContext):
-    agent = ctx.current_agent()
-    toolbox: list[dict] = []
-    if agent != None:
-        toolbox = create_bindings(agent.tools)
-    return toolbox
-
 def __default_bot(ctx: AireChatContext):
-    llm_tools = __tools(ctx)
+    llm_tools = create_tool_bindings(ctx)
     return RunnableLambda(__messages) | llm.bind_tools(llm_tools)
 
 DefaultBot = RunnableLambda(__default_bot)

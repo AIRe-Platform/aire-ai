@@ -40,5 +40,6 @@ KeywordTaggingTool = CallableTool(
     name=__tool_name,
     descriptor=__tool_description,
     event_type=AireEvent.Keywords,
+    prompt_gen=None,
     handler=__gen_keywords
 )

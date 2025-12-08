@@ -29,7 +29,6 @@ __tool_description = {
     }
 }
 
-
 def __agent_switch(ctx: AireChatContext, call: ToolCall) -> AireAgentSwitchEvent | None:
     if call.get("name") != __tool_name:
         return None
@@ -53,11 +52,29 @@ def __agent_switch(ctx: AireChatContext, call: ToolCall) -> AireAgentSwitchEvent
         return None
 
     return AireAgentSwitchEvent(agent=match.name)
-    
 
+def __prompt_gen(ctx: AireChatContext) -> str | None:
+    prompt_template = """
+    AGENT SWITCH TOOL(
+        Available agents: [
+            {agents}
+        ]
+    )"""
+    agent_template = "Agent(name='{name}', description='{description}')"
+
+    current = ctx.current_agent()
+    available = [x for x in ctx.platform.agents if x.name != current]
+
+    if len(available) == 0:
+        return None
+    
+    agents = [agent_template.format(name=x.name, description=x.description) for x in available]
+    return prompt_template.format(agents="\n".join(agents))
+    
 AgentSwitchTool = CallableTool(
     name=__tool_name, 
     descriptor=__tool_description, 
     event_type=AireEvent.AgentSwitch,
+    prompt_gen=__prompt_gen,
     handler=__agent_switch
 )

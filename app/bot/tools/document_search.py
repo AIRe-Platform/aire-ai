@@ -74,5 +74,6 @@ DocumentSearchTool = CallableTool(
     name=__tool_name, 
     descriptor=__tool_description, 
     event_type=AireEvent.DocumentResults,
+    prompt_gen=None,
     handler=__document_search
 )
