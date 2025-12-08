@@ -5,6 +5,7 @@
 from typing import Callable
 from aire.models.events import AireEvent
 from aire.models.agent import AireAgentToolConfig
+from .tools.agent_switch_tool import AgentSwitchTool
 from .tools.reminders import ReminderTool
 from .tools.questionnaire_query import QuestionnaireQueryTool
 from .tools.content_query import ContentQueryTool
@@ -18,6 +19,7 @@ class CallableTool:
     call: Callable
 
 Toolbox = {
+    AgentSwitchTool.name: AgentSwitchTool,
     ReminderTool.name: ReminderTool,
     QuestionnaireQueryTool.name: QuestionnaireQueryTool,
     ContentQueryTool.name: ContentQueryTool,
