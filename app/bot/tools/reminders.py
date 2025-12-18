@@ -6,7 +6,7 @@ from datetime import datetime
 from langchain_core.messages.tool import ToolCall
 from aire.models.reminder import AireReminder, AireReminderContent
 from aire.models.chat import AireChatContext
-from aire.models.events import AireEvent
+from aire.models.events import AireEvent, AireReminderEvent
 from aire.models.auth import AireScope
 from aire.services.memory import create_reminder
 from .callable_tool import CallableTool
@@ -34,7 +34,7 @@ __tool_description = {
     }
 }
 
-def __create_reminder_call(ctx: AireChatContext, date_and_time: str, subject: str) -> AireReminder | None:
+def __create_reminder_call(ctx: AireChatContext, date_and_time: str, subject: str) -> AireReminderEvent | None:
     timestamp = datetime.fromisoformat(date_and_time).timestamp()
     content = AireReminderContent(message=subject)    
     reminder = AireReminder(trigger_timestamp=int(timestamp), content=content, chat_id=ctx.input.chat_id)
@@ -47,10 +47,11 @@ def __create_reminder_call(ctx: AireChatContext, date_and_time: str, subject: st
     if memory == None:
         return None
     
-    return create_reminder(memory, ctx.auth, reminder)
+    reminder = create_reminder(memory, ctx.auth, reminder)
+    return AireReminderEvent(reminder=reminder)
 
 
-def __create_reminder(ctx: AireChatContext, call: ToolCall) -> AireReminder | None:
+def __create_reminder(ctx: AireChatContext, call: ToolCall) -> AireReminderEvent | None:
     if call.get("name") != __tool_name:
         return None
     

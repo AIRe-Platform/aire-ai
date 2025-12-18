@@ -130,17 +130,19 @@ async def stream_bot(bot_name: str,
             bot_input = AireChatInput(chat_id=None, chat=[bot_message], context=None)
             output_token_count = count_tokens(llm.model_name, bot_input)
             
+            stats = AireStatsEvent(token_count=output_token_count + input_token_count)
             yield { 
-                "event": AireEvent.TokenCount,
-                "data": output_token_count + input_token_count
+                "event": AireEvent.Stats,
+                "data": serializer.dumps(stats).decode("utf-8")
             }
 
             if gen_keywords:
                 keywords = await ChatKeywordChain.ainvoke(context)
                 if keywords != None and len(keywords) > 0:
+                    keyword_event = AireKeywordEvent(themes=keywords)
                     yield { 
                         "event": AireEvent.Keywords,
-                        "data": serializer.dumps(keywords).decode("utf-8")
+                        "data": serializer.dumps(keyword_event).decode("utf-8")
                     }
 
             yield { "event": AireEvent.End }

@@ -4,7 +4,7 @@
 
 from langchain_core.messages.tool import ToolCall
 from aire.models.chat import AireChatContext
-from aire.models.events import AireEvent
+from aire.models.events import AireEvent, AireKeywordEvent
 from ..chains.chat_keywords import ChatKeywordChain
 from .callable_tool import CallableTool
 
@@ -24,7 +24,7 @@ __tool_description = {
     }
 }
 
-def __gen_keywords(ctx: AireChatContext, call: ToolCall) -> list[str] | None:
+def __tag_keywords(ctx: AireChatContext, call: ToolCall) -> AireKeywordEvent | None:
     if call.get("name") != __tool_name:
         return None
     
@@ -33,7 +33,7 @@ def __gen_keywords(ctx: AireChatContext, call: ToolCall) -> list[str] | None:
     if results == None:
         return None
     
-    return list(map(lambda x: x.value, results))
+    return AireKeywordEvent(themes=results)
 
 
 KeywordTaggingTool = CallableTool(
@@ -41,5 +41,5 @@ KeywordTaggingTool = CallableTool(
     descriptor=__tool_description,
     event_type=AireEvent.Keywords,
     prompt_gen=None,
-    handler=__gen_keywords
+    handler=__tag_keywords
 )
