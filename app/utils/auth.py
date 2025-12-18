@@ -75,13 +75,8 @@ def verify_token(authorization: Annotated[str | None, Header()] = None):
     except BaseException as e:
         print(f"Token verification exception: {e}")
         raise e
-    
-def check_service_key_optional(aire_service_key: Annotated[str | None, Header()] = None):
-    if SERVICE_KEY == None:
-        raise RuntimeError("AIRE_SERVICE_KEY environment value is missing")
-    return aire_service_key == SERVICE_KEY
 
-def check_service_key_required(aire_service_key: Annotated[str, Header()]):
+def check_service_key(aire_service_key: Annotated[str | None, Header()] = None):
     if SERVICE_KEY == None:
         raise RuntimeError("AIRE_SERVICE_KEY environment value is missing")
     return aire_service_key == SERVICE_KEY
