@@ -22,6 +22,7 @@ class AireChatMessage(BaseModel):
     rating: Optional[int] = None
     question: Optional[AireQuestionnaireAnswer] = None
     theme: Optional[str] = None
+    agent: Optional[str] = None
 
 
 class AireChatInputContext(BaseModel):
