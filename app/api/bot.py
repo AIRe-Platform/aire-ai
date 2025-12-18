@@ -86,7 +86,7 @@ async def stream_bot(bot_name: str,
                 if(buffer["content"]):
                     output += buffer["content"]
                     yield {
-                        "event": AireEvent.Message,
+                        "event": AireEvent.Message.value,
                         "data": serializer.dumps({ 
                             "type": buffer["type"], 
                             "content": buffer["content"]
@@ -122,7 +122,7 @@ async def stream_bot(bot_name: str,
                     if call_result != None:
                         tool_called = True
                         yield { 
-                            "event": tool.event_type, 
+                            "event": tool.event_type.value, 
                             "data": serializer.dumps(call_result).decode("utf-8")
                         }
 
@@ -132,7 +132,7 @@ async def stream_bot(bot_name: str,
             
             stats = AireStatsEvent(token_count=output_token_count + input_token_count)
             yield { 
-                "event": AireEvent.Stats,
+                "event": AireEvent.Stats.value,
                 "data": serializer.dumps(stats).decode("utf-8")
             }
 
@@ -141,15 +141,15 @@ async def stream_bot(bot_name: str,
                 if keywords != None and len(keywords) > 0:
                     keyword_event = AireKeywordEvent(themes=keywords)
                     yield { 
-                        "event": AireEvent.Keywords,
+                        "event": AireEvent.Keywords.value,
                         "data": serializer.dumps(keyword_event).decode("utf-8")
                     }
 
-            yield { "event": AireEvent.End }
+            yield { "event": AireEvent.End.value }
         except BaseException as ex:
             print(f"Error: {ex}")
             yield {
-                "event": AireEvent.Error,
+                "event": AireEvent.Error.value,
                 "data": json.dumps({ 
                     "status_code": 500, 
                     "message": "Internal Server Error"
