@@ -183,10 +183,10 @@ class QuestionnaireVectorStore(BaseVectorStore):
             raise RuntimeError("Unexpected count of IDs")
         return ids[0]
 
-    def query_keywords(self, keywords: list[str]) -> list[AireQuestionnaireMetadata]:
+    def query_keywords(self, keywords: list[str], min_relevance: float = 0.0) -> list[AireQuestionnaireMetadata]:
         # Perform similarity search with the keywords and retrieve document
         query = " ".join(list(set(keywords)))
-        return self.query(query)
+        return self.query(query, min_relevance=min_relevance)
 
     
     def query(self, search: str, max_items: int = 8, min_relevance: float = 0.0) -> list[AireQuestionnaireMetadata]:
