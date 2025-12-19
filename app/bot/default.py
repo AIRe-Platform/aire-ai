@@ -4,7 +4,7 @@
 
 
 from langchain_core.prompts import SystemMessagePromptTemplate
-from langchain.schema.runnable import RunnableLambda
+from langchain_core.runnables import RunnableLambda
 from llm import ChatModel
 from aire.models.chat import AireChatContext
 from .toolbox import create_tool_bindings, create_tool_prompts
