@@ -41,6 +41,7 @@ There are launch/debug configurations for VSCode.
 Add these to your `development.env` to configure the module:
 
 ```env
+AIRE_MODULE_ID=aire.development.ai
 AIRE_SERVICE_BASE=http://localhost:7071/api
 AIRE_SERVICE_KEY=<use the same key as with other platform modules>
 TOKEN_SIGNING_KEY=<use the same key as with other platform modules>
