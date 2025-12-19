@@ -36,10 +36,10 @@ class AireScope(str, Enum):
 
 class AireAuth(BaseModel):
     """User token payload"""
-
     subject: Optional[str] = None
     role: AireRole | str = AireRole.User
     scopes: list[str]
     user_key: Optional[str] = None
     connected_services: Optional[list[AireUserServiceCredentials]] = None
     token: Optional[str] = None
+    platform: Optional[str] = None

@@ -3,11 +3,14 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from langchain_core.messages.tool import ToolCall
-from aire.models.chat import AireChatContext, AireChatEvent
-from aire.models.content import AireContentEvent
+from aire.models.chat import AireChatContext
+from aire.models.events import AireEvent, AireContentEvent
+from aire.models.content import AireContentMetadata
 from aire.models.auth import AireScope
+from aire.models.platform import AireModuleSetting
 from bot.vector_stores import ContentVectorStore
 from .callable_tool import CallableTool
+from utils.module_settings import get_module_setting_int
 
 __tool_name = "query_content"
 __tool_description = {
@@ -41,17 +44,36 @@ def __content_query(ctx: AireChatContext, call: ToolCall) -> AireContentEvent | 
     
     args = call.get("args")
     search = args.get("search")
+    agent = ctx.current_agent()
 
-    if search == None:
+    if search == None or agent == None:
         return None
     
-    results = ContentVectorStore().query(search, 4)
-    return AireContentEvent(search=search, results=results)
+    content: list[AireContentMetadata] = []
+    memories = ctx.platform.get_agent_memories(agent)
+    threshold = get_module_setting_int(ctx, AireModuleSetting.VectorSearchRelevanceThreshold, None)
+    
+    for memory in memories:
+        if memory.settings != None:
+            database = memory.settings.get(AireModuleSetting.VectorDatabaseName, None)
+            threshold = memory.settings.get(AireModuleSetting.VectorSearchRelevanceThreshold, threshold)
+
+            if isinstance(threshold, int):
+                relevance = threshold / 100.0
+            else:
+                relevance = 0.75
+
+            if isinstance(database, str):
+                results = ContentVectorStore(database).query(search, 4, relevance)
+                content.extend(results)
+
+    return AireContentEvent(search=search, results=content)
     
 
 ContentQueryTool = CallableTool(
     name=__tool_name, 
     descriptor=__tool_description, 
-    event_type=AireChatEvent.ContentSuggestions,
+    event_type=AireEvent.ContentSuggestions,
+    prompt_gen=None,
     handler=__content_query
 )

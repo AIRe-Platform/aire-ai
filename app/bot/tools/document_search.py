@@ -3,13 +3,14 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from langchain_core.messages.tool import ToolCall
-from aire.models.chat import AireChatContext, AireChatEvent
-from aire.models.documents import AireDocumentSearchEvent
+from aire.models.chat import AireChatContext
+from aire.models.events import AireEvent, AireDocumentResultEvent
+from aire.models.documents import AireDocumentSearchResult
 from aire.models.auth import AireScope
+from aire.models.platform import AireModuleSetting, AireModuleType
 from bot.vector_stores import DocumentVectorStore
 from .callable_tool import CallableTool
-
-__store = DocumentVectorStore()
+from utils.module_settings import get_module_setting_int
 
 __tool_name = "search_documents"
 __tool_description = {
@@ -38,7 +39,7 @@ __tool_description = {
 }
 
 
-def __document_search(ctx: AireChatContext, call: ToolCall) -> AireDocumentSearchEvent | None:
+def __document_search(ctx: AireChatContext, call: ToolCall) -> AireDocumentResultEvent | None:
     if call.get("name") != __tool_name:
         return None
     
@@ -48,21 +49,41 @@ def __document_search(ctx: AireChatContext, call: ToolCall) -> AireDocumentSearc
     args = call.get("args")
     search = args.get("search")
     document_id = args.get("document_id")
+    agent = ctx.current_agent()
 
-    if search == None:
+    if search == None or agent == None:
         return None
     
-    if document_id == None:
-        results = __store.query(search, 4, 0.75)
-    else:
-        results = __store.query_from_doc(document_id, search, 2, 0.75)
+    documents: list[AireDocumentSearchResult] = []
+    memories = ctx.platform.get_agent_memories(agent)
 
-    return AireDocumentSearchEvent(search=search, results=results)
+    relevance_threshold = get_module_setting_int(ctx, AireModuleSetting.VectorSearchRelevanceThreshold, None)
+
+    for memory in memories:
+        if memory.settings != None:
+            database = memory.settings.get(AireModuleSetting.VectorDatabaseName, None)
+            threshold = memory.settings.get(AireModuleSetting.VectorSearchRelevanceThreshold, relevance_threshold)
+
+            if isinstance(threshold, int):
+                relevance = threshold / 100.0
+            else:
+                relevance = 0.75
+
+            if isinstance(database, str):
+                store = DocumentVectorStore(database)
+                if document_id == None:
+                    results = store.query(search, 4, relevance)
+                else:
+                    results = store.query_from_doc(document_id, search, 2, relevance)
+                documents.extend(results)
+
+    return AireDocumentResultEvent(search=search, results=documents)
     
 
 DocumentSearchTool = CallableTool(
     name=__tool_name, 
     descriptor=__tool_description, 
-    event_type=AireChatEvent.DocumentResults,
+    event_type=AireEvent.DocumentResults,
+    prompt_gen=None,
     handler=__document_search
 )

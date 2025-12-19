@@ -7,15 +7,17 @@ from server import app
 from errors import *
 from utils.auth import *
 from utils.current_user import get_current_user, get_platform_config
+from utils.token_utils import count_tokens
 
 from bot.default import *
 from bot.chains.chat_keywords import ChatKeywordChain
 from bot.toolbox import Toolbox
 from aire.models.chat import *
+from aire.models.events import *
 
 import json
 from typing import Annotated, AsyncIterator
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, status
 from fastapi.responses import Response
 from langserve.serialization import WellKnownLCSerializer
 from langchain_core.messages.tool import ToolCall, ToolCallChunk
@@ -46,13 +48,14 @@ async def get_bots(auth: Annotated[AireAuth | None, Depends(verify_token)]) -> l
           response_class=Response)
 async def stream_bot(bot_name: str, 
                      input: AireChatInput,
-                     auth: Annotated[AireAuth | None, Depends(verify_token)],
-                     user: Annotated[AireUser | None, Depends(get_current_user)]):
+                     auth: Annotated[AireAuth | None, Depends(verify_token)]):
     
     if auth == None:
         raise UNAUTH_EXCEPTION
-    if not AireScope.ChatCompletion in auth.scopes:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+    if not AireScope.ChatCompletion in auth.scopes or auth.platform == None:
+        raise FORBIDDEN_EXCEPTION
+    
+    user = get_current_user(auth)
     
     match bot_name:
         case "default":
@@ -65,13 +68,13 @@ async def stream_bot(bot_name: str,
         input=input, 
         user=user, 
         allow_custom_prompt=allow_prompt_override,
-        platform=get_platform_config(),
+        platform=get_platform_config(auth.platform),
         auth=auth)
 
     async def stream() -> AsyncIterator[dict]:
         try:
             output = ""
-            input_token_count = count_tokens(input)
+            input_token_count = count_tokens(llm.model_name, input)
             gen_keywords = len(input.to_chat_messages()) > 4
             tool_called = False
             iter = bot.astream(context)
@@ -83,7 +86,7 @@ async def stream_bot(bot_name: str,
                 if(buffer["content"]):
                     output += buffer["content"]
                     yield {
-                        "event": "message",
+                        "event": AireEvent.Message.value,
                         "data": serializer.dumps({ 
                             "type": buffer["type"], 
                             "content": buffer["content"]
@@ -125,26 +128,28 @@ async def stream_bot(bot_name: str,
 
             bot_message = AireChatMessage(role="assistant", content=output)
             bot_input = AireChatInput(chat_id=None, chat=[bot_message], context=None)
-            output_token_count = count_tokens(bot_input)
+            output_token_count = count_tokens(llm.model_name, bot_input)
             
+            stats = AireStatsEvent(token_count=output_token_count + input_token_count)
             yield { 
-                "event": "token-count",
-                "data": output_token_count + input_token_count
+                "event": AireEvent.Stats.value,
+                "data": serializer.dumps(stats).decode("utf-8")
             }
 
             if gen_keywords:
                 keywords = await ChatKeywordChain.ainvoke(context)
                 if keywords != None and len(keywords) > 0:
+                    keyword_event = AireKeywordEvent(themes=keywords)
                     yield { 
-                        "event": "keywords",
-                        "data": serializer.dumps(keywords).decode("utf-8")
+                        "event": AireEvent.Keywords.value,
+                        "data": serializer.dumps(keyword_event).decode("utf-8")
                     }
 
-            yield { "event": "end" }
+            yield { "event": AireEvent.End.value }
         except BaseException as ex:
             print(f"Error: {ex}")
             yield {
-                "event": "error",
+                "event": AireEvent.Error.value,
                 "data": json.dumps({ 
                     "status_code": 500, 
                     "message": "Internal Server Error"

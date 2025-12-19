@@ -21,9 +21,3 @@ class AireDocumentSearchResult(BaseModel):
     content: Optional[str] = None
     metadata: Optional[AireDocumentMetadata] = None
     relevance: Optional[float] = None
-
-
-class AireDocumentSearchEvent(BaseModel):
-    """Document search event"""
-    search: str
-    results: list[AireDocumentSearchResult]

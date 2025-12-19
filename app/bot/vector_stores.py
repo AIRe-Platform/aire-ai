@@ -26,16 +26,15 @@ from aire.models.documents import AireDocumentSearchResult, AireDocumentMetadata
 from pathlib import Path
 
 AZURE_COSMOS_DB_CONNECTION_STRING = os.getenv("AZURE_COSMOS_DB_CONNECTION_STRING", "")
-AZURE_COSMOS_DB_DATABASE_NAME = os.getenv("AZURE_COSMOS_DB_DATABASE_NAME", "langchain_python_db")
 
 class BaseVectorStore:
     store: AzureCosmosDBNoSqlVectorSearch
 
-    def __init__(self, collection: str):
+    def __init__(self, database: str, collection: str):
         self.store = AzureCosmosDBNoSqlVectorSearch(
             cosmos_client=CosmosClient.from_connection_string(AZURE_COSMOS_DB_CONNECTION_STRING),
             embedding=EmbeddingsModel(),
-            database_name=AZURE_COSMOS_DB_DATABASE_NAME,
+            database_name=database,
             container_name=collection,
             vector_embedding_policy={
                 "vectorEmbeddings": [
@@ -91,8 +90,8 @@ class BaseVectorStore:
         
 
 class DocumentVectorStore(BaseVectorStore):
-    def __init__(self):
-        super().__init__("documents")
+    def __init__(self, database: str):
+        super().__init__(database, "documents")
         
         self.splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000, chunk_overlap=200, add_start_index=True)
@@ -153,8 +152,8 @@ class DocumentVectorStore(BaseVectorStore):
 
 
 class QuestionnaireVectorStore(BaseVectorStore):
-    def __init__(self):
-        super().__init__("questionnaires")
+    def __init__(self, database: str):
+        super().__init__(database, "questionnaires")
 
     def add_questionnaire(self, questionnaire: AireQuestionnaire) -> str:
 
@@ -184,10 +183,10 @@ class QuestionnaireVectorStore(BaseVectorStore):
             raise RuntimeError("Unexpected count of IDs")
         return ids[0]
 
-    def query_keywords(self, keywords: list[str]) -> list[AireQuestionnaireMetadata]:
+    def query_keywords(self, keywords: list[str], min_relevance: float = 0.0) -> list[AireQuestionnaireMetadata]:
         # Perform similarity search with the keywords and retrieve document
         query = " ".join(list(set(keywords)))
-        return self.query(query)
+        return self.query(query, min_relevance=min_relevance)
 
     
     def query(self, search: str, max_items: int = 8, min_relevance: float = 0.0) -> list[AireQuestionnaireMetadata]:
@@ -207,8 +206,8 @@ class QuestionnaireVectorStore(BaseVectorStore):
 
 
 class ContentVectorStore(BaseVectorStore):
-    def __init__(self):
-        super().__init__("content")
+    def __init__(self, database: str):
+        super().__init__(database, "content")
 
     def add_content(self, content: AireContent) -> str | None:
         embedding = ""

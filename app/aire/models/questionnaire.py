@@ -8,9 +8,9 @@ from enum import Enum
 from datetime import datetime
 from typing import Optional, Any
 
+
 class AireQuestionnaireOptionType(str, Enum):
     """Questionnaire option types"""
-
     Range = "range"
     Checkbox = "checkbox"
     Open = "open"
@@ -24,21 +24,18 @@ class AireQuestionnaireOption(BaseModel):
 
 class AireQuestionnaireOptionRange(AireQuestionnaireOption):
     """Questionnaire options for type 'range'"""
-
     min: int
     max: int
 
 
 class AireQuestionnaireOptionCheckbox(AireQuestionnaireOption):
     """Questionnaire options for type 'checkbox'"""
-
     values: list[str]
     multiselect: bool = True
 
 
 class AireQuestionnaireOptionOpen(AireQuestionnaireOption):
     """Questionnaire options for type 'open'"""
-
     max_len: int
     match: Optional[str] = None
     multiline: bool = False
@@ -46,7 +43,6 @@ class AireQuestionnaireOptionOpen(AireQuestionnaireOption):
 
 class AireQuestionnaireOptionNumber(AireQuestionnaireOption):
     """Questionnaire options for type 'number'"""
-
     min: Optional[int] = None
     max: Optional[int] = None
     default: Optional[int] = None
@@ -54,7 +50,6 @@ class AireQuestionnaireOptionNumber(AireQuestionnaireOption):
 
 class AireQuestionnaireQuestion(BaseModel):
     """Questionnaire question object"""
-
     id: str
     question: str
     keywords: Optional[list[str]] = None
@@ -66,7 +61,6 @@ class AireQuestionnaireQuestion(BaseModel):
 
 class AireQuestionnaireSection(BaseModel):
     """Questionnaire section object"""
-
     id: str
     name: str
     keywords: Optional[list[str]] = None
@@ -75,7 +69,6 @@ class AireQuestionnaireSection(BaseModel):
 
 class AireQuestionnaire(BaseModel):
     """Questionnaire model"""
-
     id: str
     name: str
     lang: str
@@ -86,7 +79,6 @@ class AireQuestionnaire(BaseModel):
 
 class AireQuestionnaireAnswer(BaseModel):
     """Questionnaire answer object"""
-
     questionnaire_id: str
     question_id: str
     type: AireQuestionnaireOptionType
@@ -98,7 +90,6 @@ class AireQuestionnaireAnswer(BaseModel):
 
 class AireQuestionnaireResult(BaseModel):
     """Processed Questionnaire results"""
-
     id: Optional[str] = None
     questionnaire_id: str
     timestamp: datetime
@@ -109,20 +100,14 @@ class AireQuestionnaireResult(BaseModel):
 
 class AireQuestionnaireProcessingRequest(BaseModel):
     """Request to process questionnaire results"""
-
     questionnaire_id: str
     answers: list[AireQuestionnaireAnswer]
 
 
 class AireQuestionnaireMetadata(BaseModel):
     """Questionnaire embedding metadata"""
-
     id: str
     language: Optional[str] = None
     relevance: Optional[float] = None
 
-class AireQuestionnaireEvent(BaseModel):
-    """Questionnaire event"""
-    search: str
-    results: list[AireQuestionnaireMetadata]
     

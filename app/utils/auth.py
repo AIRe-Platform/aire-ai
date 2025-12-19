@@ -63,7 +63,8 @@ def verify_token(authorization: Annotated[str | None, Header()] = None):
             scopes=scopes,
             user_key=payload.get("user_enc_key"),
             connected_services=payload.get("connected_services"),
-            token=token)
+            token=token,
+            platform=payload.get("platform"))
     
     except JWTError as e:
         print(f"Token decode error: {e}")
@@ -74,7 +75,7 @@ def verify_token(authorization: Annotated[str | None, Header()] = None):
     except BaseException as e:
         print(f"Token verification exception: {e}")
         raise e
-    
+
 def check_service_key(aire_service_key: Annotated[str | None, Header()] = None):
     if SERVICE_KEY == None:
         raise RuntimeError("AIRE_SERVICE_KEY environment value is missing")
