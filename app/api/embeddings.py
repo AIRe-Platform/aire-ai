@@ -44,7 +44,8 @@ class EmbedResponse(BaseModel):
 async def query_document(
     is_service: Annotated[bool, Depends(check_service_key)],
     database: str,
-    query: Annotated[str | None, Query(description="Query")] = None):
+    query: Annotated[str | None, Query(description="Query")] = None,
+    relevance: Annotated[float, Query()] = 0):
 
     if not is_service:
         raise UNAUTH_EXCEPTION
@@ -53,7 +54,7 @@ async def query_document(
         raise BAD_REQUEST_EXCEPTION
 
     store = DocumentVectorStore(database)
-    results = store.query(query)
+    results = store.query(query, min_relevance=relevance)
     return DocumentQueryResponse(results=results)
 
 @app.get("/embeddings/{database}/document/{id}",
@@ -64,7 +65,8 @@ async def search_from_document(
     is_service: Annotated[bool, Depends(check_service_key)],
     database: str,
     id: str,
-    search: Annotated[str | None, Query()] = None):
+    search: Annotated[str | None, Query()] = None,
+    relevance: Annotated[float, Query()] = 0):
 
     if not is_service:
         raise UNAUTH_EXCEPTION
@@ -73,7 +75,7 @@ async def search_from_document(
         raise BAD_REQUEST_EXCEPTION
     
     store = DocumentVectorStore(database)
-    results = store.query_from_doc(id, search, max_items=8, min_relevance=0.75)
+    results = store.query_from_doc(id, search, max_items=8, min_relevance=relevance)
 
     return DocumentQueryResponse(results=results)
 
@@ -172,7 +174,8 @@ async def embed_survey(
 async def query_questionnaire(
     is_service: Annotated[bool, Depends(check_service_key)],
     database: str,
-    query: Annotated[str | None, Query()] = None):
+    query: Annotated[str | None, Query()] = None,
+    relevance: Annotated[float, Query()] = 0):
 
     if not is_service:
         raise UNAUTH_EXCEPTION
@@ -181,7 +184,7 @@ async def query_questionnaire(
         raise BAD_REQUEST_EXCEPTION
     
     store = QuestionnaireVectorStore(database)
-    results = store.query_keywords(query.split(","))
+    results = store.query_keywords(query.split(","), relevance)
     return QuestionnaireQueryResponse(results=results)
 
 
@@ -234,7 +237,8 @@ async def embed_content(
 async def query_content(
     is_service: Annotated[bool, Depends(check_service_key)],
     database: str,
-    query: Annotated[str | None, Query()] = None):
+    query: Annotated[str | None, Query()] = None,
+    relevance: Annotated[float, Query()] = 0):
 
     if not is_service:
         raise UNAUTH_EXCEPTION
@@ -243,7 +247,7 @@ async def query_content(
         raise BAD_REQUEST_EXCEPTION
     
     store = ContentVectorStore(database)
-    results = store.query(query)
+    results = store.query(query, min_relevance=relevance)
     return ContentQueryResponse(results=results)
 
 
