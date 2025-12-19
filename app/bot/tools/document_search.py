@@ -56,13 +56,12 @@ def __document_search(ctx: AireChatContext, call: ToolCall) -> AireDocumentResul
     
     documents: list[AireDocumentSearchResult] = []
     memories = ctx.platform.get_agent_memories(agent)
-
-    relevance_threshold = get_module_setting_int(ctx, AireModuleSetting.VectorSearchRelevanceThreshold, None)
+    threshold = get_module_setting_int(ctx, AireModuleSetting.VectorSearchRelevanceThreshold, None)
 
     for memory in memories:
         if memory.settings != None:
             database = memory.settings.get(AireModuleSetting.VectorDatabaseName, None)
-            threshold = memory.settings.get(AireModuleSetting.VectorSearchRelevanceThreshold, relevance_threshold)
+            threshold = memory.settings.get(AireModuleSetting.VectorSearchRelevanceThreshold, threshold)
 
             if isinstance(threshold, int):
                 relevance = threshold / 100.0
