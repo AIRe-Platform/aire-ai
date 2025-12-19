@@ -24,6 +24,7 @@ class AireModuleSetting(str, Enum):
     """Known module settings keys"""
     VectorDatabaseName = "vector_database_name"
     PersonalityPrompt = "personality_prompt"
+    VectorSearchRelevanceThreshold = "vector_search_relevance_threshold"
 
 class AireModule(BaseModel):
     """Describes a platform module"""
@@ -32,7 +33,7 @@ class AireModule(BaseModel):
     endpoint: str
     access: AireModuleAccess
     token: Optional[str] = None
-    settings: Optional[dict] = None
+    settings: Optional[dict[str, str | int | bool]] = None
 
 class AireService(BaseModel):
     """Describes an external service"""
@@ -53,6 +54,10 @@ class AirePlatformConfiguration(BaseModel):
 
     def get_default_module(self, type: AireModuleType) -> AireModule | None:
         return next(iter(self.platform.modules.get(type, [])), None)
+    
+    def get_module(self, type: AireModuleType, id: str) -> AireModule | None:
+        modules = self.platform.modules.get(type, [])
+        return next(iter([x for x in modules if x.id == id]), None)
 
     def get_modules(self, type: AireModuleType, include_external: bool) -> list[AireModule]:
         modules = [x for x in self.platform.modules.get(type, [])]
