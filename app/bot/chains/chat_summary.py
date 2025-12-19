@@ -3,18 +3,16 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 
-from langchain.memory import ConversationSummaryBufferMemory
-from langchain_community.chat_message_histories import ChatMessageHistory
-from langchain.memory.prompt import SUMMARY_PROMPT
-from langchain.schema.runnable import RunnableLambda
+from langchain_core.prompts import SystemMessagePromptTemplate
+from langchain_core.runnables import RunnableLambda
 from aire.models.chat import AireChatContext
 from llm import DefaultModel
 
 llm_summary = DefaultModel(temperature=0, max_tokens=256)
 summary_prompt = """Progressively summarize the lines of conversation provided.
 
-New lines of conversation:
-{new_lines}
+Conversation:
+{messages}
 
 Important:
 Do not copy the conversation word by word.
@@ -30,11 +28,13 @@ def __chat_summary(ctx: AireChatContext) -> str:
     if len(messages) < 1:
         return ""
     
-    prompt = SUMMARY_PROMPT
-    prompt.template = summary_prompt
+    system_prompt = SystemMessagePromptTemplate.from_template(summary_prompt)
+    prompt = [ system_prompt.format(messages=messages) ]
 
-    history = ChatMessageHistory(messages=list(messages))
-    memory = ConversationSummaryBufferMemory(chat_memory=history, llm=llm_summary, prompt=prompt)
-    return memory.predict_new_summary(memory.chat_memory.messages, "").strip("\n ")
+    response = llm_summary.invoke(prompt)
+    if not isinstance(response.content, str):
+        return ""
+    
+    return response.content
 
 ChatSummaryChain = RunnableLambda(__chat_summary)
