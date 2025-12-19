@@ -7,9 +7,10 @@ from aire.models.chat import AireChatContext
 from aire.models.events import AireEvent, AireDocumentResultEvent
 from aire.models.documents import AireDocumentSearchResult
 from aire.models.auth import AireScope
-from aire.models.platform import AireModuleSetting
+from aire.models.platform import AireModuleSetting, AireModuleType
 from bot.vector_stores import DocumentVectorStore
 from .callable_tool import CallableTool
+from utils.module_settings import get_module_setting_int
 
 __tool_name = "search_documents"
 __tool_description = {
@@ -56,15 +57,24 @@ def __document_search(ctx: AireChatContext, call: ToolCall) -> AireDocumentResul
     documents: list[AireDocumentSearchResult] = []
     memories = ctx.platform.get_agent_memories(agent)
 
+    relevance_threshold = get_module_setting_int(ctx, AireModuleSetting.VectorSearchRelevanceThreshold, None)
+
     for memory in memories:
         if memory.settings != None:
             database = memory.settings.get(AireModuleSetting.VectorDatabaseName, None)
-            if database != None:
+            threshold = memory.settings.get(AireModuleSetting.VectorSearchRelevanceThreshold, relevance_threshold)
+
+            if isinstance(threshold, int):
+                relevance = threshold / 100.0
+            else:
+                relevance = 0.75
+
+            if isinstance(database, str):
                 store = DocumentVectorStore(database)
                 if document_id == None:
-                    results = store.query(search, 4, 0.75)
+                    results = store.query(search, 4, relevance)
                 else:
-                    results = store.query_from_doc(document_id, search, 2, 0.75)
+                    results = store.query_from_doc(document_id, search, 2, relevance)
                 documents.extend(results)
 
     return AireDocumentResultEvent(search=search, results=documents)

@@ -7,9 +7,10 @@ from aire.models.auth import AireScope
 from aire.models.chat import AireChatContext
 from aire.models.events import AireEvent, AireQuestionnaireEvent
 from aire.models.questionnaire import AireQuestionnaireMetadata
-from aire.models.platform import AireModuleSetting
+from aire.models.platform import AireModuleSetting, AireModuleType
 from bot.vector_stores import QuestionnaireVectorStore
 from .callable_tool import CallableTool
+from utils.module_settings import get_module_setting_int
 
 __tool_name = "query_questionnaires"
 __tool_description = {
@@ -52,12 +53,20 @@ def __query_questionnaires(ctx: AireChatContext, call: ToolCall) -> AireQuestion
     
     memories = ctx.platform.get_agent_memories(agent)
     questionnaires: list[AireQuestionnaireMetadata] = []
+    threshold = get_module_setting_int(ctx, AireModuleSetting.VectorSearchRelevanceThreshold, None)
     
     for svc in memories:
         if svc.settings != None:
             database = svc.settings.get(AireModuleSetting.VectorDatabaseName, None)
-            if database != None:
-                results = QuestionnaireVectorStore(database).query(search, 8)
+            threshold = svc.settings.get(AireModuleSetting.VectorSearchRelevanceThreshold, threshold)
+
+            if isinstance(threshold, int):
+                relevance = threshold / 100.0
+            else:
+                relevance = 0.75
+
+            if isinstance(database, str):
+                results = QuestionnaireVectorStore(database).query(search, 8, relevance)
                 questionnaires.extend(results)
 
     return AireQuestionnaireEvent(search=search, results=questionnaires)
