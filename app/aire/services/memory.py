@@ -13,13 +13,13 @@ from ..models.platform import AireModule
 from ..models.auth import AireAuth;
 from pydantic.type_adapter import TypeAdapter
 
-def keywords_hash_key(svc: AireModule):
-    return hashkey(svc.endpoint)
+def keywords_hash_key(platform: str, svc: AireModule):
+    return hashkey(platform + svc.endpoint)
 
 cache = TTLCache(maxsize=1, ttl=300)
 
 @cached(cache=cache, key=keywords_hash_key)
-def get_keywords(svc: AireModule) -> list[AireKeyword]:
+def get_keywords(platform: str, svc: AireModule) -> list[AireKeyword]:
     key = os.getenv("AIRE_SERVICE_KEY")
 
     if key == None:
@@ -28,6 +28,8 @@ def get_keywords(svc: AireModule) -> list[AireKeyword]:
     url = svc.endpoint + "/v1/keywords"
     headers = {
         "Aire-Service-Key": key,
+        "Aire-Service-Platform": platform,
+        "Aire-Service-Target": svc.id,
         "Accept": "application/json"
     }
 
