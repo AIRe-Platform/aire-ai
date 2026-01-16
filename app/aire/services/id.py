@@ -24,6 +24,7 @@ def get_user(conf: AirePlatformConfiguration, token: str):
     url = svc.endpoint + "/v1/user"
     headers = {
         "Aire-Service-Key": key,
+        "Aire-Service-Target": svc.id,
         "Accept": "application/json",
         "Authorization": "Bearer " + token
     }

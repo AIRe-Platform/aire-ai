@@ -41,11 +41,12 @@ def create_context_prompt(ctx: AireChatContext) -> str:
                 keywords = ", ".join(entries)
 
                 for theme in ctx.input.context.themes:
-                    if theme.document != None:
-                        if theme.document in document_keywords:
-                            document_keywords[theme.document].append(theme.value)
-                        else:
-                            document_keywords[theme.document] = [theme.value]
+                    if theme.documents != None:
+                        for doc in theme.documents:
+                            if doc in document_keywords:
+                                document_keywords[doc].append(theme.value)
+                            else:
+                                document_keywords[doc] = [theme.value]
 
         except:
             pass
