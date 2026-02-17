@@ -46,7 +46,7 @@ def __keyword_tagging_chain(ctx: AireChatContext) -> list[AireKeyword] | None:
         keywords: str = Field(..., 
                         description="Comma separated list of keywords describing the topic of the conversation. Empty if no suitable keywords are found.") # type: ignore
 
-    llm = DefaultModel(temperature=0.0).with_structured_output(Keywords)
+    llm = DefaultModel(temperature=0.0, max_tokens=256).with_structured_output(Keywords)
     chain = prompt | llm
 
     try:

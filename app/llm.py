@@ -19,14 +19,14 @@ LLM_DEFAULT_MODEL_NAME = os.getenv("LLM_DEFAULT_MODEL_NAME", "gpt-4o")
 LLM_CHAT_MODEL_NAME = os.getenv("LLM_CHAT_MODEL_NAME", "gpt-4o")
 LLM_EMBEDDINGS_MODEL_NAME = os.getenv("LLM_EMBEDDINGS_MODEL_NAME", "text-embedding-ada-002")
 
-def DefaultModel(temperature: float = 0.0, max_tokens: int = 256):
+def DefaultModel(temperature: float = 0.0, max_tokens: int | None = None):
     """Model for general tasks such as summarization and tagging"""
     if AZURE_OPENAI:
         return AzureChatOpenAI(
             azure_deployment=AZURE_DEFAULT_DEPLOYMENT_NAME,
             model=LLM_DEFAULT_MODEL_NAME,
             temperature=temperature,
-            max_tokens=max_tokens
+            max_completion_tokens=max_tokens
         )
     else:
         return ChatOpenAI(
