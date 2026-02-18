@@ -8,7 +8,7 @@ from langchain_core.runnables import RunnableLambda
 from aire.models.chat import AireChatContext
 from llm import DefaultModel
 
-llm_summary = DefaultModel(temperature=0, max_tokens=256)
+llm_summary = DefaultModel(temperature=0, max_tokens=None)
 summary_prompt = """Progressively summarize the lines of conversation provided.
 
 Conversation:

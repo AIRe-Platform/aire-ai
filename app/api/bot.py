@@ -23,6 +23,8 @@ from langserve.serialization import WellKnownLCSerializer
 from langchain_core.messages.tool import ToolCall, ToolCallChunk
 from sse_starlette import EventSourceResponse;
 
+from openai import APIStatusError;
+
 serializer = WellKnownLCSerializer()
 
 @app.get("/bot", 
@@ -146,6 +148,15 @@ async def stream_bot(bot_name: str,
                     }
 
             yield { "event": AireEvent.End.value }
+        except APIStatusError as apiError:
+            print(f"API Error: {apiError}")
+            yield {
+                "event": AireEvent.Error.value,
+                "data": json.dumps({ 
+                    "status_code": apiError.status_code, 
+                    "message": "API Error"
+                })
+            }
         except BaseException as ex:
             print(f"Error: {ex}")
             yield {
