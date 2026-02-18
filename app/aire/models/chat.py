@@ -2,11 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-
 from langserve.schema import CustomUserType
 from langchain_core.messages import ChatMessage
 from pydantic import BaseModel
-from enum import Enum
 from typing import Optional, Sequence
 from .user import AireUser
 from .documents import AireDocumentMetadata
@@ -14,19 +12,6 @@ from .questionnaire import AireQuestionnaireAnswer
 from .platform import AirePlatformConfiguration
 from .auth import AireAuth
 from .keyword import AireKeyword
-
-class AireChatEvent(str, Enum):
-    """Chatbot event types"""
-    Message = "message"
-    Error = "error"
-    Metadata = "metadata"
-    Keywords = "keywords"
-    TokenCount = "token-count"
-    Reminder = "reminder"
-    Questionnaire = "questionnaire"
-    ContentSuggestions = "content-suggestions"
-    DocumentResults = "document-results"
-    End = "end"
 
 
 class AireChatMessage(BaseModel):
@@ -37,6 +22,7 @@ class AireChatMessage(BaseModel):
     rating: Optional[int] = None
     question: Optional[AireQuestionnaireAnswer] = None
     theme: Optional[str] = None
+    agent: Optional[str] = None
 
 
 class AireChatInputContext(BaseModel):
@@ -48,6 +34,7 @@ class AireChatInputContext(BaseModel):
 
 class AireChatInput(BaseModel):
     """This class containst the information about a chat"""
+    agent: Optional[str] = None
     chat_id: Optional[str] = None
     chat: list[AireChatMessage]
     context: Optional[AireChatInputContext] = None
@@ -75,6 +62,12 @@ class AireChatContext(CustomUserType):
     allow_custom_prompt: bool = False
     platform: AirePlatformConfiguration
     auth: AireAuth
+
+    def current_agent(self):
+        if self.input.agent != None:
+            return next(iter([x for x in self.platform.agents if x.name == self.input.agent]), None)
+        else:
+            return next(iter(self.platform.agents), None)
 
 
 class AireChatAbstract(BaseModel):

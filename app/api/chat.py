@@ -5,11 +5,19 @@
 
 from server import app
 from errors import *
-from utils.auth import *;
+from utils.auth import *
+from utils.token_utils import count_tokens
 
-from bot.default import *
-from bot.chains.chat_abstract import ChatAbstractChain, ChatSummaryChain, ChatKeywordChain
-from aire.models.chat import *
+from bot.default import llm as DefaultLLM
+from bot.chains.chat_abstract import (
+    ChatAbstractChain, ChatSummaryChain, ChatKeywordChain
+)
+from aire.models.chat import (
+    AireChatInput, 
+    AireChatAbstract, 
+    AireChatContext,
+    AireChatStats
+)
 from aire.services.platform import get_platform_config
 
 from typing import Annotated
@@ -28,10 +36,11 @@ async def chat_abstract(
 
     if auth == None:
         raise UNAUTH_EXCEPTION
-    if not AireScope.ChatSummary in auth.scopes:
+    if not AireScope.ChatSummary in auth.scopes or auth.platform == None:
         raise FORBIDDEN_EXCEPTION
     
-    context = AireChatContext(input=input, platform=get_platform_config(), auth=auth)
+    platform = get_platform_config(auth.platform)
+    context = AireChatContext(input=input, platform=platform, auth=auth)
     return ChatAbstractChain.invoke(context)
 
 
@@ -46,10 +55,11 @@ async def chat_summary(
 
     if auth == None:
         raise UNAUTH_EXCEPTION
-    if not AireScope.ChatSummary in auth.scopes:
+    if not AireScope.ChatSummary in auth.scopes or auth.platform == None:
         raise FORBIDDEN_EXCEPTION
     
-    context = AireChatContext(input=input, platform=get_platform_config(), auth=auth)
+    platform = get_platform_config(auth.platform)
+    context = AireChatContext(input=input, platform=platform, auth=auth)
     return ChatSummaryChain.invoke(context)
 
 
@@ -66,10 +76,11 @@ async def chat_keywords(
     
     if auth == None:
         raise UNAUTH_EXCEPTION
-    if not AireScope.ChatSummary in auth.scopes:
+    if not AireScope.ChatSummary in auth.scopes or auth.platform == None:
         raise FORBIDDEN_EXCEPTION
     
-    context = AireChatContext(input=input, regen=regen, platform=get_platform_config(), auth=auth)
+    platform = get_platform_config(auth.platform)
+    context = AireChatContext(input=input, regen=regen, platform=platform, auth=auth)
     keywords = ChatKeywordChain.invoke(context)
     return list(map(lambda x: x.value, keywords or []))
 
@@ -91,7 +102,7 @@ async def chat_tokens(
     
     match bot_name:
         case "default":
-            return AireChatStats(token_count=count_tokens(input))
+            return AireChatStats(token_count=count_tokens(DefaultLLM.model_name, input))
         case _:
             return Response(status_code=status.HTTP_404_NOT_FOUND)
      

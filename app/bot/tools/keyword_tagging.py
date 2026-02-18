@@ -3,7 +3,8 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from langchain_core.messages.tool import ToolCall
-from aire.models.chat import AireChatContext, AireChatEvent
+from aire.models.chat import AireChatContext
+from aire.models.events import AireEvent, AireKeywordEvent
 from ..chains.chat_keywords import ChatKeywordChain
 from .callable_tool import CallableTool
 
@@ -23,7 +24,7 @@ __tool_description = {
     }
 }
 
-def __gen_keywords(ctx: AireChatContext, call: ToolCall) -> list[str] | None:
+def __tag_keywords(ctx: AireChatContext, call: ToolCall) -> AireKeywordEvent | None:
     if call.get("name") != __tool_name:
         return None
     
@@ -32,12 +33,13 @@ def __gen_keywords(ctx: AireChatContext, call: ToolCall) -> list[str] | None:
     if results == None:
         return None
     
-    return list(map(lambda x: x.value, results))
+    return AireKeywordEvent(themes=results)
 
 
 KeywordTaggingTool = CallableTool(
     name=__tool_name,
     descriptor=__tool_description,
-    event_type=AireChatEvent.Keywords,
-    handler=__gen_keywords
+    event_type=AireEvent.Keywords,
+    prompt_gen=None,
+    handler=__tag_keywords
 )

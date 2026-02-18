@@ -4,10 +4,13 @@
 
 from langchain_core.messages.tool import ToolCall
 from aire.models.auth import AireScope
-from aire.models.chat import AireChatContext, AireChatEvent
-from aire.models.questionnaire import AireQuestionnaireEvent
+from aire.models.chat import AireChatContext
+from aire.models.events import AireEvent, AireQuestionnaireEvent
+from aire.models.questionnaire import AireQuestionnaireMetadata
+from aire.models.platform import AireModuleSetting, AireModuleType
 from bot.vector_stores import QuestionnaireVectorStore
 from .callable_tool import CallableTool
+from utils.module_settings import get_module_setting_int
 
 __tool_name = "query_questionnaires"
 __tool_description = {
@@ -43,17 +46,36 @@ def __query_questionnaires(ctx: AireChatContext, call: ToolCall) -> AireQuestion
 
     args = call.get("args")
     search = args.get("search")
+    agent = ctx.current_agent()
 
-    if search == None:
+    if search == None or agent == None:
         return None
     
-    results = QuestionnaireVectorStore().query(search, 8)
-    return AireQuestionnaireEvent(search=search, results=results)
+    memories = ctx.platform.get_agent_memories(agent)
+    questionnaires: list[AireQuestionnaireMetadata] = []
+    threshold = get_module_setting_int(ctx, AireModuleSetting.VectorSearchRelevanceThreshold, None)
+    
+    for svc in memories:
+        if svc.settings != None:
+            database = svc.settings.get(AireModuleSetting.VectorDatabaseName, None)
+            threshold = svc.settings.get(AireModuleSetting.VectorSearchRelevanceThreshold, threshold)
+
+            if isinstance(threshold, int):
+                relevance = threshold / 100.0
+            else:
+                relevance = 0.75
+
+            if isinstance(database, str):
+                results = QuestionnaireVectorStore(database).query(search, 8, relevance)
+                questionnaires.extend(results)
+
+    return AireQuestionnaireEvent(search=search, results=questionnaires)
 
 
 QuestionnaireQueryTool = CallableTool(
     name=__tool_name,
     descriptor=__tool_description,
-    event_type=AireChatEvent.Questionnaire,
+    event_type=AireEvent.Questionnaire,
+    prompt_gen=None,
     handler=__query_questionnaires
 )

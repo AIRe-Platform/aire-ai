@@ -10,5 +10,5 @@ class AireKeyword(BaseModel):
     """Keyword"""
     value: str
     prompt: Optional[str] = None
-    document: Optional[str] = None
+    documents: Optional[list[str]] = None
     
