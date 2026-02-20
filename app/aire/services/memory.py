@@ -47,7 +47,8 @@ def create_reminder(svc: AireModule, auth: AireAuth, reminder: AireReminder) -> 
     headers = {
         "Authorization": "Bearer " + (auth.token or ""),
         "Accept": "application/json",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Aire-Service-Target": svc.id
     }
     response = requests.post(url=url, headers=headers, json=reminder.model_dump())
     if response.status_code == 200:
