@@ -7,7 +7,6 @@ from server import app
 from errors import *
 from utils.auth import *
 from utils.current_user import get_current_user, get_platform_config
-from utils.token_utils import count_tokens
 
 from bot.default import *
 from bot.chains.chat_keywords import ChatKeywordChain
@@ -76,7 +75,6 @@ async def stream_bot(bot_name: str,
     async def stream() -> AsyncIterator[dict]:
         try:
             output = ""
-            input_token_count = count_tokens(llm.model_name, input)
             gen_keywords = len(input.to_chat_messages()) > 4
             tool_called = False
             iter = bot.astream(context)
@@ -84,6 +82,17 @@ async def stream_bot(bot_name: str,
 
             async for chunk in iter:
                 buffer = serializer.dumpd(chunk)
+
+                if chunk.usage_metadata != None:
+                    token_stats = AireTokenStatsEvent(
+                        total_tokens=chunk.usage_metadata.get("total_tokens", None),
+                        input_tokens=chunk.usage_metadata.get("input_tokens", None),
+                        output_tokens=chunk.usage_metadata.get("output_tokens", None)
+                    )
+                    yield { 
+                        "event": AireEvent.TokenStats.value,
+                        "data": serializer.dumps(token_stats).decode("utf-8")
+                    }
 
                 if(buffer["content"]):
                     output += buffer["content"]
@@ -127,16 +136,6 @@ async def stream_bot(bot_name: str,
                             "event": tool.event_type.value, 
                             "data": serializer.dumps(call_result).decode("utf-8")
                         }
-
-            bot_message = AireChatMessage(role="assistant", content=output)
-            bot_input = AireChatInput(chat_id=None, chat=[bot_message], context=None)
-            output_token_count = count_tokens(llm.model_name, bot_input)
-            
-            stats = AireStatsEvent(token_count=output_token_count + input_token_count)
-            yield { 
-                "event": AireEvent.Stats.value,
-                "data": serializer.dumps(stats).decode("utf-8")
-            }
 
             if gen_keywords:
                 keywords = await ChatKeywordChain.ainvoke(context)
