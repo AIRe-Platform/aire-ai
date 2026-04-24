@@ -64,7 +64,7 @@ async def stream_bot(bot_name: str,
         case _:
             return Response(status_code=status.HTTP_404_NOT_FOUND)
         
-    allow_prompt_override = AireScope.ExperimentalCustomPrompt in auth.scopes
+    allow_prompt_override = AireScope.FeatureCustomPrompt in auth.scopes
     context = AireChatContext(
         input=input, 
         user=user, 
