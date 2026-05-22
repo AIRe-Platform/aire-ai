@@ -4,6 +4,7 @@
 
 from pydantic import BaseModel
 from enum import Enum
+from typing import Optional
 from .content import AireContentMetadata
 from .documents import AireDocumentSearchResult
 from .questionnaire import AireQuestionnaireMetadata
@@ -14,7 +15,7 @@ class AireEvent(str, Enum):
     """Chatbot event types"""
     Message = "message"
     Keywords = "keywords"
-    Stats = "stats"
+    TokenStats = "token-stats"
     Reminder = "reminder"
     Questionnaire = "questionnaire"
     ContentSuggestions = "content-suggestions"
@@ -31,9 +32,11 @@ class AireKeywordEvent(BaseModel):
     """Theme/keyword tagging event"""
     themes: list[AireKeyword]
 
-class AireStatsEvent(BaseModel):
-    """Message stats event"""
-    token_count: int
+class AireTokenStatsEvent(BaseModel):
+    """Token statistics event"""
+    total_tokens: Optional[int]
+    input_tokens: Optional[int]
+    output_tokens: Optional[int]
 
 class AireReminderEvent(BaseModel):
     """Reminder event"""

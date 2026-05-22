@@ -31,7 +31,7 @@ class AireScope(str, Enum):
     EventWrite = "event-write"
     EventDelete = "event-delete"
 
-    ExperimentalCustomPrompt = "experimental-custom-prompt"
+    FeatureCustomPrompt = "feat-custom-prompt"
 
 
 class AireAuth(BaseModel):
