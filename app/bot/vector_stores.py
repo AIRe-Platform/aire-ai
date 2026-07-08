@@ -159,12 +159,13 @@ class QuestionnaireVectorStore(BaseVectorStore):
 
         # Crawl through the survey, pick keywords and other queryable properties
         keywords = questionnaire.keywords
-        for section in questionnaire.content:
-            if section.keywords != None:
-                keywords.extend(section.keywords)
-            for question in section.questions:
-                if question.keywords != None:
-                    keywords.extend(question.keywords)
+        if questionnaire.content != None:
+            for section in questionnaire.content:
+                if section.keywords != None:
+                    keywords.extend(section.keywords)
+                for question in section.questions:
+                    if question.keywords != None:
+                        keywords.extend(question.keywords)
 
         keywords.append(questionnaire.name)
         keywords = list(set(keywords))
