@@ -44,6 +44,7 @@ def __content_query(ctx: AireChatContext, call: ToolCall) -> AireContentEvent | 
     
     args = call.get("args")
     search = args.get("search")
+    lang = args.get("lang")
     agent = ctx.current_agent()
 
     if search == None or agent == None:
@@ -64,7 +65,7 @@ def __content_query(ctx: AireChatContext, call: ToolCall) -> AireContentEvent | 
                 relevance = 0.75
 
             if isinstance(database, str):
-                results = ContentVectorStore(database).query(search, 4, relevance)
+                results = ContentVectorStore(database).query(search, lang, 4, relevance)
                 content.extend(results)
 
     return AireContentEvent(search=search, results=content)

@@ -45,6 +45,7 @@ async def query_document(
     is_service: Annotated[bool, Depends(check_service_key)],
     database: str,
     query: Annotated[str | None, Query(description="Query")] = None,
+    lang: Annotated[str | None, Query(description="Language")] = None,
     relevance: Annotated[float, Query()] = 0):
 
     if not is_service:
@@ -54,7 +55,7 @@ async def query_document(
         raise BAD_REQUEST_EXCEPTION
 
     store = DocumentVectorStore(database)
-    results = store.query(query, min_relevance=relevance)
+    results = store.query(query, lang, min_relevance=relevance)
     return DocumentQueryResponse(results=results)
 
 @app.get("/embeddings/{database}/document/{id}",
@@ -175,6 +176,7 @@ async def query_questionnaire(
     is_service: Annotated[bool, Depends(check_service_key)],
     database: str,
     query: Annotated[str | None, Query()] = None,
+    lang: Annotated[str | None, Query()] = None,
     relevance: Annotated[float, Query()] = 0):
 
     if not is_service:
@@ -184,7 +186,7 @@ async def query_questionnaire(
         raise BAD_REQUEST_EXCEPTION
     
     store = QuestionnaireVectorStore(database)
-    results = store.query_keywords(query.split(","), relevance)
+    results = store.query_keywords(query.split(","), lang, relevance)
     return QuestionnaireQueryResponse(results=results)
 
 
@@ -238,6 +240,7 @@ async def query_content(
     is_service: Annotated[bool, Depends(check_service_key)],
     database: str,
     query: Annotated[str | None, Query()] = None,
+    lang: Annotated[str | None, Query()] = None,
     relevance: Annotated[float, Query()] = 0):
 
     if not is_service:
@@ -247,7 +250,7 @@ async def query_content(
         raise BAD_REQUEST_EXCEPTION
     
     store = ContentVectorStore(database)
-    results = store.query(query, min_relevance=relevance)
+    results = store.query(query, lang, min_relevance=relevance)
     return ContentQueryResponse(results=results)
 
 
