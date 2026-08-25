@@ -2,18 +2,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-
 import uuid
 from datetime import datetime, timezone
 from langchain_core.runnables import RunnableLambda
 from langchain_core.prompts import PromptTemplate
 from aire.models.questionnaire import *
+from utils.auth import AireAuth
 from llm import DefaultModel
 
 summarizy_prompt_template = """
 Please summarize the following facts:
 {text}
 """
+
+class QuestionnaireChainInput(BaseModel):
+    req: AireQuestionnaireProcessingRequest
+    auth: AireAuth
 
 def __build_prompt(item: AireQuestionnaireAnswer):
     answer = item.answer
@@ -28,8 +32,8 @@ def __build_prompt(item: AireQuestionnaireAnswer):
     else:
         return ""
 
-def __process_questionnaire(input: AireQuestionnaireProcessingRequest) -> AireQuestionnaireResult:
-    prompts_to_process = filter(lambda x: x.prompt != None and x.answer != None, input.answers)
+def __process_questionnaire(input: QuestionnaireChainInput) -> AireQuestionnaireResult:
+    prompts_to_process = filter(lambda x: x.prompt != None and x.answer != None, input.req.answers)
     prompts = list(map(__build_prompt, prompts_to_process))
     llm = DefaultModel(temperature=0.0)
     summary = None
@@ -45,11 +49,13 @@ def __process_questionnaire(input: AireQuestionnaireProcessingRequest) -> AireQu
 
     return AireQuestionnaireResult(
         id=str(uuid.uuid4()),
-        questionnaire_id=input.questionnaire_id, 
+        questionnaire_id=input.req.questionnaire_id, 
         timestamp=datetime.now(timezone.utc),
-        answers=input.answers,
+        answers=input.req.answers,
         summary=summary,
-        prompts=prompts)
+        prompts=prompts,
+        user_id=input.auth.subject,
+        privacy=input.req.privacy)
 
 
 ProcessQuestionnaireChain = RunnableLambda(__process_questionnaire)

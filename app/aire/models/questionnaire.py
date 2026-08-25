@@ -18,6 +18,13 @@ class AireQuestionnaireOptionType(str, Enum):
     Content = "content"
 
 
+class AireQuestionnairePrivacy(str, Enum):
+    """Questionnaire privacy level"""
+    Private = "private"
+    Anonymous = "anonymous"
+    Public = "public"
+
+
 class AireQuestionnaireOption(BaseModel):
     """Questionnaire option base class"""
     pass
@@ -98,11 +105,14 @@ class AireQuestionnaireResult(BaseModel):
     answers: list[AireQuestionnaireAnswer]
     summary: str
     prompts: Optional[list[str]] = None
+    user_id: Optional[str] = None
+    privacy: Optional[AireQuestionnairePrivacy] = None
 
 
 class AireQuestionnaireProcessingRequest(BaseModel):
     """Request to process questionnaire results"""
     questionnaire_id: str
+    privacy: Optional[AireQuestionnairePrivacy] = None
     answers: list[AireQuestionnaireAnswer]
 
 
