@@ -10,13 +10,13 @@ from langchain_openai.chat_models import AzureChatOpenAI, ChatOpenAI
 AZURE_OPENAI = os.getenv("OPENAI_API_TYPE") == "azure"
 
 # Azure deployments
-AZURE_DEFAULT_DEPLOYMENT_NAME = os.getenv("AZURE_DEFAULT_DEPLOYMENT", "gpt-4o")
-AZURE_CHAT_DEPLOYMENT_NAME = os.getenv("AZURE_CHAT_DEPLOYMENT", "gpt-4o")
-AZURE_EMBEDDINGS_DEPLOYMENT_NAME = os.getenv("AZURE_EMBEDDINGS_DEPLOYMENT_NAME", "embed")
+AZURE_DEFAULT_DEPLOYMENT_NAME = os.getenv("AZURE_DEFAULT_DEPLOYMENT", "gpt-5.4")
+AZURE_CHAT_DEPLOYMENT_NAME = os.getenv("AZURE_CHAT_DEPLOYMENT", "gpt-5.4")
+AZURE_EMBEDDINGS_DEPLOYMENT_NAME = os.getenv("AZURE_EMBEDDINGS_DEPLOYMENT", "embed")
 
 # Models
-LLM_DEFAULT_MODEL_NAME = os.getenv("LLM_DEFAULT_MODEL_NAME", "gpt-4o")
-LLM_CHAT_MODEL_NAME = os.getenv("LLM_CHAT_MODEL_NAME", "gpt-4o")
+LLM_DEFAULT_MODEL_NAME = os.getenv("LLM_DEFAULT_MODEL_NAME", "gpt-5.4")
+LLM_CHAT_MODEL_NAME = os.getenv("LLM_CHAT_MODEL_NAME", "gpt-5.4")
 LLM_EMBEDDINGS_MODEL_NAME = os.getenv("LLM_EMBEDDINGS_MODEL_NAME", "text-embedding-ada-002")
 
 def DefaultModel(temperature: float = 0.0, max_tokens: int | None = None):

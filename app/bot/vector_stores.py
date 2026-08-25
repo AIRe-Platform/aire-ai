@@ -131,8 +131,13 @@ class DocumentVectorStore(BaseVectorStore):
         loader = UnstructuredODTLoader(filepath)
         return self.add_file(loader, filepath, metadata)
     
-    def query(self, search: str, max_items: int = 8, min_relevance: float = 0.0) -> list[AireDocumentSearchResult]:
-        results = self.similarity_search_by_relevance(search, max_items)
+    def query(self, search: str, lang: str | None, max_items: int = 8, min_relevance: float = 0.0) -> list[AireDocumentSearchResult]:
+        if lang != None:
+            prefilter = PreFilter(conditions=[Condition(property="metadata.lang", operator="$eq", value=lang)])
+        else:
+            prefilter = None
+    
+        results = self.similarity_search_by_relevance(search, max_items, prefilter)
 
         if min_relevance > 0.0:
             results = filter(lambda x: x[1] >= min_relevance, results)
@@ -159,12 +164,13 @@ class QuestionnaireVectorStore(BaseVectorStore):
 
         # Crawl through the survey, pick keywords and other queryable properties
         keywords = questionnaire.keywords
-        for section in questionnaire.content:
-            if section.keywords != None:
-                keywords.extend(section.keywords)
-            for question in section.questions:
-                if question.keywords != None:
-                    keywords.extend(question.keywords)
+        if questionnaire.content != None:
+            for section in questionnaire.content:
+                if section.keywords != None:
+                    keywords.extend(section.keywords)
+                for question in section.questions:
+                    if question.keywords != None:
+                        keywords.extend(question.keywords)
 
         keywords.append(questionnaire.name)
         keywords = list(set(keywords))
@@ -183,14 +189,19 @@ class QuestionnaireVectorStore(BaseVectorStore):
             raise RuntimeError("Unexpected count of IDs")
         return ids[0]
 
-    def query_keywords(self, keywords: list[str], min_relevance: float = 0.0) -> list[AireQuestionnaireMetadata]:
+    def query_keywords(self, keywords: list[str], lang: str | None, min_relevance: float = 0.0) -> list[AireQuestionnaireMetadata]:
         # Perform similarity search with the keywords and retrieve document
         query = " ".join(list(set(keywords)))
-        return self.query(query, min_relevance=min_relevance)
+        return self.query(query, lang, min_relevance=min_relevance)
 
     
-    def query(self, search: str, max_items: int = 8, min_relevance: float = 0.0) -> list[AireQuestionnaireMetadata]:
-        results = self.similarity_search_by_relevance(search, max_items)
+    def query(self, search: str, lang: str | None, max_items: int = 8, min_relevance: float = 0.0) -> list[AireQuestionnaireMetadata]:
+        if lang != None:
+            prefilter = PreFilter(conditions=[Condition(property="metadata.language", operator="$eq", value=lang)])
+        else:
+            prefilter = None
+    
+        results = self.similarity_search_by_relevance(search, max_items, prefilter)
 
         if min_relevance > 0.0:
             results = filter(lambda x: x[1] >= min_relevance, results)
@@ -233,14 +244,20 @@ class ContentVectorStore(BaseVectorStore):
         doc.metadata = {
             "source": content.id,
             "type": content.type,
+            "language": content.lang,
             "keywords": keywords
         }
 
         ids = self.add_documents([doc])
         return ids[0]
 
-    def query(self, search: str, max_items: int = 8, min_relevance: float = 0.0) -> list[AireContentMetadata]:
-        results = self.similarity_search_by_relevance(search, max_items)
+    def query(self, search: str, lang: str | None, max_items: int = 8, min_relevance: float = 0.0) -> list[AireContentMetadata]:
+        if lang != None:
+            prefilter = PreFilter(conditions=[Condition(property="metadata.language", operator="$eq", value=lang)])
+        else:
+            prefilter = None
+
+        results = self.similarity_search_by_relevance(search, max_items, prefilter)
 
         if min_relevance > 0.0:
             results = filter(lambda x: x[1] >= min_relevance, results)
