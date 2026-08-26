@@ -48,6 +48,7 @@ def __document_search(ctx: AireChatContext, call: ToolCall) -> AireDocumentResul
     
     args = call.get("args")
     search = args.get("search")
+    lang = args.get("lang")
     document_id = args.get("document_id")
     agent = ctx.current_agent()
 
@@ -71,7 +72,7 @@ def __document_search(ctx: AireChatContext, call: ToolCall) -> AireDocumentResul
             if isinstance(database, str):
                 store = DocumentVectorStore(database)
                 if document_id == None:
-                    results = store.query(search, 4, relevance)
+                    results = store.query(search, lang, 4, relevance)
                 else:
                     results = store.query_from_doc(document_id, search, 2, relevance)
                 documents.extend(results)

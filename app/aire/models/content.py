@@ -21,6 +21,7 @@ class AireContent(BaseModel):
     type: AireContentType
     name: Optional[str] = None
     description: Optional[str] = None
+    lang: Optional[str] = None
     hidden: Optional[bool] = None
     url: Optional[str] = None
     thumbnail_url: Optional[str] = None

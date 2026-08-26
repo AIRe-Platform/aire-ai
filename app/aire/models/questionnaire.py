@@ -15,6 +15,14 @@ class AireQuestionnaireOptionType(str, Enum):
     Checkbox = "checkbox"
     Open = "open"
     Number = "number"
+    Content = "content"
+
+
+class AireQuestionnairePrivacy(str, Enum):
+    """Questionnaire privacy level"""
+    Private = "private"
+    Anonymous = "anonymous"
+    Public = "public"
 
 
 class AireQuestionnaireOption(BaseModel):
@@ -74,7 +82,8 @@ class AireQuestionnaire(BaseModel):
     lang: str
     modified: Optional[datetime] = None
     keywords: list[str]
-    content: list[AireQuestionnaireSection]
+    content: Optional[list[AireQuestionnaireSection]]
+    external_url: Optional[str]
 
 
 class AireQuestionnaireAnswer(BaseModel):
@@ -96,11 +105,14 @@ class AireQuestionnaireResult(BaseModel):
     answers: list[AireQuestionnaireAnswer]
     summary: str
     prompts: Optional[list[str]] = None
+    user_id: Optional[str] = None
+    privacy: Optional[AireQuestionnairePrivacy] = None
 
 
 class AireQuestionnaireProcessingRequest(BaseModel):
     """Request to process questionnaire results"""
     questionnaire_id: str
+    privacy: Optional[AireQuestionnairePrivacy] = None
     answers: list[AireQuestionnaireAnswer]
 
 

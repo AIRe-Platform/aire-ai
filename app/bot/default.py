@@ -46,6 +46,9 @@ def __messages(ctx: AireChatContext):
 
 def __default_bot(ctx: AireChatContext):
     llm_tools = create_tool_bindings(ctx)
-    return RunnableLambda(__messages) | llm.bind_tools(llm_tools)
+    if ctx.input.disable_tools == True:
+        return RunnableLambda(__messages) | llm
+    else:
+        return RunnableLambda(__messages) | llm.bind_tools(llm_tools)
 
 DefaultBot = RunnableLambda(__default_bot)

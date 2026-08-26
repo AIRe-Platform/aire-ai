@@ -46,6 +46,7 @@ def __query_questionnaires(ctx: AireChatContext, call: ToolCall) -> AireQuestion
 
     args = call.get("args")
     search = args.get("search")
+    lang = args.get("lang")
     agent = ctx.current_agent()
 
     if search == None or agent == None:
@@ -66,7 +67,7 @@ def __query_questionnaires(ctx: AireChatContext, call: ToolCall) -> AireQuestion
                 relevance = 0.75
 
             if isinstance(database, str):
-                results = QuestionnaireVectorStore(database).query(search, 8, relevance)
+                results = QuestionnaireVectorStore(database).query(search, lang, 8, relevance)
                 questionnaires.extend(results)
 
     return AireQuestionnaireEvent(search=search, results=questionnaires)

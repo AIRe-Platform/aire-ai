@@ -38,6 +38,7 @@ class AireChatInput(BaseModel):
     chat_id: Optional[str] = None
     chat: list[AireChatMessage]
     context: Optional[AireChatInputContext] = None
+    disable_tools: Optional[bool] = None
 
     def to_chat_messages(self) -> Sequence[ChatMessage]:
         messages = filter(lambda msg: msg.content != None, self.chat)

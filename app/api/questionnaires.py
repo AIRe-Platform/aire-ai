@@ -8,7 +8,7 @@ from errors import *
 from utils.auth import *
 
 from aire.models.questionnaire import *
-from bot.chains.questionnaire import ProcessQuestionnaireChain
+from bot.chains.questionnaire import ProcessQuestionnaireChain, QuestionnaireChainInput
 
 from typing import Annotated
 from fastapi import Depends, Body
@@ -17,15 +17,14 @@ from fastapi import Depends, Body
           description="Process questionnaire results",
           tags=["Questionnaires"])
 async def process_questionnaire(
-    is_service: Annotated[bool, Depends(check_service_key)],
     auth: Annotated[AireAuth | None, Depends(verify_token)],
-    results: Annotated[AireQuestionnaireProcessingRequest, Body()]
+    request: Annotated[AireQuestionnaireProcessingRequest, Body()]
 ) -> AireQuestionnaireResult:
     
-    if not is_service:
-        if auth == None:
-            raise UNAUTH_EXCEPTION
-        if not AireScope.QuestionnaireRead in auth.scopes:
-            raise FORBIDDEN_EXCEPTION
+    if auth == None:
+        raise UNAUTH_EXCEPTION
+    if not AireScope.QuestionnaireRead in auth.scopes:
+        raise FORBIDDEN_EXCEPTION
         
-    return ProcessQuestionnaireChain.invoke(results)
+    input = QuestionnaireChainInput(req=request, auth=auth)
+    return ProcessQuestionnaireChain.invoke(input)
