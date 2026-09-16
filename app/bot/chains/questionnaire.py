@@ -15,22 +15,31 @@ Please summarize the following facts:
 {text}
 """
 
+question_answer_template = """
+Question: {question}
+Answer: {answer}
+"""
+
 class QuestionnaireChainInput(BaseModel):
     req: AireQuestionnaireProcessingRequest
     auth: AireAuth
 
 def __build_prompt(item: AireQuestionnaireAnswer):
     answer = item.answer
-    if type(answer) is list:
+    if isinstance(answer, list):
         answer = ", ".join(answer)
 
     if item.prompt and item.options:
-        if type(answer) is dict[str, Any]:
-            return item.prompt.format(question=item.question, **answer, **item.options)
-        else:
-            return item.prompt.format(answer=answer, question=item.question, **item.options)
-    else:
-        return ""
+        try:
+            if isinstance(answer, dict):
+                return item.prompt.format(question=item.question, **answer, **item.options)
+            else:
+                return item.prompt.format(answer=answer, question=item.question, **item.options)
+        except:
+            pass
+    
+    # Fallback to default prompt template
+    return question_answer_template.format(question=item.question, answer=answer)
 
 def __process_questionnaire(input: QuestionnaireChainInput) -> AireQuestionnaireResult:
     prompts_to_process = filter(lambda x: x.prompt != None and x.answer != None, input.req.answers)
@@ -44,8 +53,8 @@ def __process_questionnaire(input: QuestionnaireChainInput) -> AireQuestionnaire
         summary_result = summary_chain.invoke({ "text": "\n".join(prompts) })
         summary = summary_result.content
 
-    if summary is not str:
-        summary = "No summary available."
+    if not isinstance(summary, str):
+        summary = str(summary)
 
     return AireQuestionnaireResult(
         id=str(uuid.uuid4()),
