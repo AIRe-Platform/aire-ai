@@ -63,7 +63,7 @@ def __prompt_gen(ctx: AireChatContext) -> str | None:
     agent_template = "Agent(name='{name}', description='{description}')"
 
     current = ctx.current_agent()
-    available = [x for x in ctx.platform.agents if x.name != current]
+    available = [x for x in ctx.platform.agents if current == None or x.name != current.name]
 
     if len(available) == 0:
         return None
