@@ -7,10 +7,9 @@ from aire.models.chat import AireChatContext
 from aire.models.events import AireEvent, AireDocumentResultEvent
 from aire.models.documents import AireDocumentSearchResult
 from aire.models.auth import AireScope
-from aire.models.platform import AireModuleSetting, AireModuleType
+from aire.models.platform import AireModuleSetting
 from bot.vector_stores import DocumentVectorStore
 from .callable_tool import CallableTool
-from utils.module_settings import get_module_setting_int
 
 __tool_name = "search_documents"
 __tool_description = {
@@ -48,26 +47,35 @@ def __document_search(ctx: AireChatContext, call: ToolCall) -> AireDocumentResul
     
     args = call.get("args")
     search = args.get("search")
-    lang = args.get("lang")
     document_id = args.get("document_id")
     agent = ctx.current_agent()
+    lang = None
+    
+    if ctx.user != None:
+        lang = ctx.user.language
 
     if search == None or agent == None:
         return None
     
     documents: list[AireDocumentSearchResult] = []
     memories = ctx.platform.get_agent_memories(agent)
-    threshold = get_module_setting_int(ctx, AireModuleSetting.VectorSearchRelevanceThreshold, None)
 
     for memory in memories:
         if memory.module.settings != None:
             database = memory.module.settings.get(AireModuleSetting.VectorDatabaseName, None)
-            threshold = memory.module.settings.get(AireModuleSetting.VectorSearchRelevanceThreshold, threshold)
+            threshold = memory.module.settings.get(AireModuleSetting.VectorSearchRelevanceThreshold, None)
 
             if isinstance(threshold, int):
-                relevance = threshold / 100.0
-            else:
+                relevance = threshold
+            elif isinstance(threshold, str):
+                relevance = float(threshold)
+            else: # default relevance
                 relevance = 0.75
+
+            # convert possible percentage and clamp relevance
+            if relevance > 1.0:
+                relevance = relevance / 100.0
+            relevance = max(0, min(relevance, 1))
 
             if isinstance(database, str):
                 store = DocumentVectorStore(database)

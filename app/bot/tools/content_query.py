@@ -10,7 +10,6 @@ from aire.models.auth import AireScope
 from aire.models.platform import AireModuleSetting
 from bot.vector_stores import ContentVectorStore
 from .callable_tool import CallableTool
-from utils.module_settings import get_module_setting_int
 
 __tool_name = "query_content"
 __tool_description = {
@@ -44,8 +43,11 @@ def __content_query(ctx: AireChatContext, call: ToolCall) -> AireContentEvent | 
     
     args = call.get("args")
     search = args.get("search")
-    lang = args.get("lang")
     agent = ctx.current_agent()
+    lang = None
+
+    if ctx.user != None:
+        lang = ctx.user.language
 
     if search == None or agent == None:
         return None
