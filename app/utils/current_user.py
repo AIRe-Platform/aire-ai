@@ -15,7 +15,7 @@ def get_current_user(auth: Optional[AireAuth]  = None):
     try:
         if auth != None and auth.token != None and auth.platform != None:
             platform = get_platform_config(auth.platform)
-            return get_user(platform, auth.token)
+            return get_user(platform, auth)
     except BaseException as e:
         print(f"Could not retrieve user data: {e}")
         raise FORBIDDEN_EXCEPTION

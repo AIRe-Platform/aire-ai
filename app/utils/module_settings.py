@@ -11,9 +11,9 @@ MODULE_ID = os.getenv("AIRE_MODULE_ID", "")
 def get_module_setting_str(ctx: AireChatContext, setting: str, default: str | None = None) -> str | None:
     var = default
     try:
-        module = ctx.platform.get_module(AireModuleType.AI, MODULE_ID)
-        if module != None and module.settings != None:
-            value = module.settings.get(setting, default)
+        svc = ctx.platform.get_platform_module(AireModuleType.AI, MODULE_ID)
+        if svc != None and svc.module.settings != None:
+            value = svc.module.settings.get(setting, default)
             if isinstance(value, str):
                 var = value
     except AttributeError:
@@ -23,9 +23,9 @@ def get_module_setting_str(ctx: AireChatContext, setting: str, default: str | No
 def get_module_setting_int(ctx: AireChatContext, setting: str, default: int | None = None) -> int | None:
     var = default
     try:
-        module = ctx.platform.get_module(AireModuleType.AI, MODULE_ID)
-        if module != None and module.settings != None:
-            value = module.settings.get(setting, default)
+        svc = ctx.platform.get_platform_module(AireModuleType.AI, MODULE_ID)
+        if svc != None and svc.module.settings != None:
+            value = svc.module.settings.get(setting, default)
             if isinstance(value, int):
                 var = value
     except AttributeError:
@@ -35,9 +35,9 @@ def get_module_setting_int(ctx: AireChatContext, setting: str, default: int | No
 def get_module_setting_bool(ctx: AireChatContext, setting: str, default: bool | None = None) -> bool | None:
     var = default
     try:
-        module = ctx.platform.get_module(AireModuleType.AI, MODULE_ID)
-        if module != None and module.settings != None:
-            value = module.settings.get(setting, default)
+        svc = ctx.platform.get_platform_module(AireModuleType.AI, MODULE_ID)
+        if svc != None and svc.module.settings != None:
+            value = svc.module.settings.get(setting, default)
             if isinstance(value, bool):
                 var = value
     except AttributeError:

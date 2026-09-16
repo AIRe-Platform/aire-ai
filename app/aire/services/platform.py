@@ -7,7 +7,12 @@ import requests
 import os
 from cachetools import cached, TTLCache
 from cachetools.keys import hashkey
-from ..models.platform import AirePlatformConfiguration
+from ..models.platform import (
+    AirePlatformConfiguration, 
+    AireModuleAccess,
+    AireServiceModule
+)
+from ..models.auth import AireAuth
 
 def hash_key(id: str):
     return hashkey(id)
@@ -33,4 +38,5 @@ def get_platform_config(id: str) -> AirePlatformConfiguration:
         return AirePlatformConfiguration.model_validate(response.json())
     else:
         raise RuntimeError("Failed to request platform configuration")
-    
+
+

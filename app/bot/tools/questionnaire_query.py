@@ -7,7 +7,7 @@ from aire.models.auth import AireScope
 from aire.models.chat import AireChatContext
 from aire.models.events import AireEvent, AireQuestionnaireEvent
 from aire.models.questionnaire import AireQuestionnaireMetadata
-from aire.models.platform import AireModuleSetting, AireModuleType
+from aire.models.platform import AireModuleSetting
 from bot.vector_stores import QuestionnaireVectorStore
 from .callable_tool import CallableTool
 from utils.module_settings import get_module_setting_int
@@ -57,9 +57,9 @@ def __query_questionnaires(ctx: AireChatContext, call: ToolCall) -> AireQuestion
     threshold = get_module_setting_int(ctx, AireModuleSetting.VectorSearchRelevanceThreshold, None)
     
     for svc in memories:
-        if svc.settings != None:
-            database = svc.settings.get(AireModuleSetting.VectorDatabaseName, None)
-            threshold = svc.settings.get(AireModuleSetting.VectorSearchRelevanceThreshold, threshold)
+        if svc.module.settings != None:
+            database = svc.module.settings.get(AireModuleSetting.VectorDatabaseName, None)
+            threshold = svc.module.settings.get(AireModuleSetting.VectorSearchRelevanceThreshold, threshold)
 
             if isinstance(threshold, int):
                 relevance = threshold / 100.0
