@@ -52,17 +52,23 @@ def __content_query(ctx: AireChatContext, call: ToolCall) -> AireContentEvent | 
     
     content: list[AireContentMetadata] = []
     memories = ctx.platform.get_agent_memories(agent)
-    threshold = get_module_setting_int(ctx, AireModuleSetting.VectorSearchRelevanceThreshold, None)
     
     for memory in memories:
         if memory.module.settings != None:
             database = memory.module.settings.get(AireModuleSetting.VectorDatabaseName, None)
-            threshold = memory.module.settings.get(AireModuleSetting.VectorSearchRelevanceThreshold, threshold)
+            threshold = memory.module.settings.get(AireModuleSetting.VectorSearchRelevanceThreshold, None)
 
             if isinstance(threshold, int):
-                relevance = threshold / 100.0
-            else:
+                relevance = threshold
+            elif isinstance(threshold, str):
+                relevance = float(threshold)
+            else: # default relevance
                 relevance = 0.75
+
+            # convert possible percentage and clamp relevance
+            if relevance > 1.0:
+                relevance = relevance / 100.0
+            relevance = max(0, min(relevance, 1))
 
             if isinstance(database, str):
                 results = ContentVectorStore(database).query(search, lang, 4, relevance)
