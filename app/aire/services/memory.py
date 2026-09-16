@@ -13,10 +13,10 @@ from ..models.platform import AireServiceModule
 from ..models.auth import AireAuth;
 from pydantic.type_adapter import TypeAdapter
 
-def keywords_hash_key(svc: AireServiceModule, _: AireAuth):
+def keywords_hash_key(svc: AireServiceModule, _: dict[str,str]):
     return hashkey(svc.module.id + svc.module.endpoint)
 
-cache = TTLCache(maxsize=1, ttl=300)
+cache = TTLCache(maxsize=10, ttl=300)
     
 @cached(cache=cache, key=keywords_hash_key)
 def _get_keywords_cached(svc: AireServiceModule, headers: dict[str,str]) -> list[AireKeyword]:
