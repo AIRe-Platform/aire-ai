@@ -4,8 +4,7 @@
 
 
 import httpx
-from cachetools import cached, TTLCache
-from cachetools.keys import hashkey
+from cachetools import TTLCache
 from .headers import get_svc_headers
 from ..models.keyword import AireKeyword
 from ..models.reminder import AireReminder
@@ -13,13 +12,20 @@ from ..models.platform import AireServiceModule
 from ..models.auth import AireAuth;
 from pydantic.type_adapter import TypeAdapter
 
-def keywords_hash_key(svc: AireServiceModule, _: dict[str,str]):
-    return hashkey(svc.module.id + svc.module.endpoint)
+def cache_key(svc: AireServiceModule):
+    return svc.module.id + svc.module.endpoint
 
-cache = TTLCache(maxsize=10, ttl=300)
-    
-@cached(cache=cache, key=keywords_hash_key)
+cache = TTLCache[str, list[AireKeyword]](maxsize=10, ttl=300)
 async def _get_keywords_async_cached(svc: AireServiceModule, headers: dict[str,str]) -> list[AireKeyword]:
+    result = cache.get(cache_key(svc))
+
+    if result is None:
+        result = await _get_keywords_async(svc, headers)
+        cache[cache_key(svc)] = result
+    
+    return result
+    
+async def _get_keywords_async(svc: AireServiceModule, headers: dict[str,str]) -> list[AireKeyword]:
     url = svc.module.endpoint + "/v1/keywords"
     headers.update({
         "Accept": "application/json"

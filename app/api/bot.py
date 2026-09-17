@@ -7,7 +7,7 @@ from server import app
 from errors import *
 from utils.auth import *
 from utils.current_user import get_current_user_async
-from aire.services.platform import get_platform_config_async
+from aire.services.platform import get_platform_config_async_cached
 
 from bot.default import *
 from bot.chains.chat_keywords import ChatKeywordChain
@@ -66,8 +66,8 @@ async def stream_bot(bot_name: str,
             return Response(status_code=status.HTTP_404_NOT_FOUND)
         
     allow_prompt_override = AireScope.FeatureCustomPrompt in auth.scopes
-    platform_config = await get_platform_config_async(auth.platform)
-    
+    platform_config = await get_platform_config_async_cached(auth.platform)
+
     context = AireChatContext(
         input=input, 
         user=user, 

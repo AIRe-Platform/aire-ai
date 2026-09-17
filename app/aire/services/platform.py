@@ -5,17 +5,22 @@
 
 import os
 import httpx
-from cachetools import cached, TTLCache
-from cachetools.keys import hashkey
+from cachetools import TTLCache
 from ..models.platform import AirePlatformConfiguration
 
-def hash_key(id: str):
-    return hashkey(id)
 
-cache = TTLCache(maxsize=1, ttl=1800)
+cache = TTLCache[str, AirePlatformConfiguration](maxsize=1, ttl=1800)
+async def get_platform_config_async_cached(id: str) -> AirePlatformConfiguration:
+    result = cache.get(id)
 
-@cached(cache=cache, key=hash_key)
-async def get_platform_config_async(id: str) -> AirePlatformConfiguration:
+    if result is None:
+        result = await _get_platform_config_async(id)
+        cache[id] = result
+
+    return result
+
+
+async def _get_platform_config_async(id: str) -> AirePlatformConfiguration:
     base = os.getenv("AIRE_SERVICE_BASE")
     key = os.getenv("AIRE_SERVICE_KEY")
     
