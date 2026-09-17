@@ -26,13 +26,14 @@ from aire.models.documents import AireDocumentSearchResult, AireDocumentMetadata
 from pathlib import Path
 
 AZURE_COSMOS_DB_CONNECTION_STRING = os.getenv("AZURE_COSMOS_DB_CONNECTION_STRING", "")
+cosmos_client = CosmosClient.from_connection_string(AZURE_COSMOS_DB_CONNECTION_STRING)
 
 class BaseVectorStore:
     store: AzureCosmosDBNoSqlVectorSearch
 
     def __init__(self, database: str, collection: str):
         self.store = AzureCosmosDBNoSqlVectorSearch(
-            cosmos_client=CosmosClient.from_connection_string(AZURE_COSMOS_DB_CONNECTION_STRING),
+            cosmos_client=cosmos_client,
             embedding=EmbeddingsModel(),
             database_name=database,
             container_name=collection,
@@ -70,21 +71,21 @@ class BaseVectorStore:
             # }
         )
     
-    def similarity_search(self, query: str, prefilter: Optional[PreFilter] = None):
-        return self.store.similarity_search(query, pre_filter=prefilter)
+    async def similarity_search_async(self, query: str, prefilter: Optional[PreFilter] = None):
+        return await self.store.asimilarity_search(query, pre_filter=prefilter)
     
-    def similarity_search_by_relevance(self, query: str, count: int = 1, prefilter: Optional[PreFilter] = None):
-        results = self.store.similarity_search_with_score(query, count, pre_filter=prefilter)
+    async def similarity_search_by_relevance_async(self, query: str, count: int = 1, prefilter: Optional[PreFilter] = None):
+        results = await self.store.asimilarity_search_with_score(query, count, pre_filter=prefilter)
         results.sort(key=lambda x: x[1], reverse=True)
         return results
 
-    def add_documents(self, docs: list[Document]) -> list[str]:
-        ids = self.store.add_documents(docs)
+    async def add_documents_async(self, docs: list[Document]) -> list[str]:
+        ids = await self.store.aadd_documents(docs)
         return ids
     
-    def remove_document(self, id: str):
+    async def remove_document_async(self, id: str):
         try:
-            self.store.delete([id])
+            await self.store.adelete([id])
         except:
             pass
         
@@ -103,41 +104,41 @@ class DocumentVectorStore(BaseVectorStore):
             content=doc.page_content,
             metadata=AireDocumentMetadata.model_validate(doc.metadata))
     
-    def add_file(self, loader: BaseLoader, filepath: Path, metadata: AireDocumentMetadata | None) -> list[str]:
+    async def add_file_async(self, loader: BaseLoader, filepath: Path, metadata: AireDocumentMetadata | None) -> list[str]:
         docs = loader.load_and_split(self.splitter)
         if metadata == None:
             metadata = AireDocumentMetadata(filename=filepath.name)
         for d in docs:
             d.metadata = metadata.model_dump()
-        return self.add_documents(docs)
+        return await self.add_documents_async(docs)
 
-    def add_pdf(self, filepath: Path, metadata: AireDocumentMetadata | None) -> list[str]:
+    async def add_pdf_async(self, filepath: Path, metadata: AireDocumentMetadata | None) -> list[str]:
         loader = PyPDFLoader(file_path=filepath.as_posix())
-        return self.add_file(loader, filepath, metadata)
+        return await self.add_file_async(loader, filepath, metadata)
 
-    def add_markdown(self, filepath: Path, metadata: AireDocumentMetadata | None) -> list[str]:
+    async def add_markdown_async(self, filepath: Path, metadata: AireDocumentMetadata | None) -> list[str]:
         loader = UnstructuredMarkdownLoader(file_path=filepath.as_posix())
-        return self.add_file(loader, filepath, metadata)
+        return await self.add_file_async(loader, filepath, metadata)
     
-    def add_plain_text(self, filepath: Path, metadata: AireDocumentMetadata | None) -> list[str]:
+    async def add_plain_text_async(self, filepath: Path, metadata: AireDocumentMetadata | None) -> list[str]:
         loader = TextLoader(file_path=filepath, autodetect_encoding=True)
-        return self.add_file(loader, filepath, metadata)
+        return await self.add_file_async(loader, filepath, metadata)
     
-    def add_word_document(self, filepath: Path, metadata: AireDocumentMetadata | None) -> list[str]:
+    async def add_word_document_async(self, filepath: Path, metadata: AireDocumentMetadata | None) -> list[str]:
         loader = UnstructuredWordDocumentLoader(filepath)
-        return self.add_file(loader, filepath, metadata)
+        return await self.add_file_async(loader, filepath, metadata)
     
-    def add_odt_document(self, filepath: Path, metadata: AireDocumentMetadata | None) -> list[str]:
+    async def add_odt_document_async(self, filepath: Path, metadata: AireDocumentMetadata | None) -> list[str]:
         loader = UnstructuredODTLoader(filepath)
-        return self.add_file(loader, filepath, metadata)
+        return await self.add_file_async(loader, filepath, metadata)
     
-    def query(self, search: str, lang: str | None, max_items: int = 8, min_relevance: float = 0.0) -> list[AireDocumentSearchResult]:
+    async def query_async(self, search: str, lang: str | None, max_items: int = 8, min_relevance: float = 0.0) -> list[AireDocumentSearchResult]:
         if lang != None:
             prefilter = PreFilter(conditions=[Condition(property="metadata.lang", operator="$eq", value=lang)])
         else:
             prefilter = None
     
-        results = self.similarity_search_by_relevance(search, max_items, prefilter)
+        results = await self.similarity_search_by_relevance_async(search, max_items, prefilter)
 
         if min_relevance > 0.0:
             results = filter(lambda x: x[1] >= min_relevance, results)
@@ -145,9 +146,9 @@ class DocumentVectorStore(BaseVectorStore):
         documents = list(map(lambda x: self.__convert_document_to_search_result(x[0], x[1]), results))
         return documents
     
-    def query_from_doc(self, source_id: str, search: str, max_items: int = 8, min_relevance: float = 0.0) -> list[AireDocumentSearchResult]:
+    async def query_from_doc_async(self, source_id: str, search: str, max_items: int = 8, min_relevance: float = 0.0) -> list[AireDocumentSearchResult]:
         prefilter = PreFilter(conditions=[Condition(property="metadata.source", operator="$eq", value=source_id)])
-        results = self.similarity_search_by_relevance(search, max_items, prefilter)
+        results = await self.similarity_search_by_relevance_async(search, max_items, prefilter)
 
         if min_relevance > 0.0:
             results = filter(lambda x: x[1] >= min_relevance, results)
@@ -160,7 +161,7 @@ class QuestionnaireVectorStore(BaseVectorStore):
     def __init__(self, database: str):
         super().__init__(database, "questionnaires")
 
-    def add_questionnaire(self, questionnaire: AireQuestionnaire) -> str:
+    async def add_questionnaire_async(self, questionnaire: AireQuestionnaire) -> str:
 
         # Crawl through the survey, pick keywords and other queryable properties
         keywords = questionnaire.keywords
@@ -184,24 +185,24 @@ class QuestionnaireVectorStore(BaseVectorStore):
             "language": questionnaire.lang
         }
 
-        ids = self.add_documents([doc])
+        ids = await self.add_documents_async([doc])
         if len(ids) != 1:
             raise RuntimeError("Unexpected count of IDs")
         return ids[0]
 
-    def query_keywords(self, keywords: list[str], lang: str | None, min_relevance: float = 0.0) -> list[AireQuestionnaireMetadata]:
+    async def query_keywords_async(self, keywords: list[str], lang: str | None, min_relevance: float = 0.0) -> list[AireQuestionnaireMetadata]:
         # Perform similarity search with the keywords and retrieve document
         query = " ".join(list(set(keywords)))
-        return self.query(query, lang, min_relevance=min_relevance)
+        return await self.query_async(query, lang, min_relevance=min_relevance)
 
     
-    def query(self, search: str, lang: str | None, max_items: int = 8, min_relevance: float = 0.0) -> list[AireQuestionnaireMetadata]:
+    async def query_async(self, search: str, lang: str | None, max_items: int = 8, min_relevance: float = 0.0) -> list[AireQuestionnaireMetadata]:
         if lang != None:
             prefilter = PreFilter(conditions=[Condition(property="metadata.language", operator="$eq", value=lang)])
         else:
             prefilter = None
     
-        results = self.similarity_search_by_relevance(search, max_items, prefilter)
+        results = await self.similarity_search_by_relevance_async(search, max_items, prefilter)
 
         if min_relevance > 0.0:
             results = filter(lambda x: x[1] >= min_relevance, results)
@@ -220,7 +221,7 @@ class ContentVectorStore(BaseVectorStore):
     def __init__(self, database: str):
         super().__init__(database, "content")
 
-    def add_content(self, content: AireContent) -> str | None:
+    async def add_content_async(self, content: AireContent) -> str | None:
         embedding = ""
 
         if content.name != None:
@@ -248,16 +249,16 @@ class ContentVectorStore(BaseVectorStore):
             "keywords": keywords
         }
 
-        ids = self.add_documents([doc])
+        ids = await self.add_documents_async([doc])
         return ids[0]
 
-    def query(self, search: str, lang: str | None, max_items: int = 8, min_relevance: float = 0.0) -> list[AireContentMetadata]:
+    async def query_async(self, search: str, lang: str | None, max_items: int = 8, min_relevance: float = 0.0) -> list[AireContentMetadata]:
         if lang != None:
             prefilter = PreFilter(conditions=[Condition(property="metadata.language", operator="$eq", value=lang)])
         else:
             prefilter = None
 
-        results = self.similarity_search_by_relevance(search, max_items, prefilter)
+        results = await self.similarity_search_by_relevance_async(search, max_items, prefilter)
 
         if min_relevance > 0.0:
             results = filter(lambda x: x[1] >= min_relevance, results)

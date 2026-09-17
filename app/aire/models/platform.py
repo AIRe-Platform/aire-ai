@@ -26,14 +26,19 @@ class AireModuleSetting(str, Enum):
     PersonalityPrompt = "personality_prompt"
     VectorSearchRelevanceThreshold = "vector_search_relevance_threshold"
 
+class AireModuleClientCredentials(BaseModel):
+    """Module client credentials"""
+    client_id: Optional[str] = None
+    client_secret: Optional[str] = None
+
 class AireModule(BaseModel):
     """Describes a platform module"""
     id: str
     type: AireModuleType
     endpoint: str
     access: AireModuleAccess
-    token: Optional[str] = None
     settings: Optional[dict[str, str | int | bool]] = None
+    credentials: Optional[AireModuleClientCredentials] = None
 
 class AireService(BaseModel):
     """Describes an external service"""
@@ -45,6 +50,11 @@ class AirePlatform(BaseModel):
     name: str
     modules: dict[AireModuleType, list[AireModule]]
 
+class AireServiceModule(BaseModel):
+    service_name: str
+    external: bool
+    module: AireModule
+
 class AirePlatformConfiguration(BaseModel):
     """Contains the configuration of the AIRe platform"""
     platform: AirePlatform
@@ -52,28 +62,46 @@ class AirePlatformConfiguration(BaseModel):
     settings: Optional[dict] = None
     agents: list[AireAgent]
 
-    def get_default_module(self, type: AireModuleType) -> AireModule | None:
-        return next(iter(self.platform.modules.get(type, [])), None)
+    def get_default_module(self, type: AireModuleType) -> AireServiceModule | None:
+        module = next(iter(self.platform.modules.get(type, [])), None)
+        if module != None:
+            return AireServiceModule(service_name=self.platform.name, external=False, module=module)
+        else:
+            return None
     
-    def get_module(self, type: AireModuleType, id: str) -> AireModule | None:
+    def get_platform_module(self, type: AireModuleType, id: str) -> AireServiceModule | None:
         modules = self.platform.modules.get(type, [])
-        return next(iter([x for x in modules if x.id == id]), None)
+        return next(iter([AireServiceModule(
+            service_name=self.platform.name, 
+            external=False, 
+            module=x
+        ) for x in modules if x.id == id]), None)
 
-    def get_modules(self, type: AireModuleType, include_external: bool) -> list[AireModule]:
-        modules = [x for x in self.platform.modules.get(type, [])]
+    def get_modules(self, type: AireModuleType, include_external: bool) -> list[AireServiceModule]:
+        modules = [
+            AireServiceModule(
+                service_name=self.platform.name, 
+                external=False, 
+                module=x
+            ) for x in self.platform.modules.get(type, [])
+        ]
+
         if include_external:
             for svc in self.services:
                 if svc.modules != None:
-                    extmodules = [x for x in svc.modules if x.type == type]
+                    extmodules = [
+                        AireServiceModule(
+                            service_name=svc.name, 
+                            external=True, 
+                            module=x
+                        ) for x in svc.modules if x.type == type
+                    ]
                     modules.extend(extmodules)
         return modules
 
-    def get_agent_memories(self, agent: AireAgent) -> list[AireModule]:
-        modules = [x for x in self.platform.modules.get(AireModuleType.Memory, []) 
-                   if agent.memories.count(x.id) > 0]
-        for svc in self.services:
-            if svc.modules != None:
-                extmodules = [x for x in svc.modules 
-                              if x.type == AireModuleType.Memory and agent.memories.count(x.id) > 0]
-                modules.extend(extmodules)
+    def get_agent_memories(self, agent: AireAgent) -> list[AireServiceModule]:
+        modules = [
+            x for x in self.get_modules(AireModuleType.Memory, True)
+            if agent.memories.count(x.module.id) > 0
+        ]
         return modules

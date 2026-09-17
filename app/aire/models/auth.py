@@ -19,17 +19,25 @@ class AireScope(str, Enum):
     DocumentWrite = "document-write"
     DocumentDelete = "document-delete"
 
+    KeywordsRead = "keywords-read"
+    KeywordsWrite = "keywords-write"
+    KeywordsDelete = "keywords-delete"
+
     QuestionnaireRead = "questionnaire-read"
     QuestionnaireWrite = "questionnaire-write"
     QuestionnaireDelete = "questionnaire-delete"
 
-    ContentRead = "content-read",
-    ContentWrite = "content-write",
-    ContentDelete = "content-delete",
+    ContentRead = "content-read"
+    ContentWrite = "content-write"
+    ContentDelete = "content-delete"
 
     EventRead = "event-read"
     EventWrite = "event-write"
     EventDelete = "event-delete"
+
+    RemindersRead = "reminder-read"
+    RemindersWrite = "reminder-write"
+    RemindersDelete = "reminder-delete"
 
     FeatureCustomPrompt = "feat-custom-prompt"
 

@@ -3,54 +3,64 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 
-import requests
-import os
-from cachetools import cached, TTLCache
-from cachetools.keys import hashkey
+import httpx
+from cachetools import TTLCache
+from .headers import get_svc_headers
 from ..models.keyword import AireKeyword
 from ..models.reminder import AireReminder
-from ..models.platform import AireModule
+from ..models.platform import AireServiceModule
 from ..models.auth import AireAuth;
 from pydantic.type_adapter import TypeAdapter
 
-def keywords_hash_key(platform: str, svc: AireModule):
-    return hashkey(platform + svc.endpoint)
+def cache_key(svc: AireServiceModule):
+    return svc.module.id + svc.module.endpoint
 
-cache = TTLCache(maxsize=1, ttl=300)
+cache = TTLCache[str, list[AireKeyword]](maxsize=10, ttl=300)
+async def _get_keywords_async_cached(svc: AireServiceModule, headers: dict[str,str]) -> list[AireKeyword]:
+    result = cache.get(cache_key(svc))
 
-@cached(cache=cache, key=keywords_hash_key)
-def get_keywords(platform: str, svc: AireModule) -> list[AireKeyword]:
-    key = os.getenv("AIRE_SERVICE_KEY")
-
-    if key == None:
-        raise RuntimeError("Missing AIRe service configuration")
+    if result is None:
+        result = await _get_keywords_async(svc, headers)
+        cache[cache_key(svc)] = result
     
-    url = svc.endpoint + "/v1/keywords"
-    headers = {
-        "Aire-Service-Key": key,
-        "Aire-Service-Platform": platform,
-        "Aire-Service-Target": svc.id,
+    return result
+    
+async def _get_keywords_async(svc: AireServiceModule, headers: dict[str,str]) -> list[AireKeyword]:
+    url = svc.module.endpoint + "/v1/keywords"
+    headers.update({
         "Accept": "application/json"
-    }
+    })
 
-    response = requests.get(url=url, headers=headers)
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url=url, headers=headers)
+
     if response.status_code == 200:
         adapter = TypeAdapter(list[AireKeyword])
         keywords = adapter.validate_python(response.json())
         return keywords
     else:
-        raise RuntimeError("Failed to get keywords")
-    
+        raise RuntimeError("Failed to query keywords")
 
-def create_reminder(svc: AireModule, auth: AireAuth, reminder: AireReminder) -> AireReminder:
-    url = svc.endpoint + "/v1/reminder"
-    headers = {
-        "Authorization": "Bearer " + (auth.token or ""),
+
+async def get_keywords_async(svc: AireServiceModule, auth: AireAuth) -> list[AireKeyword]:
+    try:
+        headers = get_svc_headers(svc, auth, None)
+        return await _get_keywords_async_cached(svc, headers)
+    except:
+        return []
+
+    
+async def create_reminder_async(svc: AireServiceModule, auth: AireAuth, reminder: AireReminder) -> AireReminder:
+    url = svc.module.endpoint + "/v1/reminder"
+    headers = get_svc_headers(svc, auth, None)
+    headers.update({
         "Accept": "application/json",
         "Content-Type": "application/json",
-        "Aire-Service-Target": svc.id
-    }
-    response = requests.post(url=url, headers=headers, json=reminder.model_dump())
+    })
+
+    async with httpx.AsyncClient() as client:
+        response = await client.post(url=url, headers=headers, json=reminder.model_dump())
+
     if response.status_code == 200:
         return AireReminder.model_validate(response.json())
     else:

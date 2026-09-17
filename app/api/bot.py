@@ -6,7 +6,8 @@
 from server import app
 from errors import *
 from utils.auth import *
-from utils.current_user import get_current_user, get_platform_config
+from utils.current_user import get_current_user_async
+from aire.services.platform import get_platform_config_async_cached
 
 from bot.default import *
 from bot.chains.chat_keywords import ChatKeywordChain
@@ -56,7 +57,7 @@ async def stream_bot(bot_name: str,
     if not AireScope.ChatCompletion in auth.scopes or auth.platform == None:
         raise FORBIDDEN_EXCEPTION
     
-    user = get_current_user(auth)
+    user = await get_current_user_async(auth)
     
     match bot_name:
         case "default":
@@ -65,11 +66,13 @@ async def stream_bot(bot_name: str,
             return Response(status_code=status.HTTP_404_NOT_FOUND)
         
     allow_prompt_override = AireScope.FeatureCustomPrompt in auth.scopes
+    platform_config = await get_platform_config_async_cached(auth.platform)
+
     context = AireChatContext(
         input=input, 
         user=user, 
         allow_custom_prompt=allow_prompt_override,
-        platform=get_platform_config(auth.platform),
+        platform=platform_config,
         auth=auth)
 
     async def stream() -> AsyncIterator[dict]:
@@ -129,7 +132,7 @@ async def stream_bot(bot_name: str,
                 
                 if call.get("name") in Toolbox and not tool_called:
                     tool = Toolbox[call.get("name")]
-                    call_result = tool.handler(context, call)
+                    call_result = await tool.handler(context, call)
                     if call_result != None:
                         tool_called = True
                         yield { 
