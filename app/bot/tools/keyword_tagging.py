@@ -5,6 +5,7 @@
 from langchain_core.messages.tool import ToolCall
 from aire.models.chat import AireChatContext
 from aire.models.events import AireEvent, AireKeywordEvent
+from aire.models.auth import AireScope
 from ..chains.chat_keywords import ChatKeywordChain
 from .callable_tool import CallableTool
 
@@ -26,6 +27,9 @@ __tool_description = {
 
 async def __tag_keywords(ctx: AireChatContext, call: ToolCall) -> AireKeywordEvent | None:
     if call.get("name") != __tool_name:
+        return None
+
+    if not AireScope.KeywordsRead in ctx.auth.scopes:
         return None
     
     results = await ChatKeywordChain.ainvoke(ctx)

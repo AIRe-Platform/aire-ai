@@ -132,7 +132,7 @@ async def stream_bot(bot_name: str,
                 
                 if call.get("name") in Toolbox and not tool_called:
                     tool = Toolbox[call.get("name")]
-                    call_result = tool.handler(context, call)
+                    call_result = await tool.handler(context, call)
                     if call_result != None:
                         tool_called = True
                         yield { 

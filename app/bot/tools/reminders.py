@@ -55,7 +55,7 @@ async def __create_reminder(ctx: AireChatContext, call: ToolCall) -> AireReminde
     if call.get("name") != __tool_name:
         return None
     
-    if not AireScope.ContentRead in ctx.auth.scopes:
+    if not AireScope.RemindersWrite in ctx.auth.scopes:
         return None
     
     args = call.get("args")

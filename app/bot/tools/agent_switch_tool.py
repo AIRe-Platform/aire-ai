@@ -5,7 +5,6 @@
 from langchain_core.messages.tool import ToolCall
 from aire.models.chat import AireChatContext
 from aire.models.events import AireEvent, AireAgentSwitchEvent
-from aire.models.auth import AireScope
 from .callable_tool import CallableTool
 
 __tool_name = "agent_switch"
@@ -31,9 +30,6 @@ __tool_description = {
 
 async def __agent_switch(ctx: AireChatContext, call: ToolCall) -> AireAgentSwitchEvent | None:
     if call.get("name") != __tool_name:
-        return None
-    
-    if not AireScope.ContentRead in ctx.auth.scopes:
         return None
     
     args = call.get("args")
