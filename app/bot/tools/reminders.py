@@ -8,7 +8,7 @@ from aire.models.reminder import AireReminder, AireReminderContent
 from aire.models.chat import AireChatContext
 from aire.models.events import AireEvent, AireReminderEvent
 from aire.models.auth import AireScope
-from aire.services.memory import create_reminder
+from aire.services.memory import create_reminder_async
 from .callable_tool import CallableTool
 
 __tool_name = "create_reminder"
@@ -34,7 +34,7 @@ __tool_description = {
     }
 }
 
-def __create_reminder_call(ctx: AireChatContext, date_and_time: str, subject: str) -> AireReminderEvent | None:
+async def __create_reminder_call(ctx: AireChatContext, date_and_time: str, subject: str) -> AireReminderEvent | None:
     timestamp = datetime.fromisoformat(date_and_time).timestamp()
     content = AireReminderContent(message=subject)    
     reminder = AireReminder(trigger_timestamp=int(timestamp), content=content, chat_id=ctx.input.chat_id)
@@ -47,15 +47,15 @@ def __create_reminder_call(ctx: AireChatContext, date_and_time: str, subject: st
     if memory == None:
         return None
     
-    reminder = create_reminder(memory, ctx.auth, reminder)
+    reminder = await create_reminder_async(memory, ctx.auth, reminder)
     return AireReminderEvent(reminder=reminder)
 
 
-def __create_reminder(ctx: AireChatContext, call: ToolCall) -> AireReminderEvent | None:
+async def __create_reminder(ctx: AireChatContext, call: ToolCall) -> AireReminderEvent | None:
     if call.get("name") != __tool_name:
         return None
     
-    if not AireScope.ContentRead in ctx.auth.scopes:
+    if not AireScope.RemindersWrite in ctx.auth.scopes:
         return None
     
     args = call.get("args")
@@ -65,7 +65,7 @@ def __create_reminder(ctx: AireChatContext, call: ToolCall) -> AireReminderEvent
     if datetime == None or subject == None:
         return None
 
-    return __create_reminder_call(ctx, datetime, subject)
+    return await __create_reminder_call(ctx, datetime, subject)
 
 
 ReminderTool = CallableTool(

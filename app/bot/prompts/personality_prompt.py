@@ -9,9 +9,9 @@ def create_personality_prompt(ctx: AireChatContext):
     personality_prompt = ""
 
     try:
-        module = ctx.platform.get_default_module(AireModuleType.AI)
-        if module != None and module.settings != None:
-            personality_prompt = module.settings.get(AireModuleSetting.PersonalityPrompt, "")
+        svc = ctx.platform.get_default_module(AireModuleType.AI)
+        if svc != None and svc.module.settings != None:
+            personality_prompt = svc.module.settings.get(AireModuleSetting.PersonalityPrompt, "")
     except AttributeError:
         pass
 

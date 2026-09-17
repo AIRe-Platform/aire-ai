@@ -7,10 +7,9 @@ from aire.models.auth import AireScope
 from aire.models.chat import AireChatContext
 from aire.models.events import AireEvent, AireQuestionnaireEvent
 from aire.models.questionnaire import AireQuestionnaireMetadata
-from aire.models.platform import AireModuleSetting, AireModuleType
+from aire.models.platform import AireModuleSetting
 from bot.vector_stores import QuestionnaireVectorStore
 from .callable_tool import CallableTool
-from utils.module_settings import get_module_setting_int
 
 __tool_name = "query_questionnaires"
 __tool_description = {
@@ -37,7 +36,7 @@ __tool_description = {
 }
 
 
-def __query_questionnaires(ctx: AireChatContext, call: ToolCall) -> AireQuestionnaireEvent | None:
+async def __query_questionnaires(ctx: AireChatContext, call: ToolCall) -> AireQuestionnaireEvent | None:
     if call.get("name") != __tool_name:
         return None
     
@@ -46,20 +45,34 @@ def __query_questionnaires(ctx: AireChatContext, call: ToolCall) -> AireQuestion
 
     args = call.get("args")
     search = args.get("search")
-    lang = args.get("lang")
     agent = ctx.current_agent()
+    lang = None
+    
+    if ctx.user != None:
+        lang = ctx.user.language
 
     if search == None or agent == None:
         return None
     
     memories = ctx.platform.get_agent_memories(agent)
     questionnaires: list[AireQuestionnaireMetadata] = []
-    threshold = get_module_setting_int(ctx, AireModuleSetting.VectorSearchRelevanceThreshold, None)
     
     for svc in memories:
-        if svc.settings != None:
-            database = svc.settings.get(AireModuleSetting.VectorDatabaseName, None)
-            threshold = svc.settings.get(AireModuleSetting.VectorSearchRelevanceThreshold, threshold)
+        if svc.module.settings != None:
+            database = svc.module.settings.get(AireModuleSetting.VectorDatabaseName, None)            
+            threshold = svc.module.settings.get(AireModuleSetting.VectorSearchRelevanceThreshold, None)
+
+            if isinstance(threshold, int):
+                relevance = threshold
+            elif isinstance(threshold, str):
+                relevance = float(threshold)
+            else: # default relevance
+                relevance = 0.75
+
+            # convert possible percentage and clamp relevance
+            if relevance > 1.0:
+                relevance = relevance / 100.0
+            relevance = max(0, min(relevance, 1))
 
             if isinstance(threshold, int):
                 relevance = threshold / 100.0
@@ -67,7 +80,7 @@ def __query_questionnaires(ctx: AireChatContext, call: ToolCall) -> AireQuestion
                 relevance = 0.75
 
             if isinstance(database, str):
-                results = QuestionnaireVectorStore(database).query(search, lang, 8, relevance)
+                results = await QuestionnaireVectorStore(database).query_async(search, lang, 8, relevance)
                 questionnaires.extend(results)
 
     return AireQuestionnaireEvent(search=search, results=questionnaires)

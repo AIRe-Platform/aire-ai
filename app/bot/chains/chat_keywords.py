@@ -3,10 +3,11 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 
+import asyncio
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableLambda
 from aire.models.chat import AireChatContext
-from aire.services.memory import get_keywords, AireKeyword
+from aire.services.memory import get_keywords_async, AireKeyword
 from llm import DefaultModel
 from pydantic import BaseModel, Field
 
@@ -26,19 +27,15 @@ Conversation:
 """
 )
 
-def __keyword_tagging_chain(ctx: AireChatContext) -> list[AireKeyword] | None:
+async def __keyword_tagging_chain(ctx: AireChatContext) -> list[AireKeyword] | None:
     messages = ctx.input.to_chat_messages()
     agent = ctx.current_agent()
 
     if len(messages) < 1 or agent == None:
         return []
     
-    plat = ctx.auth.platform
-    if plat == None:
-        return []
-    
     memories = ctx.platform.get_agent_memories(agent)
-    keywords = sum([get_keywords(plat, x) for x in memories], [])
+    keywords = sum([await get_keywords_async(x, ctx.auth) for x in memories], [])
     dictionary = {k.value: k for k in keywords}
     keyword_list = "\n".join(dictionary.keys())
     

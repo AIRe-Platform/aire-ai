@@ -27,4 +27,4 @@ async def process_questionnaire(
         raise FORBIDDEN_EXCEPTION
         
     input = QuestionnaireChainInput(req=request, auth=auth)
-    return ProcessQuestionnaireChain.invoke(input)
+    return await ProcessQuestionnaireChain.ainvoke(input)

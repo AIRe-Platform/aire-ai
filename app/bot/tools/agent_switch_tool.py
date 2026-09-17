@@ -5,7 +5,6 @@
 from langchain_core.messages.tool import ToolCall
 from aire.models.chat import AireChatContext
 from aire.models.events import AireEvent, AireAgentSwitchEvent
-from aire.models.auth import AireScope
 from .callable_tool import CallableTool
 
 __tool_name = "agent_switch"
@@ -29,11 +28,8 @@ __tool_description = {
     }
 }
 
-def __agent_switch(ctx: AireChatContext, call: ToolCall) -> AireAgentSwitchEvent | None:
+async def __agent_switch(ctx: AireChatContext, call: ToolCall) -> AireAgentSwitchEvent | None:
     if call.get("name") != __tool_name:
-        return None
-    
-    if not AireScope.ContentRead in ctx.auth.scopes:
         return None
     
     args = call.get("args")
@@ -63,7 +59,7 @@ def __prompt_gen(ctx: AireChatContext) -> str | None:
     agent_template = "Agent(name='{name}', description='{description}')"
 
     current = ctx.current_agent()
-    available = [x for x in ctx.platform.agents if x.name != current]
+    available = [x for x in ctx.platform.agents if current == None or x.name != current.name]
 
     if len(available) == 0:
         return None

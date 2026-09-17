@@ -10,7 +10,6 @@ from aire.models.auth import AireScope
 from aire.models.platform import AireModuleSetting
 from bot.vector_stores import ContentVectorStore
 from .callable_tool import CallableTool
-from utils.module_settings import get_module_setting_int
 
 __tool_name = "query_content"
 __tool_description = {
@@ -35,7 +34,7 @@ __tool_description = {
 }
 
 
-def __content_query(ctx: AireChatContext, call: ToolCall) -> AireContentEvent | None:
+async def __content_query(ctx: AireChatContext, call: ToolCall) -> AireContentEvent | None:
     if call.get("name") != __tool_name:
         return None
     
@@ -44,28 +43,37 @@ def __content_query(ctx: AireChatContext, call: ToolCall) -> AireContentEvent | 
     
     args = call.get("args")
     search = args.get("search")
-    lang = args.get("lang")
     agent = ctx.current_agent()
+    lang = None
+
+    if ctx.user != None:
+        lang = ctx.user.language
 
     if search == None or agent == None:
         return None
     
     content: list[AireContentMetadata] = []
     memories = ctx.platform.get_agent_memories(agent)
-    threshold = get_module_setting_int(ctx, AireModuleSetting.VectorSearchRelevanceThreshold, None)
     
     for memory in memories:
-        if memory.settings != None:
-            database = memory.settings.get(AireModuleSetting.VectorDatabaseName, None)
-            threshold = memory.settings.get(AireModuleSetting.VectorSearchRelevanceThreshold, threshold)
+        if memory.module.settings != None:
+            database = memory.module.settings.get(AireModuleSetting.VectorDatabaseName, None)
+            threshold = memory.module.settings.get(AireModuleSetting.VectorSearchRelevanceThreshold, None)
 
             if isinstance(threshold, int):
-                relevance = threshold / 100.0
-            else:
+                relevance = threshold
+            elif isinstance(threshold, str):
+                relevance = float(threshold)
+            else: # default relevance
                 relevance = 0.75
 
+            # convert possible percentage and clamp relevance
+            if relevance > 1.0:
+                relevance = relevance / 100.0
+            relevance = max(0, min(relevance, 1))
+
             if isinstance(database, str):
-                results = ContentVectorStore(database).query(search, lang, 4, relevance)
+                results = await ContentVectorStore(database).query_async(search, lang, 4, relevance)
                 content.extend(results)
 
     return AireContentEvent(search=search, results=content)
