@@ -55,7 +55,7 @@ async def query_document(
         raise BAD_REQUEST_EXCEPTION
 
     store = DocumentVectorStore(database)
-    results = store.query(query, lang, min_relevance=relevance)
+    results = await store.query_async(query, lang, min_relevance=relevance)
     return DocumentQueryResponse(results=results)
 
 @app.get("/embeddings/{database}/document/{id}",
@@ -76,7 +76,7 @@ async def search_from_document(
         raise BAD_REQUEST_EXCEPTION
     
     store = DocumentVectorStore(database)
-    results = store.query_from_doc(id, search, max_items=8, min_relevance=relevance)
+    results = await store.query_from_doc_async(id, search, max_items=8, min_relevance=relevance)
 
     return DocumentQueryResponse(results=results)
 
@@ -101,13 +101,13 @@ async def embed_document(
     doc_metadata = AireDocumentMetadata.model_validate_json(metadata)
     
     if document.content_type == "application/pdf":
-        handler = store.add_pdf
+        handler = store.add_pdf_async
     elif document.content_type == "text/markdown":
-        handler = store.add_markdown
+        handler = store.add_markdown_async
     elif document.content_type == "text/plain":
-        handler = store.add_plain_text
+        handler = store.add_plain_text_async
     elif document.content_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        handler = store.add_word_document
+        handler = store.add_word_document_async
     else:
         raise UNSUPPORTED_MEDIA_EXCEPTION
     
@@ -118,7 +118,7 @@ async def embed_document(
         path = await create_temporary_file(document)
         if path == None:
             raise Exception("Failed to store uploaded file")
-        ids = handler(path, doc_metadata)
+        ids = await handler(path, doc_metadata)
     except BaseException as ex:
         print(f"Failed to process document: {ex}")
     finally:
@@ -142,7 +142,7 @@ async def delete_document(
         raise UNAUTH_EXCEPTION
         
     store = DocumentVectorStore(database)
-    store.remove_document(id)
+    await store.remove_document_async(id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -163,7 +163,7 @@ async def embed_survey(
         raise UNAUTH_EXCEPTION
         
     store = QuestionnaireVectorStore(database)
-    id = store.add_questionnaire(questionnaire)
+    id = await store.add_questionnaire_async(questionnaire)
     return EmbedResponse(ids=[id])
 
 
@@ -186,7 +186,7 @@ async def query_questionnaire(
         raise BAD_REQUEST_EXCEPTION
     
     store = QuestionnaireVectorStore(database)
-    results = store.query_keywords(query.split(","), lang, relevance)
+    results = await store.query_keywords_async(query.split(","), lang, relevance)
     return QuestionnaireQueryResponse(results=results)
 
 
@@ -202,7 +202,7 @@ async def delete_survey(
         raise UNAUTH_EXCEPTION
 
     store = QuestionnaireVectorStore(database)
-    store.remove_document(id)
+    await store.remove_document_async(id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -223,7 +223,7 @@ async def embed_content(
         raise UNAUTH_EXCEPTION
         
     store = ContentVectorStore(database)
-    id = store.add_content(content)
+    id = await store.add_content_async(content)
 
     if id == None:
         raise BAD_REQUEST_EXCEPTION
@@ -250,7 +250,7 @@ async def query_content(
         raise BAD_REQUEST_EXCEPTION
     
     store = ContentVectorStore(database)
-    results = store.query(query, lang, min_relevance=relevance)
+    results = await store.query_async(query, lang, min_relevance=relevance)
     return ContentQueryResponse(results=results)
 
 
@@ -266,5 +266,5 @@ async def delete_content(
         raise UNAUTH_EXCEPTION
 
     store = ContentVectorStore(database)
-    store.remove_document(id)
+    await store.remove_document_async(id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

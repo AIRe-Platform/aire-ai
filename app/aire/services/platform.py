@@ -3,16 +3,11 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 
-import requests
 import os
+import httpx
 from cachetools import cached, TTLCache
 from cachetools.keys import hashkey
-from ..models.platform import (
-    AirePlatformConfiguration, 
-    AireModuleAccess,
-    AireServiceModule
-)
-from ..models.auth import AireAuth
+from ..models.platform import AirePlatformConfiguration
 
 def hash_key(id: str):
     return hashkey(id)
@@ -20,7 +15,7 @@ def hash_key(id: str):
 cache = TTLCache(maxsize=1, ttl=1800)
 
 @cached(cache=cache, key=hash_key)
-def get_platform_config(id: str) -> AirePlatformConfiguration:
+async def get_platform_config_async(id: str) -> AirePlatformConfiguration:
     base = os.getenv("AIRE_SERVICE_BASE")
     key = os.getenv("AIRE_SERVICE_KEY")
     
@@ -33,7 +28,9 @@ def get_platform_config(id: str) -> AirePlatformConfiguration:
         "Accept": "application/json"
     }
 
-    response = requests.get(url=url, headers=headers)
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url=url, headers=headers)
+
     if response.status_code == 200:
         return AirePlatformConfiguration.model_validate(response.json())
     else:

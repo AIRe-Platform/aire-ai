@@ -3,7 +3,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 
-import requests
+import httpx
 from .headers import get_svc_headers
 from ..models.platform import (
     AirePlatformConfiguration, 
@@ -12,7 +12,7 @@ from ..models.platform import (
 from ..models.auth import AireAuth
 from ..models.user import AireUser
 
-def get_user(conf: AirePlatformConfiguration, auth: AireAuth):    
+async def get_user_async(conf: AirePlatformConfiguration, auth: AireAuth):    
     svc = conf.get_default_module(AireModuleType.ID)
     if svc == None:
         raise RuntimeError("ID Module is not configured")
@@ -23,7 +23,9 @@ def get_user(conf: AirePlatformConfiguration, auth: AireAuth):
         "Accept": "application/json"
     })
 
-    response = requests.get(url=url, headers=headers)
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url=url, headers=headers)
+        
     if response.status_code == 200:
         return AireUser.model_validate(response.json())
     else:

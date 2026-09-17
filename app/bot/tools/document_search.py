@@ -38,7 +38,7 @@ __tool_description = {
 }
 
 
-def __document_search(ctx: AireChatContext, call: ToolCall) -> AireDocumentResultEvent | None:
+async def __document_search(ctx: AireChatContext, call: ToolCall) -> AireDocumentResultEvent | None:
     if call.get("name") != __tool_name:
         return None
     
@@ -80,9 +80,9 @@ def __document_search(ctx: AireChatContext, call: ToolCall) -> AireDocumentResul
             if isinstance(database, str):
                 store = DocumentVectorStore(database)
                 if document_id == None:
-                    results = store.query(search, lang, 4, relevance)
+                    results = await store.query_async(search, lang, 4, relevance)
                 else:
-                    results = store.query_from_doc(document_id, search, 2, relevance)
+                    results = await store.query_from_doc_async(document_id, search, 2, relevance)
                 documents.extend(results)
 
     return AireDocumentResultEvent(search=search, results=documents)

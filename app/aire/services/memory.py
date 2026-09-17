@@ -3,7 +3,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 
-import requests
+import httpx
 from cachetools import cached, TTLCache
 from cachetools.keys import hashkey
 from .headers import get_svc_headers
@@ -19,13 +19,15 @@ def keywords_hash_key(svc: AireServiceModule, _: dict[str,str]):
 cache = TTLCache(maxsize=10, ttl=300)
     
 @cached(cache=cache, key=keywords_hash_key)
-def _get_keywords_cached(svc: AireServiceModule, headers: dict[str,str]) -> list[AireKeyword]:
+async def _get_keywords_async_cached(svc: AireServiceModule, headers: dict[str,str]) -> list[AireKeyword]:
     url = svc.module.endpoint + "/v1/keywords"
     headers.update({
         "Accept": "application/json"
     })
 
-    response = requests.get(url=url, headers=headers)
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url=url, headers=headers)
+
     if response.status_code == 200:
         adapter = TypeAdapter(list[AireKeyword])
         keywords = adapter.validate_python(response.json())
@@ -34,15 +36,15 @@ def _get_keywords_cached(svc: AireServiceModule, headers: dict[str,str]) -> list
         raise RuntimeError("Failed to query keywords")
 
 
-def get_keywords(svc: AireServiceModule, auth: AireAuth) -> list[AireKeyword]:
+async def get_keywords_async(svc: AireServiceModule, auth: AireAuth) -> list[AireKeyword]:
     try:
         headers = get_svc_headers(svc, auth, None)
-        return _get_keywords_cached(svc, headers)
+        return await _get_keywords_async_cached(svc, headers)
     except:
         return []
 
     
-def create_reminder(svc: AireServiceModule, auth: AireAuth, reminder: AireReminder) -> AireReminder:
+async def create_reminder_async(svc: AireServiceModule, auth: AireAuth, reminder: AireReminder) -> AireReminder:
     url = svc.module.endpoint + "/v1/reminder"
     headers = get_svc_headers(svc, auth, None)
     headers.update({
@@ -50,7 +52,9 @@ def create_reminder(svc: AireServiceModule, auth: AireAuth, reminder: AireRemind
         "Content-Type": "application/json",
     })
 
-    response = requests.post(url=url, headers=headers, json=reminder.model_dump())
+    async with httpx.AsyncClient() as client:
+        response = await client.post(url=url, headers=headers, json=reminder.model_dump())
+
     if response.status_code == 200:
         return AireReminder.model_validate(response.json())
     else:

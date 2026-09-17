@@ -24,11 +24,11 @@ __tool_description = {
     }
 }
 
-def __tag_keywords(ctx: AireChatContext, call: ToolCall) -> AireKeywordEvent | None:
+async def __tag_keywords(ctx: AireChatContext, call: ToolCall) -> AireKeywordEvent | None:
     if call.get("name") != __tool_name:
         return None
     
-    results = ChatKeywordChain.invoke(ctx)
+    results = await ChatKeywordChain.ainvoke(ctx)
     
     if results == None:
         return None

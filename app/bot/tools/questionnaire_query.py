@@ -36,7 +36,7 @@ __tool_description = {
 }
 
 
-def __query_questionnaires(ctx: AireChatContext, call: ToolCall) -> AireQuestionnaireEvent | None:
+async def __query_questionnaires(ctx: AireChatContext, call: ToolCall) -> AireQuestionnaireEvent | None:
     if call.get("name") != __tool_name:
         return None
     
@@ -80,7 +80,7 @@ def __query_questionnaires(ctx: AireChatContext, call: ToolCall) -> AireQuestion
                 relevance = 0.75
 
             if isinstance(database, str):
-                results = QuestionnaireVectorStore(database).query(search, lang, 8, relevance)
+                results = await QuestionnaireVectorStore(database).query_async(search, lang, 8, relevance)
                 questionnaires.extend(results)
 
     return AireQuestionnaireEvent(search=search, results=questionnaires)

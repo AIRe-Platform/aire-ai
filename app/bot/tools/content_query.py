@@ -34,7 +34,7 @@ __tool_description = {
 }
 
 
-def __content_query(ctx: AireChatContext, call: ToolCall) -> AireContentEvent | None:
+async def __content_query(ctx: AireChatContext, call: ToolCall) -> AireContentEvent | None:
     if call.get("name") != __tool_name:
         return None
     
@@ -73,7 +73,7 @@ def __content_query(ctx: AireChatContext, call: ToolCall) -> AireContentEvent | 
             relevance = max(0, min(relevance, 1))
 
             if isinstance(database, str):
-                results = ContentVectorStore(database).query(search, lang, 4, relevance)
+                results = await ContentVectorStore(database).query_async(search, lang, 4, relevance)
                 content.extend(results)
 
     return AireContentEvent(search=search, results=content)

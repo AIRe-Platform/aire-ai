@@ -18,7 +18,7 @@ from aire.models.chat import (
     AireChatContext,
     AireChatStats
 )
-from aire.services.platform import get_platform_config
+from aire.services.platform import get_platform_config_async
 
 from typing import Annotated
 from fastapi import Depends, Query, status
@@ -39,9 +39,9 @@ async def chat_abstract(
     if not AireScope.ChatSummary in auth.scopes or auth.platform == None:
         raise FORBIDDEN_EXCEPTION
     
-    platform = get_platform_config(auth.platform)
+    platform = await get_platform_config_async(auth.platform)
     context = AireChatContext(input=input, platform=platform, auth=auth)
-    return ChatAbstractChain.invoke(context)
+    return await ChatAbstractChain.ainvoke(context)
 
 
 @app.post("/chat/summary", 
@@ -58,9 +58,9 @@ async def chat_summary(
     if not AireScope.ChatSummary in auth.scopes or auth.platform == None:
         raise FORBIDDEN_EXCEPTION
     
-    platform = get_platform_config(auth.platform)
+    platform = await get_platform_config_async(auth.platform)
     context = AireChatContext(input=input, platform=platform, auth=auth)
-    return ChatSummaryChain.invoke(context)
+    return await ChatSummaryChain.ainvoke(context)
 
 
 @app.post("/chat/keywords", 
@@ -79,9 +79,9 @@ async def chat_keywords(
     if not AireScope.ChatSummary in auth.scopes or auth.platform == None:
         raise FORBIDDEN_EXCEPTION
     
-    platform = get_platform_config(auth.platform)
+    platform = await get_platform_config_async(auth.platform)
     context = AireChatContext(input=input, regen=regen, platform=platform, auth=auth)
-    keywords = ChatKeywordChain.invoke(context)
+    keywords = await ChatKeywordChain.ainvoke(context)
     return list(map(lambda x: x.value, keywords or []))
 
 

@@ -29,7 +29,7 @@ __tool_description = {
     }
 }
 
-def __agent_switch(ctx: AireChatContext, call: ToolCall) -> AireAgentSwitchEvent | None:
+async def __agent_switch(ctx: AireChatContext, call: ToolCall) -> AireAgentSwitchEvent | None:
     if call.get("name") != __tool_name:
         return None
     

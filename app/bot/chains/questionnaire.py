@@ -41,7 +41,7 @@ def __build_prompt(item: AireQuestionnaireAnswer):
     # Fallback to default prompt template
     return question_answer_template.format(question=item.question, answer=answer)
 
-def __process_questionnaire(input: QuestionnaireChainInput) -> AireQuestionnaireResult:
+async def __process_questionnaire(input: QuestionnaireChainInput) -> AireQuestionnaireResult:
     prompts_to_process = filter(lambda x: x.prompt != None and x.answer != None, input.req.answers)
     prompts = list(map(__build_prompt, prompts_to_process))
     llm = DefaultModel(temperature=0.0)
@@ -50,7 +50,7 @@ def __process_questionnaire(input: QuestionnaireChainInput) -> AireQuestionnaire
     if len(prompts) > 0:
         summary_prompt = PromptTemplate.from_template(summarizy_prompt_template)
         summary_chain = summary_prompt | llm
-        summary_result = summary_chain.invoke({ "text": "\n".join(prompts) })
+        summary_result = await summary_chain.ainvoke({ "text": "\n".join(prompts) })
         summary = summary_result.content
 
     if not isinstance(summary, str):

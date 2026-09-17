@@ -23,7 +23,7 @@ Do not include any information that could identify the user.
 
 New summary:"""
 
-def __chat_summary(ctx: AireChatContext) -> str:
+async def __chat_summary(ctx: AireChatContext) -> str:
     messages = ctx.input.to_chat_messages()
     if len(messages) < 1:
         return ""
@@ -31,7 +31,7 @@ def __chat_summary(ctx: AireChatContext) -> str:
     system_prompt = SystemMessagePromptTemplate.from_template(summary_prompt)
     prompt = [ system_prompt.format(messages=messages) ]
 
-    response = llm_summary.invoke(prompt)
+    response = await llm_summary.ainvoke(prompt)
     if not isinstance(response.content, str):
         return ""
     
